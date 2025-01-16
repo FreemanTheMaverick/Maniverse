@@ -6,11 +6,7 @@
 #include "../Macro.h"
 #include "Manifold.h"
 
-void Init_Simplex(pybind11::module_&);
-void Init_Orthogonal(pybind11::module_&);
-void Init_Grassmann(pybind11::module_&);
-
-PYBIND11_MODULE(Maniverse, m){
+void Init_Manifold(pybind11::module_& m){
 	pybind11::class_<Manifold>(m, "Manifold")
 		.def_readwrite("Name", &Manifold::Name)
 		.def_readwrite("P", &Manifold::P)
@@ -32,7 +28,4 @@ PYBIND11_MODULE(Maniverse, m){
 		.def("Update", &Manifold::Update)
 		.def("getGradient", &Manifold::getGradient)
 		.def("getHessian", &Manifold::getHessian);
-	Init_Simplex(m);
-	Init_Orthogonal(m);
-	Init_Grassmann(m);
 }
