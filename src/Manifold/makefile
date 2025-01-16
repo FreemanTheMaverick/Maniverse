@@ -1,8 +1,11 @@
-Flags = $(GeneralFlags) $(EIGEN3Flags)
+Flags = $(GeneralFlags) $(EIGEN3Flags) $(PYBIND11Flags)
 
 .PHONY: all
 
-all: Simplex Orthogonal Grassmann GrassmannQLocal
+all: Manifold Simplex Orthogonal Grassmann
+
+Manifold: Manifold.cpp
+	$(CXX) -o ../../obj/Manifold.o Manifold.cpp -c $(Flags)
 
 Simplex: Simplex.cpp
 	$(CXX) -o ../../obj/Simplex.o Simplex.cpp -c $(Flags)
@@ -12,6 +15,3 @@ Orthogonal: Orthogonal.cpp
 
 Grassmann: Grassmann.cpp
 	$(CXX) -o ../../obj/Grassmann.o Grassmann.cpp -c $(Flags)
-
-GrassmannQLocal: GrassmannQLocal.cpp
-	$(CXX) -o ../../obj/GrassmannQLocal.o GrassmannQLocal.cpp -c $(Flags)

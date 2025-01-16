@@ -1,3 +1,6 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <functional>
@@ -87,4 +90,9 @@ void Orthogonal::getHessian(){
 		const EigenMatrix TprojHev = 0.5 * ( Hev - P * Hev.transpose() * P );
 		return (EigenMatrix)( TprojHev - 0.5 * ( PGrpT * v - P * v.transpose() * Grp ) );
 	};
+}
+
+void Init_Orthogonal(pybind11::module_& m){
+	pybind11::class_<Orthogonal, Manifold>(m, "Orthogonal")
+		.def(pybind11::init<EigenMatrix>());
 }
