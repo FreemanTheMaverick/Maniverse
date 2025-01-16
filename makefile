@@ -21,6 +21,9 @@ all:
 	cd obj/ && $(AR) -rv ../lib/libmaniverse.a *.o
 	cd obj/ && $(CXX) -shared -o ../lib/libmaniverse.so *.o $(GeneralFlags)
 	cd obj/ && $(CXX) -shared -o ../lib/Maniverse.so *.o $(GeneralFlags)
+	mkdir -p include/Maniverse/
+	mkdir -p include/Maniverse/Manifold/
+	find src/Manifold/ -type f -name "*h" ! -name "Py*" -exec cp {} include/Maniverse/Manifold/ \;
 
 clean:
 	rm -rf obj/ lib/ include/
