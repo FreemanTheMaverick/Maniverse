@@ -1,3 +1,6 @@
+#include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
@@ -123,4 +126,9 @@ void Grassmann::getHessian(){
 		const EigenMatrix sum = partA - partB;
 		return EigenMatrix(P * sum - sum * P);
 	};
+}
+
+void Init_Grassmann(pybind11::module_& m){
+	pybind11::class_<Grassmann, Manifold>(m, "Grassmann")
+		.def(pybind11::init<EigenMatrix>());
 }
