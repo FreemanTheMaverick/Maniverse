@@ -14,7 +14,7 @@
 #include <iostream>
 
 static int getRank(EigenMatrix p){
-	Eigen::FullPivLU<Matrix3f> lu(p);
+	Eigen::FullPivLU<EigenMatrix> lu(p);
 	return lu.rank();
 }
 
@@ -22,12 +22,12 @@ static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
 	// Y = P Omega
 	const int rank = p.cols();
 	const int nconstraints = ( rank + 1 ) * rank / 2;
-	const EigenMatrix Left = EigenZero(rank * rank + nconstraints, rank * rank + nconstraints);
-	const EigenVector Right = EigenZero(rank * rank + nconstraints);
+	EigenMatrix Left = EigenZero(rank * rank + nconstraints, rank * rank + nconstraints);
+	EigenVector Right = EigenZero(rank * rank + nconstraints);
 	
 	// PT * P
 	const EigenMatrix PtP = p.transpose() * p;
-	for ( int i = 0; i < rank; i++ )
+	for ( int i = 0; i < rank * rank; i += rank )
 		Left.block(i, i, rank, rank) = PtP;
 
 	// Constraints
@@ -41,20 +41,20 @@ static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
 	Left.block(rank * rank, 0, nconstraints, rank) = C;
 
 	// Right-hand side
-	Right.head(rank * rank) = ( p.transpose() * Y ).reshape(rank * rank, 1);
+	Right.head(rank * rank) = ( p.transpose() * Y ).reshaped(rank * rank, 1);
 
 	// Vertical component
 	const EigenVector x = Left.colPivHouseholderQr().solve(Right);
-	const EigenMatrix Omega = x.reshape(rank, rank);
+	const EigenMatrix Omega = x.reshaped(rank, rank);
 
 	// Horizontal component
-	return X - p * Omega;
+	return Y - p * Omega;
 }
 
 TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p){
 	const int rank = getRank(p);
 	assert( rank == p.cols() && "The matrix is column-rank-deficient!" );
-	this->Name = std::to_string(rank) + std::to_string("-D translation-rotation-invariant point cloud");
+	this->Name = std::to_string(rank) + "-D translation-rotation-invariant point cloud";
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());
 	this->Gr.resize(p.rows(), p.cols());
@@ -92,11 +92,17 @@ EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q){
 }
 
 EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A){
-	return HorizontalLift(this->P, A);
+	EigenMatrix tmp = EigenZero(A.rows(), A.cols());
+	for ( int i = 0; i < this->P.cols(); i++)
+		tmp.col(i) = A.col(i) / A.col(i).mean();
+	return HorizontalLift(this->P, tmp);
 }
 
 EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A){
-	return A.array() - A.mean();
+	EigenMatrix tmp = EigenZero(A.rows(), A.cols());
+	for ( int i = 0; i < this->P.cols(); i++)
+		tmp.col(i) = A.col(i) / A.col(i).mean();
+	return tmp;
 }
 
 EigenMatrix TransRotInvPointCloud::TransportTangent(EigenMatrix X, EigenMatrix Y){
@@ -113,28 +119,22 @@ void TransRotInvPointCloud::Update(EigenMatrix p, bool purify){
 	const int rank = getRank(p);
 	assert( rank == p.cols() && "The matrix is column-rank-deficient!" );
 	this->P = p;
-	if (purify){
-
-	}
+	if (purify)
+		this->P = this->TangentPurification(p);
 }
 
 void TransRotInvPointCloud::getGradient(){
-	this->Gr = this->TangentProjection(this->P.cwiseProduct(this->Ge));
+	this->Gr = this->TangentProjection(this->Ge);
 }
 
 void TransRotInvPointCloud::getHessian(){
-	const int n = this->P.size();
-	const EigenMatrix ones = EigenZero(n, n).array() + 1;
-	const EigenMatrix proj = this->TangentProjection(EigenOne(n, n));
-	const EigenMatrix M = proj * (EigenMatrix)this->P.asDiagonal();
-	const EigenMatrix N = proj * (EigenMatrix)(
-			this->Ge
-			- ones * this->Ge.cwiseProduct(this->P)
-			- 0.5 * this->Gr.cwiseProduct(this->P.cwiseInverse())
-	).asDiagonal();
+	const EigenMatrix P = this->P;
 	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [He, M, N](EigenMatrix v){
-		return (EigenMatrix)(M * He(v) + N * v); // The forced conversion "(EigenMatrix)" is necessary. Without it the result will be wrong. I do not know why. Then I forced convert every EigenMatrix return value in std::function for ensurance.
+	this->Hr = [P, He](EigenMatrix v){
+		EigenMatrix tmp = EigenZero(v.rows(), v.cols());
+		for ( int i = 0; i < v.cols(); i++)
+			tmp.col(i) = v.col(i) / v.col(i).mean();
+		return (EigenMatrix)HorizontalLift(P, He( HorizontalLift(P, tmp) ));
 	};
 }
 
