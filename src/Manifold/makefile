@@ -1,5 +1,3 @@
-Flags = $(GeneralFlags) $(EIGEN3Flags) $(PYBIND11Flags)
-
 .PHONY: all
 
 all: Manifold Simplex Orthogonal Grassmann TransRotInvPointCloud

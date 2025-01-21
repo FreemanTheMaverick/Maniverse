@@ -1,10 +1,12 @@
 .PHONY: all
 
-all: MANIFOLD PYMANIVERSE
+all: MANIFOLD OPTIMIZER PYMANIVERSE
 
 MANIFOLD:
 	$(MAKE) -C Manifold
 
+OPTIMIZER:
+	$(MAKE) -C Optimizer
 
 PYMANIVERSE: PyManiverse.cpp
-	$(CXX) -o ../obj/PyManiverse.o PyManiverse.cpp -c $(Flags) $(GeneralFlags) $(PYBIND11Flags)
+	$(CXX) -o ../obj/PyManiverse.o PyManiverse.cpp -c $(Flags)
