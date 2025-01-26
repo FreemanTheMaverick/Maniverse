@@ -10,14 +10,14 @@
 
 #include "Simplex.h"
 
-#include <iostream>
 
-Simplex::Simplex(EigenMatrix p){
+static double Distance(EigenMatrix p, EigenMatrix q){
+	return 2 * std::acos( p.cwiseProduct(q).cwiseSqrt().sum() );
+}
+
+Simplex::Simplex(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
 	this->Name = "Simplex";
-	this->P.resize(p.rows(), p.cols());
-	this->Ge.resize(p.rows(), p.cols());
-	this->Gr.resize(p.rows(), p.cols());
-	this->P = p;
+	assert( p.cols() == 1 && "A point on the Simplex manifold should have only one column!" );
 }
 
 int Simplex::getDimension(){
@@ -26,18 +26,6 @@ int Simplex::getDimension(){
 
 double Simplex::Inner(EigenMatrix X, EigenMatrix Y){
 	return this->P.cwiseInverse().cwiseProduct(X.cwiseProduct(Y)).sum();
-}
-
-std::function<double (EigenMatrix, EigenMatrix)> Simplex::getInner(){
-	const EigenMatrix P = this->P;
-	const std::function<double (EigenMatrix, EigenMatrix)> inner = [P](EigenMatrix X, EigenMatrix Y){
-		return P.cwiseInverse().cwiseProduct(X.cwiseProduct(Y)).sum();
-	};
-	return inner;
-}
-
-double Simplex::Distance(EigenMatrix q){
-	return 2 * std::acos( this->P.cwiseProduct(q).cwiseSqrt().sum() );
 }
 
 EigenMatrix Simplex::Exponential(EigenMatrix X){
@@ -52,7 +40,7 @@ EigenMatrix Simplex::Exponential(EigenMatrix X){
 
 EigenMatrix Simplex::Logarithm(EigenMatrix q){
 	const double dot = Dot( this->P.cwiseSqrt(), q.cwiseSqrt() );
-	const double tmp1 = this->Distance(q);
+	const double tmp1 = Distance(this->P, q);
 	const double tmp2 = 1. - dot;
 	const EigenMatrix tmp3 = this->P.cwiseProduct(q).cwiseSqrt();
 	const EigenMatrix tmp4 = dot * this->P;
@@ -69,16 +57,6 @@ EigenMatrix Simplex::TangentProjection(EigenMatrix A){
 
 EigenMatrix Simplex::TangentPurification(EigenMatrix A){
 	return A.array() - A.mean();
-}
-
-EigenMatrix Simplex::TransportTangent(EigenMatrix X, EigenMatrix Y){
-	assert( 0 && "Parallel transport on Simplex manifold is not implemented!" );
-	return (X + Y) * 0;
-}
-
-EigenMatrix Simplex::TransportManifold(EigenMatrix X, EigenMatrix q){
-	assert( 0 && "Parallel transport on Simplex manifold is not implemented!" );
-	return (X + q) * 0;
 }
 
 void Simplex::Update(EigenMatrix p, bool purify){
@@ -107,9 +85,10 @@ void Simplex::getHessian(){
 	this->Hr = [He, M, N](EigenMatrix v){
 		return (EigenMatrix)(M * He(v) + N * v); // The forced conversion "(EigenMatrix)" is necessary. Without it the result will be wrong. I do not know why. Then I forced convert every EigenMatrix return value in std::function for ensurance.
 	};
+	if ( this->HessTransportMatrix ) this->Hrm = M * this->Hem + N;
 }
 
 void Init_Simplex(pybind11::module_& m){
 	pybind11::class_<Simplex, Manifold>(m, "Simplex")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, bool>());
 }

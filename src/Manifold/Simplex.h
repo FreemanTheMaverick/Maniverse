@@ -1,23 +1,22 @@
 #include "Manifold.h"
 
 class Simplex: public Manifold{ public:
-	Simplex(EigenMatrix p);
+	EigenMatrix Projector;
+	Simplex(EigenMatrix p, bool hess_transport_matrix);
 
-	int getDimension();
-	double Inner(EigenMatrix X, EigenMatrix Y);
-	std::function<double (EigenMatrix, EigenMatrix)> getInner();
-	double Distance(EigenMatrix q);
+	int getDimension() override;
+	double Inner(EigenMatrix X, EigenMatrix Y) override;
 
-	EigenMatrix Exponential(EigenMatrix X);
-	EigenMatrix Logarithm(EigenMatrix q);
+	EigenMatrix Exponential(EigenMatrix X) override;
+	EigenMatrix Logarithm(EigenMatrix q) override;
 
-	EigenMatrix TangentProjection(EigenMatrix A);
-	EigenMatrix TangentPurification(EigenMatrix A);
+	EigenMatrix TangentProjection(EigenMatrix A) override;
+	EigenMatrix TangentPurification(EigenMatrix A) override;
 
-	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y);
-	EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q);
+	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
+	EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) override;
 
-	void Update(EigenMatrix p, bool purify);
-	void getGradient();
-	void getHessian();
+	void Update(EigenMatrix p, bool purify) override;
+	void getGradient() override;
+	void getHessian() override;
 };

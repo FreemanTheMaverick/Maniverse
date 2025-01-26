@@ -1,23 +1,23 @@
 #include "Manifold.h"
 
 class Grassmann: public Manifold{ public:
-	Grassmann(EigenMatrix p);
+	EigenMatrix Projector;
 
-	int getDimension();
-	double Inner(EigenMatrix X, EigenMatrix Y);
-	std::function<double (EigenMatrix, EigenMatrix)> getInner();
-	double Distance(EigenMatrix q);
+	Grassmann(EigenMatrix p, bool hess_transport_matrix);
 
-	EigenMatrix Exponential(EigenMatrix X);
-	EigenMatrix Logarithm(EigenMatrix q);
+	int getDimension() override;
+	double Inner(EigenMatrix X, EigenMatrix Y) override;
 
-	EigenMatrix TangentProjection(EigenMatrix A);
-	EigenMatrix TangentPurification(EigenMatrix A);
+	EigenMatrix Exponential(EigenMatrix X) override;
+	EigenMatrix Logarithm(EigenMatrix q) override;
 
-	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y);
-	EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q);
+	EigenMatrix TangentProjection(EigenMatrix A) override;
+	EigenMatrix TangentPurification(EigenMatrix A) override;
 
-	void Update(EigenMatrix p, bool purify);
-	void getGradient();
-	void getHessian();
+	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
+	EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) override;
+
+	void Update(EigenMatrix p, bool purify) override;
+	void getGradient() override;
+	void getHessian() override;
 };
