@@ -10,14 +10,11 @@
 
 #include "Orthogonal.h"
 
-#include <iostream>
 
-Orthogonal::Orthogonal(EigenMatrix p){
+Orthogonal::Orthogonal(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
 	this->Name = "Orthogonal";
-	this->P.resize(p.rows(), p.cols());
-	this->Ge.resize(p.rows(), p.cols());
-	this->Gr.resize(p.rows(), p.cols());
-	this->P = p;
+	assert( p.rows() == p.cols() && "An orthogonal matrix must be square!" );
+	assert( ( p * p.transpose() - p.transpose() * p ).norm() > 1e-8 && "An orthogonal matrix must fulfill U.Ut = Ut.U!" );
 }
 
 int Orthogonal::getDimension(){
@@ -26,18 +23,6 @@ int Orthogonal::getDimension(){
 
 double Orthogonal::Inner(EigenMatrix X, EigenMatrix Y){
 	return 0.5 * Dot(X, Y);
-}
-
-std::function<double (EigenMatrix, EigenMatrix)> Orthogonal::getInner(){
-	const std::function<double (EigenMatrix, EigenMatrix)> inner = [](EigenMatrix X, EigenMatrix Y){
-		return 0.5 * Dot(X, Y);
-	};
-	return inner;
-}
-
-double Orthogonal::Distance(EigenMatrix q){
-	assert( 0 && "Geodesic length on Orthogonal manifold is not implemented!" );
-	return q.sum() * 0;
 }
 
 EigenMatrix Orthogonal::Exponential(EigenMatrix X){
@@ -56,16 +41,6 @@ EigenMatrix Orthogonal::TangentPurification(EigenMatrix A){
 	const EigenMatrix Z = this->P.transpose() * A;
 	const EigenMatrix Zpurified = 0.5  * (Z - Z.transpose());
 	return this->P * Zpurified;
-}
-
-EigenMatrix Orthogonal::TransportTangent(EigenMatrix X, EigenMatrix Y){
-	assert( 0 && "Parallel transport on Orthogonal manifold is not implemented!" );
-	return (X + Y) * 0;
-}
-
-EigenMatrix Orthogonal::TransportManifold(EigenMatrix X, EigenMatrix q){
-	assert( 0 && "Parallel transport on Orthogonal manifold is not implemented!" );
-	return (X + q) * 0;
 }
 
 void Orthogonal::Update(EigenMatrix p, bool purify){
@@ -94,5 +69,5 @@ void Orthogonal::getHessian(){
 
 void Init_Orthogonal(pybind11::module_& m){
 	pybind11::class_<Orthogonal, Manifold>(m, "Orthogonal")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, bool>());
 }

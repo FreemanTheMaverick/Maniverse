@@ -15,9 +15,8 @@
 
 #include "Grassmann.h"
 
-#include <iostream>
 
-Grassmann::Grassmann(EigenMatrix p){
+Grassmann::Grassmann(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
 	this->Name = "Grassmann";
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());
@@ -30,30 +29,17 @@ Grassmann::Grassmann(EigenMatrix p){
 	int rank = 0;
 	for ( int i = 0; i < p.rows(); i++ )
 		if ( eigenvalues(i) > 0.5 ) rank++;
-	this->Aux.resize(p.rows(), rank);
-	this->Aux = eigenvectors.rightCols(rank);
+	this->Projector.resize(p.rows(), rank);
+	this->Projector = eigenvectors.rightCols(rank);
 }
 
 int Grassmann::getDimension(){
-	const double rank = this->Aux.cols();
+	const double rank = this->Projector.cols();
 	return rank * ( this->P.rows() - rank );
 }
 
 double Grassmann::Inner(EigenMatrix X, EigenMatrix Y){
 	return Dot(X, Y);
-}
-
-std::function<double (EigenMatrix, EigenMatrix)> Grassmann::getInner(){
-	const std::function<double (EigenMatrix, EigenMatrix)> inner = [](EigenMatrix X, EigenMatrix Y){
-		return Dot(X, Y);
-	};
-	return inner;
-}
-
-
-double Grassmann::Distance(EigenMatrix q){
-	assert( 0 && "Geodesic length on Grassmann manifold is not implemented!" );
-	return q.sum();
 }
 
 EigenMatrix Grassmann::Exponential(EigenMatrix X){
@@ -106,9 +92,9 @@ void Grassmann::Update(EigenMatrix p, bool purify){
 	Eigen::SelfAdjointEigenSolver<EigenMatrix> eigensolver;
 	eigensolver.compute(p);
 	const EigenMatrix eigenvectors = eigensolver.eigenvectors();
-	const int ncols = this->Aux.cols();
-	this->Aux = eigenvectors.rightCols(ncols);
-	if (purify) this->P = this->Aux * this->Aux.transpose();
+	const int ncols = this->Projector.cols();
+	this->Projector = eigenvectors.rightCols(ncols);
+	if (purify) this->P = this->Projector * this->Projector.transpose();
 }
 
 void Grassmann::getGradient(){
@@ -130,5 +116,5 @@ void Grassmann::getHessian(){
 
 void Init_Grassmann(pybind11::module_& m){
 	pybind11::class_<Grassmann, Manifold>(m, "Grassmann")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, bool>());
 }

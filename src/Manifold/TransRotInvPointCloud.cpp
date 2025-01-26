@@ -11,7 +11,6 @@
 
 #include "TransRotInvPointCloud.h"
 
-#include <iostream>
 
 static int getRank(EigenMatrix p){
 	Eigen::FullPivLU<EigenMatrix> lu(p);
@@ -51,14 +50,10 @@ static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
 	return Y - p * Omega;
 }
 
-TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p){
+TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
 	const int rank = getRank(p);
 	assert( rank == p.cols() && "The matrix is column-rank-deficient!" );
 	this->Name = std::to_string(rank) + "-D translation-rotation-invariant point cloud";
-	this->P.resize(p.rows(), p.cols());
-	this->Ge.resize(p.rows(), p.cols());
-	this->Gr.resize(p.rows(), p.cols());
-	this->P = p;
 }
 
 int TransRotInvPointCloud::getDimension(){
@@ -70,17 +65,6 @@ int TransRotInvPointCloud::getDimension(){
 
 double TransRotInvPointCloud::Inner(EigenMatrix X, EigenMatrix Y){
 	return (X.cwiseProduct(Y)).sum(); // On the horizontal space
-}
-
-std::function<double (EigenMatrix, EigenMatrix)> TransRotInvPointCloud::getInner(){
-	const std::function<double (EigenMatrix, EigenMatrix)> inner = [](EigenMatrix X, EigenMatrix Y){
-		return (X.cwiseProduct(Y)).sum(); // On the horizontal space
-	};
-	return inner;
-}
-
-double TransRotInvPointCloud::Distance(EigenMatrix q){
-	return ( this->P - q ).norm();
 }
 
 EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X){
@@ -103,16 +87,6 @@ EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A){
 	for ( int i = 0; i < this->P.cols(); i++)
 		tmp.col(i) = A.col(i) / A.col(i).mean();
 	return tmp;
-}
-
-EigenMatrix TransRotInvPointCloud::TransportTangent(EigenMatrix X, EigenMatrix Y){
-	assert( 0 && "Parallel transport on TransRotInvPointCloud manifold is not implemented!" );
-	return (X + Y) * 0;
-}
-
-EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, EigenMatrix q){
-	assert( 0 && "Parallel transport on TransRotInvPointCloud manifold is not implemented!" );
-	return (X + q) * 0;
 }
 
 void TransRotInvPointCloud::Update(EigenMatrix p, bool purify){
@@ -140,5 +114,5 @@ void TransRotInvPointCloud::getHessian(){
 
 void Init_TransRotInvPointCloud(pybind11::module_& m){
 	pybind11::class_<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, bool>());
 }
