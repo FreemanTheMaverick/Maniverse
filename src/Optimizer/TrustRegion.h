@@ -1,4 +1,4 @@
-bool Ox(
+bool TrustRegionMatrixFree(
 		std::function<
 			std::tuple<
 				double,

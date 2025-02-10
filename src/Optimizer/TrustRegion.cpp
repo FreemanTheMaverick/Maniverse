@@ -11,12 +11,12 @@
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
-#include "Loong.h"
+#include "SubSolver.h"
 
 #include <iostream>
 
 
-bool Ox(
+bool TrustRegionMatrixFree(
 		std::function<
 			std::tuple<
 				double,
@@ -32,7 +32,7 @@ bool Ox(
 	const double tol1 = std::get<1>(tol) * M.P.size();
 	const double tol2 = std::get<2>(tol) * M.P.size();
 	if (output > 0){
-		std::printf("Using Ox optimizer on %s manifold\n", M.Name.c_str());
+		std::printf("Using matrix-free trust ragion optimizer on %s manifold\n", M.Name.c_str());
 		std::printf("Convergence threshold:\n");
 		std::printf("| Target change (T. C.)               : %E\n", tol0);
 		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
@@ -59,7 +59,7 @@ bool Ox(
 			0.1*std::min(M.Inner(M.Gr,M.Gr),std::sqrt(M.Inner(M.Gr,M.Gr)))/M.getDimension(),
 			0.1*tol2/M.getDimension()
 		};
-		const EigenMatrix S = Loong(M, R, loong_tol, output-1);
+		const EigenMatrix S = TruncatedConjugateGradient(M, R, loong_tol, output-1);
 
 		const double S2 = M.Inner(S, S);
 		const EigenMatrix Pnew = M.Exponential(S);
@@ -98,6 +98,6 @@ bool Ox(
 	return 0;
 }
 
-void Init_Ox(pybind11::module_& m){
-	m.def("Ox", &Ox);
+void Init_TrustRegion(pybind11::module_& m){
+	m.def("TrustRegionMatrixFree", &TrustRegionMatrixFree);
 }

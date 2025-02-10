@@ -16,7 +16,7 @@
 #include <iostream>
 
 
-EigenMatrix Loong(
+EigenMatrix TruncatedConjugateGradient(
 		Manifold& M, double R,
 		std::tuple<double, double, double> tol, int output){
 
@@ -24,7 +24,7 @@ EigenMatrix Loong(
 	const double tol1 = std::get<1>(tol) * M.P.size();
 	const double tol2 = std::get<2>(tol) * M.P.size();
 	if (output > 0){
-		std::printf("Using Loong optimizer on the tangent space of %s manifold\n", M.Name.c_str());
+		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", M.Name.c_str());
 		std::printf("Convergence threshold:\n");
         std::printf("| Target change (T. C.)               : %E\n", tol0);
 		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
@@ -89,6 +89,6 @@ EigenMatrix Loong(
 	return v;
 }
 
-void Init_Loong(pybind11::module_& m){
-	m.def("Loong", &Loong);
+void Init_SubSolver(pybind11::module_& m){
+	m.def("TruncatedConjugateGradient", &TruncatedConjugateGradient);
 }
