@@ -1,2 +1,2 @@
-Init_Ox(m);
-Init_Loong(m);
+Init_Newton(m);
+Init_SubSolver(m);

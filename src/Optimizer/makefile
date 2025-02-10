@@ -1,9 +1,9 @@
 .PHONY: all
 
-all: Ox Loong
+all: TrustRegion SubSolver
 
-Ox: Ox.cpp
-	$(CXX) -o ../../obj/Ox.o Ox.cpp -c $(Flags)
+TrustRegion: TrustRegion.cpp
+	$(CXX) -o ../../obj/TrustRegion.o TrustRegion.cpp -c $(Flags)
 
-Loong: Loong.cpp
-	$(CXX) -o ../../obj/Loong.o Loong.cpp -c $(Flags)
+SubSolver: SubSolver.cpp
+	$(CXX) -o ../../obj/SubSolver.o SubSolver.cpp -c $(Flags)

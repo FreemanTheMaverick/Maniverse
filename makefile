@@ -2,11 +2,11 @@ export MAKE = make
 export CXX = g++
 export AR = ar
 
-export PYTHON3 = /home/freeman/anaconda3/include/python3.11
+export PYTHON3 = /home/yzhangnn/scratch/anaconda3/include/python3.11
 # The path where you can find "Python.h".
-export PYBIND11 = /home/freeman/anaconda3/lib/python3.11/site-packages/pybind11/include
+export PYBIND11 = /home/yzhangnn/pybind11/include/
 # The path where you can find "pybind11/".
-export EIGEN3 = /home/freeman/eigen-3.4.0/
+export EIGEN3 = /home/yzhangnn/eigen/
 # The path where you can find "Eigen/", "signature_of_eigen3_matrix_library" and "unsupported/".
 
 export GeneralFlags = -Wall -Wextra -Wpedantic -O3 -std=c++17 -fPIC
