@@ -13,8 +13,8 @@ class Simplex: public Manifold{ public:
 	EigenMatrix TangentProjection(EigenMatrix A) override;
 	EigenMatrix TangentPurification(EigenMatrix A) override;
 
-	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
-	EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) override;
+	//EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
+	//EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) override;
 
 	void Update(EigenMatrix p, bool purify) override;
 	void getGradient() override;

@@ -14,6 +14,7 @@ class Manifold{ public:
 	Manifold(EigenMatrix p, bool hess_transport_matrix);
 	virtual int getDimension();
 	virtual double Inner(EigenMatrix X, EigenMatrix Y);
+	EigenMatrix getGram();
 
 	virtual EigenMatrix Exponential(EigenMatrix X);
 	virtual EigenMatrix Logarithm(EigenMatrix q);
