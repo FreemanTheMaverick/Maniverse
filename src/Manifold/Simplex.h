@@ -1,7 +1,7 @@
 #include "Manifold.h"
 
 class Simplex: public Manifold{ public:
-	EigenMatrix Projector;
+	EigenMatrix Hem;
 	Simplex(EigenMatrix p, bool hess_transport_matrix);
 
 	int getDimension() override;

@@ -5,16 +5,19 @@ class Manifold{ public:
 	EigenMatrix P;
 	EigenMatrix Ge;
 	EigenMatrix Gr;
-	bool HessTransportMatrix;
+	bool MatrixFree;
 	EigenMatrix Hem;
 	EigenMatrix Hrm;
 	std::function<EigenMatrix (EigenMatrix)> He;
 	std::function<EigenMatrix (EigenMatrix)> Hr;
+	std::vector<EigenMatrix> BasisSet;
 
-	Manifold(EigenMatrix p, bool hess_transport_matrix);
+	Manifold(EigenMatrix p, bool matrix_free);
 	virtual int getDimension();
 	virtual double Inner(EigenMatrix X, EigenMatrix Y);
-	EigenMatrix getGram();
+	void getBasisSet();
+	void RepresentHessian();
+	std::vector<std::tuple<double, EigenMatrix>> DiagonalizeHessian();
 
 	virtual EigenMatrix Exponential(EigenMatrix X);
 	virtual EigenMatrix Logarithm(EigenMatrix q);

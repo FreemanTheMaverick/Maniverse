@@ -1,7 +1,7 @@
 #include "Manifold.h"
 
 class TransRotInvPointCloud: public Manifold{ public:
-	TransRotInvPointCloud(EigenMatrix p, bool hess_transport_matrix);
+	TransRotInvPointCloud(EigenMatrix p, bool matrix_free);
 
 	int getDimension() override;
 	double Inner(EigenMatrix X, EigenMatrix Y) override;

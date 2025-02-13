@@ -3,7 +3,7 @@
 class Grassmann: public Manifold{ public:
 	EigenMatrix Projector;
 
-	Grassmann(EigenMatrix p, bool hess_transport_matrix);
+	Grassmann(EigenMatrix p, bool matrix_free);
 
 	int getDimension() override;
 	double Inner(EigenMatrix X, EigenMatrix Y) override;
