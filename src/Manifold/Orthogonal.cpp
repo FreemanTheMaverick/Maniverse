@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #include <Eigen/Dense>
@@ -11,7 +12,7 @@
 #include "Orthogonal.h"
 
 
-Orthogonal::Orthogonal(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
+Orthogonal::Orthogonal(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Orthogonal";
 	assert( p.rows() == p.cols() && "An orthogonal matrix must be square!" );
 	assert( ( p * p.transpose() - p.transpose() * p ).norm() > 1e-8 && "An orthogonal matrix must fulfill U.Ut = Ut.U!" );

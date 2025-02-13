@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #include <Eigen/Dense>
@@ -15,7 +16,7 @@ static double Distance(EigenMatrix p, EigenMatrix q){
 	return 2 * std::acos( p.cwiseProduct(q).cwiseSqrt().sum() );
 }
 
-Simplex::Simplex(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
+Simplex::Simplex(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Simplex";
 	assert( p.cols() == 1 && "A point on the Simplex manifold should have only one column!" );
 }
@@ -85,7 +86,6 @@ void Simplex::getHessian(){
 	this->Hr = [He, M, N](EigenMatrix v){
 		return (EigenMatrix)(M * He(v) + N * v); // The forced conversion "(EigenMatrix)" is necessary. Without it the result will be wrong. I do not know why. Then I forced convert every EigenMatrix return value in std::function for ensurance.
 	};
-	if ( this->HessTransportMatrix ) this->Hrm = M * this->Hem + N;
 }
 
 void Init_Simplex(pybind11::module_& m){

@@ -1,4 +1,5 @@
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #include <Eigen/Dense>
@@ -16,7 +17,7 @@
 #include "Grassmann.h"
 
 
-Grassmann::Grassmann(EigenMatrix p, bool hess_transport_matrix): Manifold(p, hess_transport_matrix){
+Grassmann::Grassmann(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Grassmann";
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());

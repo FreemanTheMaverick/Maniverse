@@ -1,7 +1,7 @@
 #include "Manifold.h"
 
 class Orthogonal: public Manifold{ public:
-	Orthogonal(EigenMatrix p, bool hess_transport_matrix);
+	Orthogonal(EigenMatrix p, bool matrix_free);
 
 	int getDimension() override;
 	double Inner(EigenMatrix X, EigenMatrix Y) override;
