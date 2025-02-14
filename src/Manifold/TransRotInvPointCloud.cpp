@@ -75,7 +75,7 @@ double TransRotInvPointCloud::Inner(EigenMatrix X, EigenMatrix Y){
 }
 
 EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X){
-	return X;
+	return this->P + X;
 }
 
 EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q){
