@@ -21,15 +21,15 @@ Simplex::Simplex(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	assert( p.cols() == 1 && "A point on the Simplex manifold should have only one column!" );
 }
 
-int Simplex::getDimension(){
+int Simplex::getDimension() const{
 	return this->P.size() - 1;
 }
 
-double Simplex::Inner(EigenMatrix X, EigenMatrix Y){
+double Simplex::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return this->P.cwiseInverse().cwiseProduct(X.cwiseProduct(Y)).sum();
 }
 
-EigenMatrix Simplex::Exponential(EigenMatrix X){
+EigenMatrix Simplex::Exponential(EigenMatrix X) const{
 	const EigenMatrix Xp = X.cwiseProduct(this->P.array().rsqrt().matrix());
 	const double norm = Xp.norm();
 	const EigenMatrix Xpn = Xp / norm;
@@ -39,7 +39,7 @@ EigenMatrix Simplex::Exponential(EigenMatrix X){
 	return tmp1 + tmp2 + tmp3;
 }
 
-EigenMatrix Simplex::Logarithm(EigenMatrix q){
+EigenMatrix Simplex::Logarithm(EigenMatrix q) const{
 	const double dot = Dot( this->P.cwiseSqrt(), q.cwiseSqrt() );
 	const double tmp1 = Distance(this->P, q);
 	const double tmp2 = 1. - dot;
@@ -48,7 +48,7 @@ EigenMatrix Simplex::Logarithm(EigenMatrix q){
 	return tmp1 / tmp2 * ( tmp3 - tmp4 );
 }
 
-EigenMatrix Simplex::TangentProjection(EigenMatrix A){
+EigenMatrix Simplex::TangentProjection(EigenMatrix A) const{
 	const int n = this->P.size();
 	const EigenMatrix ones = EigenZero(n, n).array() + 1;
 	EigenMatrix tmp = EigenZero(n, n);
@@ -56,7 +56,7 @@ EigenMatrix Simplex::TangentProjection(EigenMatrix A){
 	return ( EigenOne(n, n) - tmp ) * A;
 }
 
-EigenMatrix Simplex::TangentPurification(EigenMatrix A){
+EigenMatrix Simplex::TangentPurification(EigenMatrix A) const{
 	return A.array() - A.mean();
 }
 

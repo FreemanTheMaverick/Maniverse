@@ -18,27 +18,27 @@ Orthogonal::Orthogonal(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free
 	assert( ( p * p.transpose() - p.transpose() * p ).norm() > 1e-8 && "An orthogonal matrix must fulfill U.Ut = Ut.U!" );
 }
 
-int Orthogonal::getDimension(){
+int Orthogonal::getDimension() const{
 	return this->P.cols() * (this->P.cols() - 1) / 2;
 }
 
-double Orthogonal::Inner(EigenMatrix X, EigenMatrix Y){
+double Orthogonal::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return 0.5 * Dot(X, Y);
 }
 
-EigenMatrix Orthogonal::Exponential(EigenMatrix X){
+EigenMatrix Orthogonal::Exponential(EigenMatrix X) const{
 	return (X * this->P.transpose()).exp() * this->P;
 }
 
-EigenMatrix Orthogonal::Logarithm(EigenMatrix q){
+EigenMatrix Orthogonal::Logarithm(EigenMatrix q) const{
 	return ( this->P.transpose() * q ).log();
 }
 
-EigenMatrix Orthogonal::TangentProjection(EigenMatrix A){
+EigenMatrix Orthogonal::TangentProjection(EigenMatrix A) const{
 	return 0.5 * ( A - this->P * A.transpose() * this->P );
 }
 
-EigenMatrix Orthogonal::TangentPurification(EigenMatrix A){
+EigenMatrix Orthogonal::TangentPurification(EigenMatrix A) const{
 	const EigenMatrix Z = this->P.transpose() * A;
 	const EigenMatrix Zpurified = 0.5  * (Z - Z.transpose());
 	return this->P * Zpurified;

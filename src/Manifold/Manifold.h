@@ -13,19 +13,19 @@ class Manifold{ public:
 	std::vector<EigenMatrix> BasisSet;
 
 	Manifold(EigenMatrix p, bool matrix_free);
-	virtual int getDimension();
-	virtual double Inner(EigenMatrix X, EigenMatrix Y);
+	virtual int getDimension() const;
+	virtual double Inner(EigenMatrix X, EigenMatrix Y) const;
 	void getBasisSet();
 	void getHessianMatrix();
 
-	virtual EigenMatrix Exponential(EigenMatrix X);
-	virtual EigenMatrix Logarithm(EigenMatrix q);
+	virtual EigenMatrix Exponential(EigenMatrix X) const;
+	virtual EigenMatrix Logarithm(EigenMatrix q) const;
 
-	virtual EigenMatrix TangentProjection(EigenMatrix A);
-	virtual EigenMatrix TangentPurification(EigenMatrix A);
+	virtual EigenMatrix TangentProjection(EigenMatrix A) const;
+	virtual EigenMatrix TangentPurification(EigenMatrix A) const;
 
-	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y);
-	virtual EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q);
+	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
+	virtual EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) const;
 
 	virtual void Update(EigenMatrix p, bool purify);
 	virtual void getGradient();

@@ -28,12 +28,12 @@ Manifold::Manifold(EigenMatrix p, bool matrix_free){
 	}
 }
 
-int Manifold::getDimension(){
+int Manifold::getDimension() const{
 	__Not_Implemented__
 	return 0;
 }
 
-double Manifold::Inner(EigenMatrix X, EigenMatrix Y){
+double Manifold::Inner(EigenMatrix X, EigenMatrix Y) const{
 	__Not_Implemented__
 	return X.rows() * Y.cols() * 0; // Avoiding the unused-variable warning
 }
@@ -130,32 +130,32 @@ void Manifold::getHessianMatrix(){
 	};
 }
 
-EigenMatrix Manifold::Exponential(EigenMatrix X){
+EigenMatrix Manifold::Exponential(EigenMatrix X) const{
 	__Not_Implemented__
 	return EigenZero(X.rows(), X.cols());
 }
 
-EigenMatrix Manifold::Logarithm(EigenMatrix X){
+EigenMatrix Manifold::Logarithm(EigenMatrix X) const{
 	__Not_Implemented__
 	return EigenZero(X.rows(), X.cols());
 }
 
-EigenMatrix Manifold::TangentProjection(EigenMatrix A){
+EigenMatrix Manifold::TangentProjection(EigenMatrix A) const{
 	__Not_Implemented__
 	return EigenZero(A.rows(), A.cols());
 }
 
-EigenMatrix Manifold::TangentPurification(EigenMatrix A){
+EigenMatrix Manifold::TangentPurification(EigenMatrix A) const{
 	__Not_Implemented__
 	return EigenZero(A.rows(), A.cols());
 }
 
-EigenMatrix Manifold::TransportTangent(EigenMatrix X, EigenMatrix Y){
+EigenMatrix Manifold::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 	__Not_Implemented__
 	return EigenZero(X.rows(), Y.cols());
 }
 
-EigenMatrix Manifold::TransportManifold(EigenMatrix X, EigenMatrix q){
+EigenMatrix Manifold::TransportManifold(EigenMatrix X, EigenMatrix q) const{
 	__Not_Implemented__
 	return EigenZero(X.rows(), q.cols());
 }

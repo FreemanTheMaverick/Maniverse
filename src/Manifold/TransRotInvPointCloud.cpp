@@ -64,40 +64,40 @@ TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p, bool matrix_free): M
 	this->Name = std::to_string(rank) + "-D translation-rotation-invariant point cloud";
 }
 
-int TransRotInvPointCloud::getDimension(){
+int TransRotInvPointCloud::getDimension() const{
 	const int nrows = P.rows();
 	const int ncols = P.cols();
 	//     Total         Trans   Rot
 	return nrows * ncols - ncols - ncols * ( ncols - 1 ) / 2;
 }
 
-double TransRotInvPointCloud::Inner(EigenMatrix X, EigenMatrix Y){
+double TransRotInvPointCloud::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return (X.cwiseProduct(Y)).sum(); // On the horizontal space
 }
 
-EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X){
+EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X) const{
 	return this->P + X;
 }
 
-EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q){
+EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q) const{
 	return HorizontalLift(this->P, q);
 }
 
-EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A){
+EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A) const{
 	EigenMatrix tmp = EigenZero(A.rows(), A.cols());
 	for ( int i = 0; i < this->P.cols(); i++)
 		tmp.col(i) = ( A.col(i).array() - A.col(i).mean() ).matrix();
 	return HorizontalLift(this->P, tmp);
 }
 
-EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A){
+EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A) const{
 	EigenMatrix tmp = EigenZero(A.rows(), A.cols());
 	for ( int i = 0; i < this->P.cols(); i++)
 		tmp.col(i) = ( A.col(i).array() - A.col(i).mean() ).matrix();
 	return tmp;
 }
 
-EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, EigenMatrix q){
+EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, EigenMatrix q) const{
 	return HorizontalLift(q, X);
 }
 

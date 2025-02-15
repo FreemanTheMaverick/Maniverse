@@ -4,14 +4,14 @@ class Simplex: public Manifold{ public:
 	EigenMatrix Hem;
 	Simplex(EigenMatrix p, bool hess_transport_matrix);
 
-	int getDimension() override;
-	double Inner(EigenMatrix X, EigenMatrix Y) override;
+	int getDimension() const override;
+	double Inner(EigenMatrix X, EigenMatrix Y) const override;
 
-	EigenMatrix Exponential(EigenMatrix X) override;
-	EigenMatrix Logarithm(EigenMatrix q) override;
+	EigenMatrix Exponential(EigenMatrix X) const override;
+	EigenMatrix Logarithm(EigenMatrix q) const override;
 
-	EigenMatrix TangentProjection(EigenMatrix A) override;
-	EigenMatrix TangentPurification(EigenMatrix A) override;
+	EigenMatrix TangentProjection(EigenMatrix A) const override;
+	EigenMatrix TangentPurification(EigenMatrix A) const override;
 
 	//EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
 	//EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) override;

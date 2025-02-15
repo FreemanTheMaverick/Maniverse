@@ -33,7 +33,7 @@ bool TrustRegion(
 	const double tol1 = std::get<1>(tol) * M.P.size();
 	const double tol2 = std::get<2>(tol) * M.P.size();
 	if (output > 0){
-		std::printf("Using matrix-free trust region optimizer on %s manifold\n", M.Name.c_str());
+		std::printf("Using trust region optimizer on %s manifold\n", M.Name.c_str());
 		std::printf("Convergence threshold:\n");
 		std::printf("| Target change (T. C.)               : %E\n", tol0);
 		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
@@ -53,6 +53,18 @@ bool TrustRegion(
 		M.getGradient();
 		if (output > 0) std::printf("| %4d |  %17.10f  | % 5.1E | %5.1E |", iiter, L, deltaL, M.Gr.norm());
 		M.getHessian();
+
+		if ( ! M.MatrixFree ){
+			M.getBasisSet();
+			M.getHessianMatrix();
+			int negative = 0;
+			for ( auto& [eigenvalue, _] : M.Hrm ){
+				if ( eigenvalue < 0 ) negative++;
+			}
+			double shift = 0;
+			if ( negative > 0 ) shift = std::get<0>(M.Hrm[negative]) - std::get<0>(M.Hrm[0]);
+			for ( auto& [eigenvalue, _] : M.Hrm ) eigenvalue += shift;
+		}
 
 		// Truncated conjugate gradient and rating the new step
 		const std::tuple<double, double, double> loong_tol = {
@@ -116,7 +128,7 @@ bool TrustRegionRationalFunctionOptimization(
 	const double tol1 = std::get<1>(tol) * M.P.size();
 	const double tol2 = std::get<2>(tol) * M.P.size();
 	if (output > 0){
-		std::printf("Using trust region optimizer on %s manifold\n", M.Name.c_str());
+		std::printf("Using trust region rational function optimizer on %s manifold\n", M.Name.c_str());
 		std::printf("Convergence threshold:\n");
 		std::printf("| Target change (T. C.)               : %E\n", tol0);
 		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);

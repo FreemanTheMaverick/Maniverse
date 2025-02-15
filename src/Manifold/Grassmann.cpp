@@ -34,16 +34,16 @@ Grassmann::Grassmann(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Projector = eigenvectors.rightCols(rank);
 }
 
-int Grassmann::getDimension(){
+int Grassmann::getDimension() const{
 	const double rank = this->Projector.cols();
 	return rank * ( this->P.rows() - rank );
 }
 
-double Grassmann::Inner(EigenMatrix X, EigenMatrix Y){
+double Grassmann::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return Dot(X, Y);
 }
 
-EigenMatrix Grassmann::Exponential(EigenMatrix X){
+EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
 	const EigenMatrix Xp = X * this->P - this->P * X;
 	const EigenMatrix pX = - Xp;
 	const EigenMatrix expXp = Xp.exp();
@@ -51,7 +51,7 @@ EigenMatrix Grassmann::Exponential(EigenMatrix X){
 	return expXp * this->P * exppX;
 }
 
-EigenMatrix Grassmann::Logarithm(EigenMatrix q){
+EigenMatrix Grassmann::Logarithm(EigenMatrix q) const{
 	const EigenMatrix Omega = 0.5 * (
 			( EigenOne(q.rows(), q.cols()) - 2 * q ) *
 			( EigenOne(q.rows(), q.cols()) - 2 * this->P )
@@ -59,19 +59,19 @@ EigenMatrix Grassmann::Logarithm(EigenMatrix q){
 	return Omega * this->P - this->P * Omega;
 }
 
-EigenMatrix Grassmann::TangentProjection(EigenMatrix X){
+EigenMatrix Grassmann::TangentProjection(EigenMatrix X) const{
 	// X must be symmetric.
 	const EigenMatrix adPX = this->P * X - X * this->P;
 	return this->P * adPX - adPX * this->P;
 }
 
-EigenMatrix Grassmann::TangentPurification(EigenMatrix A){
+EigenMatrix Grassmann::TangentPurification(EigenMatrix A) const{
 	const EigenMatrix symA = 0.5 * ( A + A.transpose() );
 	const EigenMatrix pureA = symA - this->P * symA * this->P;
 	return 0.5 * ( pureA + pureA.transpose() );
 }
 
-EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y){
+EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 	// X - Vector to transport from P
 	// Y - Destination on the tangent space of P
 	const EigenMatrix dp = Y * this->P - this->P * Y;
@@ -81,7 +81,7 @@ EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y){
 	return expdp * X * exppd;
 }
 
-EigenMatrix Grassmann::TransportManifold(EigenMatrix X, EigenMatrix q){
+EigenMatrix Grassmann::TransportManifold(EigenMatrix X, EigenMatrix q) const{
 	// X - Vector to transport from P
 	// q - Destination on the manifold
 	const EigenMatrix Y = this->Logarithm(q);
