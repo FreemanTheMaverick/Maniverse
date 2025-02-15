@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+
 static int getRank(EigenMatrix p){
 	Eigen::FullPivLU<EigenMatrix> lu(p);
 	return lu.rank();
@@ -79,7 +80,7 @@ EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X){
 }
 
 EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q){
-	return q;
+	return HorizontalLift(this->P, q);
 }
 
 EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A){
@@ -94,6 +95,10 @@ EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A){
 	for ( int i = 0; i < this->P.cols(); i++)
 		tmp.col(i) = ( A.col(i).array() - A.col(i).mean() ).matrix();
 	return tmp;
+}
+
+EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, EigenMatrix q){
+	return HorizontalLift(q, X);
 }
 
 void TransRotInvPointCloud::Update(EigenMatrix p, bool purify){

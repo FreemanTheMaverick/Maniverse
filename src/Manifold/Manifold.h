@@ -7,7 +7,7 @@ class Manifold{ public:
 	EigenMatrix Gr;
 	bool MatrixFree;
 	EigenMatrix Hem;
-	EigenMatrix Hrm;
+	std::vector<std::tuple<double, EigenMatrix>> Hrm;
 	std::function<EigenMatrix (EigenMatrix)> He;
 	std::function<EigenMatrix (EigenMatrix)> Hr;
 	std::vector<EigenMatrix> BasisSet;
@@ -16,8 +16,7 @@ class Manifold{ public:
 	virtual int getDimension();
 	virtual double Inner(EigenMatrix X, EigenMatrix Y);
 	void getBasisSet();
-	void RepresentHessian();
-	std::vector<std::tuple<double, EigenMatrix>> DiagonalizeHessian();
+	void getHessianMatrix();
 
 	virtual EigenMatrix Exponential(EigenMatrix X);
 	virtual EigenMatrix Logarithm(EigenMatrix q);
@@ -25,8 +24,6 @@ class Manifold{ public:
 	virtual EigenMatrix TangentProjection(EigenMatrix A);
 	virtual EigenMatrix TangentPurification(EigenMatrix A);
 
-	EigenMatrix TransportTangentMatrix;
-	EigenMatrix TransportManifoldMatrix;
 	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y);
 	virtual EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q);
 
