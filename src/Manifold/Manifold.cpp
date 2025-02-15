@@ -24,14 +24,7 @@ Manifold::Manifold(EigenMatrix p, bool matrix_free){
 	this->MatrixFree = matrix_free;
 	if (this->MatrixFree){
 		this->Hem.resize(0, 0);
-		this->Hrm.resize(0, 0);
-		this->TransportTangentMatrix(0, 0);
-		this->TransportManifoldMatrix(0, 0);
-	}else{
-		this->Hem.resize(p.rows() * p.cols(), p.rows() * p.cols());
-		this->Hrm.resize(p.rows() * p.cols(), p.rows() * p.cols());
-		this->TransportTangentMatrix.resize(p.rows() * p.cols(), p.rows() * p.cols());
-		this->TransportManifoldMatrix.resize(p.rows() * p.cols(), p.rows() * p.cols());
+		this->Hrm.resize(0);
 	}
 }
 
@@ -42,7 +35,7 @@ int Manifold::getDimension(){
 
 double Manifold::Inner(EigenMatrix X, EigenMatrix Y){
 	__Not_Implemented__
-	return X.rows() * Y.cols() * 0;
+	return X.rows() * Y.cols() * 0; // Avoiding the unused-variable warning
 }
 
 static std::tuple<EigenVector, EigenMatrix> ThinEigen(EigenMatrix A, int m){
@@ -104,41 +97,37 @@ void Manifold::getBasisSet(){
 	}
 }
 
-void Manifold::RepresentHessian(){
+void Manifold::getHessianMatrix(){
+	// Representing the Riemannian hessian with the orthogonal basis set
 	const int rank = this->getDimension();
 	EigenMatrix hrm = EigenZero(rank, rank);
 	for ( int i = 0; i < rank; i++ ) for ( int j = 0; j <= i; j++ ){
 		hrm(i, j) = hrm(j, i) = this->Inner(this->BasisSet[i], this->Hr(this->BasisSet[j]));
 	}
-	this->Hrm.resize(rank, rank);
-	this->Hrm = ( hrm + hrm.transpose() ) / 2;
-	hrm = this->Hrm;
-	/*
-	const std::vector<EigenMatrix> basis_set = this->BasisSet;
-	const int nrows = this->P.rows();
-	const int ncols = this->P.cols();
-	const int size = nrows * ncols;
-	this->Hr = [nrows, ncols, size, rank, hrm, basis_set](EigenMatrix v){
-		EigenMatrix C = EigenZero(size, rank);
-		for ( int i = 0; i < rank; i++ ) C.col(i) = basis_set[i].reshaped<Eigen::RowMajor>();
-		return (C * hrm * C.transpose() * v.reshaped<Eigen::RowMajor>()).reshaped<Eigen::RowMajor>(nrows, ncols);
-	};
-	*/
-}
 
-std::vector<std::tuple<double, EigenMatrix>> Manifold::DiagonalizeHessian(){
+	// Diagonalizing the Riemannian hessian and representing the eigenvectors in Euclidean space
 	Eigen::SelfAdjointEigenSolver<EigenMatrix> es;
-	es.compute(this->Hrm);
+	es.compute(hrm);
 	const EigenMatrix Lambda = es.eigenvalues();
 	const EigenMatrix Y = es.eigenvectors();
-	std::vector<std::tuple<double, EigenMatrix>> eigen_tuples(this->getDimension(), {0, EigenZero(this->P.rows(), this->P.cols())});
+	this->Hrm.resize(this->getDimension());
 	for ( int i = 0; i < this->getDimension(); i++ ){
-		std::get<0>(eigen_tuples[i]) = Lambda(i);
+		std::get<0>(this->Hrm[i]) = Lambda(i);
+		std::get<1>(this->Hrm[i]).resize(this->P.rows(), this->P.cols());
+		std::get<1>(this->Hrm[i]).setZero();
 		for ( int j = 0; j < this->getDimension(); j++ ){
-			std::get<1>(eigen_tuples[i]) += this->BasisSet[j] * Y(j, i);
+			std::get<1>(this->Hrm[i]) += this->BasisSet[j] * Y(j, i);
 		}
 	}
-	return eigen_tuples;
+
+	// Updating the Riemannian hessian operator
+	this->Hr = [&hrm = this->Hrm](EigenMatrix v){ // Passing reference instead of value to std::function, so that the eigenvalues can be modified elsewhere without rewriting this part.
+		EigenMatrix Hv = EigenZero(v.rows(), v.cols());
+		for ( auto [eigenvalue, eigenvector] : hrm ){
+			Hv += eigenvalue * eigenvector.cwiseProduct(v).sum() * eigenvector;
+		}
+		return Hv;
+	};
 }
 
 EigenMatrix Manifold::Exponential(EigenMatrix X){
@@ -203,14 +192,11 @@ void Init_Manifold(pybind11::module_& m){
 		.def("getDimension", &Manifold::getDimension)
 		.def("Inner", &Manifold::Inner)
 		.def("getBasisSet", &Manifold::getBasisSet)
-		.def("RepresentHessian", &Manifold::RepresentHessian)
-		.def("DiagonalizeHessian", &Manifold::DiagonalizeHessian)
+		.def("getHessianMatrix", &Manifold::getHessianMatrix)
 		.def("Exponential", &Manifold::Exponential)
 		.def("Logarithm", &Manifold::Logarithm)
 		.def("TangentProjection", &Manifold::TangentProjection)
 		.def("TangentPurification", &Manifold::TangentPurification)
-		.def_readwrite("TransportTangentMatrix", &Manifold::TransportTangentMatrix)
-		.def_readwrite("TransportManifoldMatrix", &Manifold::TransportManifoldMatrix)
 		.def("TransportTangent", &Manifold::TransportTangent)
 		.def("TransportManifold", &Manifold::TransportManifold)
 		.def("Update", &Manifold::Update)
