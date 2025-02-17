@@ -31,3 +31,6 @@ class Manifold{ public:
 	virtual void getGradient();
 	virtual void getHessian();
 };
+
+std::vector<std::tuple<double, EigenMatrix>> Diagonalize(
+		EigenMatrix& A, std::vector<EigenMatrix>& basis_set);

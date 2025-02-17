@@ -4,10 +4,10 @@ bool TrustRegion(
 				double,
 				EigenMatrix,
 				std::function<EigenMatrix (EigenMatrix)>
-			> (EigenMatrix)
+			> (EigenMatrix, int)
 		>& func,
 		std::tuple<double, double, double> tol,
-		int max_iter,
+		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output);
 
 bool TrustRegionRationalFunctionOptimization(

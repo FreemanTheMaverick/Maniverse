@@ -97,6 +97,25 @@ void Manifold::getBasisSet(){
 	}
 }
 
+std::vector<std::tuple<double, EigenMatrix>> Diagonalize(
+		EigenMatrix& A, std::vector<EigenMatrix>& basis_set){
+	Eigen::SelfAdjointEigenSolver<EigenMatrix> es;
+	es.compute( ( A + A.transpose() ) / 2 );
+	const EigenMatrix Lambda = es.eigenvalues();
+	const EigenMatrix Y = es.eigenvectors();
+	const int nrows = basis_set[0].rows();
+	const int ncols = basis_set[0].cols();
+	const int rank = basis_set.size();
+	std::vector<std::tuple<double, EigenMatrix>> hrm(rank, std::tuple(0, EigenZero(nrows, ncols)));
+	for ( int i = 0; i < rank; i++ ){
+		std::get<0>(hrm[i]) = Lambda(i);
+		for ( int j = 0; j < rank; j++ ){
+			std::get<1>(hrm[i]) += basis_set[j] * Y(j, i);
+		}
+	}
+	return hrm;
+}
+
 void Manifold::getHessianMatrix(){
 	// Representing the Riemannian hessian with the orthogonal basis set
 	const int rank = this->getDimension();
@@ -106,19 +125,7 @@ void Manifold::getHessianMatrix(){
 	}
 
 	// Diagonalizing the Riemannian hessian and representing the eigenvectors in Euclidean space
-	Eigen::SelfAdjointEigenSolver<EigenMatrix> es;
-	es.compute(hrm);
-	const EigenMatrix Lambda = es.eigenvalues();
-	const EigenMatrix Y = es.eigenvectors();
-	this->Hrm.resize(this->getDimension());
-	for ( int i = 0; i < this->getDimension(); i++ ){
-		std::get<0>(this->Hrm[i]) = Lambda(i);
-		std::get<1>(this->Hrm[i]).resize(this->P.rows(), this->P.cols());
-		std::get<1>(this->Hrm[i]).setZero();
-		for ( int j = 0; j < this->getDimension(); j++ ){
-			std::get<1>(this->Hrm[i]) += this->BasisSet[j] * Y(j, i);
-		}
-	}
+	this->Hrm = Diagonalize(hrm, this->BasisSet);
 
 	// Updating the Riemannian hessian operator
 	this->Hr = [&hrm = this->Hrm](EigenMatrix v){ // Passing reference instead of value to std::function, so that the eigenvalues can be modified elsewhere without rewriting this part.
@@ -202,4 +209,5 @@ void Init_Manifold(pybind11::module_& m){
 		.def("Update", &Manifold::Update)
 		.def("getGradient", &Manifold::getGradient)
 		.def("getHessian", &Manifold::getHessian);
+	m.def("Diagonalize", &Diagonalize);
 }
