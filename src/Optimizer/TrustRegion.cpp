@@ -17,16 +17,18 @@
 #include <iostream>
 
 
+#define __Calc_Hess__(n) ( n % recalc_hess == 0 )
+
 bool TrustRegion(
 		std::function<
 			std::tuple<
 				double,
 				EigenMatrix,
 				std::function<EigenMatrix (EigenMatrix)>
-			> (EigenMatrix)
+			> (EigenMatrix, int)
 		>& func,
 		std::tuple<double, double, double> tol,
-		int max_iter,
+		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output){
 
 	const double tol0 = std::get<0>(tol) * M.getDimension();
@@ -44,7 +46,7 @@ bool TrustRegion(
 	const auto start = __now__;
 	const double R0 = 1;
 	const double rho_thres = 0.1;
-	std::tie(L, M.Ge, M.He) = func(M.P);
+	std::tie(L, M.Ge, M.He) = func(M.P, 2);
 	double deltaL = L;
 	double R = R0;
 	
@@ -52,7 +54,7 @@ bool TrustRegion(
 
 		M.getGradient();
 		if (output > 0) std::printf("| %4d |  %17.10f  | % 5.1E | %5.1E |", iiter, L, deltaL, M.Gr.norm());
-		M.getHessian();
+		if (__Calc_Hess__(iiter)) M.getHessian();
 
 		if ( ! M.MatrixFree ){
 			M.getBasisSet();
@@ -79,7 +81,7 @@ bool TrustRegion(
 		double Lnew;
 		EigenMatrix Genew;
 		std::function<EigenMatrix (EigenMatrix)> Henew;
-		std::tie(Lnew, Genew, Henew) = func(Pnew);
+		std::tie(Lnew, Genew, Henew) = func(Pnew, __Calc_Hess__(iiter) ? 2 : 1);
 		const double top = Lnew - L;
 		const double bottom = M.Inner(M.Gr + 0.5 * M.Hr(S), S);
 		const double rho = top / bottom;
