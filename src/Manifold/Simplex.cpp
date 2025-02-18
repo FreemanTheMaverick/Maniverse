@@ -6,6 +6,7 @@
 #include <cmath>
 #include <functional>
 #include <cassert>
+#include <memory>
 
 #include "../Macro.h"
 
@@ -86,6 +87,10 @@ void Simplex::getHessian(){
 	this->Hr = [He, M, N](EigenMatrix v){
 		return (EigenMatrix)(M * He(v) + N * v); // The forced conversion "(EigenMatrix)" is necessary. Without it the result will be wrong. I do not know why. Then I forced convert every EigenMatrix return value in std::function for ensurance.
 	};
+}
+
+std::unique_ptr<Manifold> Simplex::Clone() const{
+	return std::make_unique<Simplex>(*this);
 }
 
 void Init_Simplex(pybind11::module_& m){

@@ -68,6 +68,10 @@ void Orthogonal::getHessian(){
 	};
 }
 
+std::unique_ptr<Manifold> Orthogonal::Clone() const{
+	return std::make_unique<Orthogonal>(*this);
+}
+
 void Init_Orthogonal(pybind11::module_& m){
 	pybind11::class_<Orthogonal, Manifold>(m, "Orthogonal")
 		.def(pybind11::init<EigenMatrix, bool>());

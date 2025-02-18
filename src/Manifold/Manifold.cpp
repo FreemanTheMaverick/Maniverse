@@ -4,6 +4,7 @@
 #include <pybind11/functional.h>
 #include <Eigen/Dense>
 #include <typeinfo>
+#include <memory>
 
 #include "../Macro.h"
 
@@ -183,6 +184,11 @@ void Manifold::getHessian(){
 	__Not_Implemented__
 }
 
+std::unique_ptr<Manifold> Manifold::Clone() const{
+	__Not_Implemented__
+	return std::make_unique<Manifold>(*this);
+}
+
 void Init_Manifold(pybind11::module_& m){
 	pybind11::class_<Manifold>(m, "Manifold")
 		.def_readwrite("Name", &Manifold::Name)
@@ -208,6 +214,7 @@ void Init_Manifold(pybind11::module_& m){
 		.def("TransportManifold", &Manifold::TransportManifold)
 		.def("Update", &Manifold::Update)
 		.def("getGradient", &Manifold::getGradient)
-		.def("getHessian", &Manifold::getHessian);
+		.def("getHessian", &Manifold::getHessian)
+		.def("Clone", &Manifold::Clone);
 	m.def("Diagonalize", &Diagonalize);
 }

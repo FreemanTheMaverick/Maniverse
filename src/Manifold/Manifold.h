@@ -30,6 +30,9 @@ class Manifold{ public:
 	virtual void Update(EigenMatrix p, bool purify);
 	virtual void getGradient();
 	virtual void getHessian();
+
+	~Manifold() = default;
+	virtual std::unique_ptr<Manifold> Clone() const;
 };
 
 std::vector<std::tuple<double, EigenMatrix>> Diagonalize(
