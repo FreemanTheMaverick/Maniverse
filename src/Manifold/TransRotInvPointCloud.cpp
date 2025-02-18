@@ -126,6 +126,10 @@ void TransRotInvPointCloud::getHessian(){
 	};
 }
 
+std::unique_ptr<Manifold> TransRotInvPointCloud::Clone() const{
+	return std::make_unique<TransRotInvPointCloud>(*this);
+}
+
 void Init_TransRotInvPointCloud(pybind11::module_& m){
 	pybind11::class_<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
 		.def(pybind11::init<EigenMatrix, bool>());

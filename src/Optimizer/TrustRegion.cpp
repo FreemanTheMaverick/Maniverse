@@ -9,10 +9,12 @@
 #include <cstdio>
 #include <chrono>
 #include <string>
+#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
 #include "SubSolver.h"
+#include "HessUpdate.h"
 
 #include <iostream>
 
@@ -49,16 +51,23 @@ bool TrustRegion(
 	std::tie(L, M.Ge, M.He) = func(M.P, 2);
 	double deltaL = L;
 	double R = R0;
-	
+	std::vector<std::unique_ptr<Manifold>> Ms; Ms.reserve(recalc_hess);
+	EigenMatrix S = EigenZero(M.P.rows(), M.P.cols());
+
 	for ( int iiter = 0; iiter < max_iter; iiter++ ){
 
 		M.getGradient();
 		if (output > 0) std::printf("| %4d |  %17.10f  | % 5.1E | %5.1E |", iiter, L, deltaL, M.Gr.norm());
-		if (__Calc_Hess__(iiter)) M.getHessian();
+		if ( __Calc_Hess__(iiter) ){
+			Ms.clear();
+			M.getHessian();
+		}else BroydenFletcherGoldfarbShanno(*(Ms.back()), M, S);
 
 		if ( ! M.MatrixFree ){
-			M.getBasisSet();
-			M.getHessianMatrix();
+			if ( __Calc_Hess__(iiter) ){
+				M.getBasisSet();
+				M.getHessianMatrix();
+			}
 			int negative = 0;
 			for ( auto& [eigenvalue, _] : M.Hrm ){
 				if ( eigenvalue < 0 ) negative++;
@@ -69,12 +78,12 @@ bool TrustRegion(
 		}
 
 		// Truncated conjugate gradient and rating the new step
-		const std::tuple<double, double, double> loong_tol = {
+		const std::tuple<double, double, double> tcg_tol = {
 			tol0/M.getDimension(),
 			0.1*std::min(M.Inner(M.Gr,M.Gr),std::sqrt(M.Inner(M.Gr,M.Gr)))/M.getDimension(),
 			0.1*tol2/M.getDimension()
 		};
-		const EigenMatrix S = TruncatedConjugateGradient(M, R, loong_tol, output-1);
+		S = TruncatedConjugateGradient(M, R, tcg_tol, output-1);
 
 		const double S2 = M.Inner(S, S);
 		const EigenMatrix Pnew = M.Exponential(S);
@@ -107,7 +116,7 @@ bool TrustRegion(
 				if ( std::abs(deltaL) < tol0 && std::sqrt(S2) < tol2 ) return 1;
 			}
 		}
-
+		Ms.push_back(M.Clone());
 	}
 
 	return 0;

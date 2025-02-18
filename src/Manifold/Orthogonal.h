@@ -18,4 +18,6 @@ class Orthogonal: public Manifold{ public:
 	void Update(EigenMatrix p, bool purify) override;
 	void getGradient() override;
 	void getHessian() override;
+
+	std::unique_ptr<Manifold> Clone() const override;
 };

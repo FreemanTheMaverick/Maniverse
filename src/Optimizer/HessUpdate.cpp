@@ -3,12 +3,16 @@
 #include <pybind11/functional.h>
 #include <Eigen/Dense>
 #include <cmath>
+#include <tuple>
+#include <vector>
 #include <functional>
 #include <string>
 #include <cassert>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+
+#include <iostream>
 
 
 void BroydenFletcherGoldfarbShanno(Manifold& M1, Manifold& M2, EigenMatrix step1){
@@ -17,7 +21,7 @@ void BroydenFletcherGoldfarbShanno(Manifold& M1, Manifold& M2, EigenMatrix step1
 	const EigenMatrix YoverYS = Y / M2.Inner(Y, S);
 	const EigenMatrix tmp = M1.TransportManifold(M1.Hr(M2.TransportManifold(S, M1.P)), M2.P);
 	const EigenMatrix HSoverSHS = tmp / M2.Inner(S, tmp);
-	if ( !M1.MatrixFree ){
+	if ( M1.MatrixFree ){
 		M2.Hr = [M1, &M2, S, Y, YoverYS, HSoverSHS](EigenMatrix v){
 			const EigenMatrix Hv1 = M1.TransportManifold(M1.Hr(M2.TransportManifold(v, M1.P)), M2.P);
 			const EigenMatrix Hv2 = M2.Inner(Y, v) * YoverYS;
@@ -38,9 +42,8 @@ void BroydenFletcherGoldfarbShanno(Manifold& M1, Manifold& M2, EigenMatrix step1
 		const EigenMatrix Ycol = Y.reshaped<Eigen::RowMajor>();
 		const EigenMatrix TildeHS = TildeH * Scol;
 		const EigenMatrix InnerM = Cinv.transpose() * Cinv;
-		const EigenMatrix term2 = TildeHS * S.transpose() * InnerM * TildeH / M2.Inner(S, TildeHS.reshaped<Eigen::RowMajor>(M1.P.rows(), M1.P.cols()));
+		const EigenMatrix term2 = TildeHS * Scol.transpose() * InnerM * TildeH / M2.Inner(S, TildeHS.reshaped<Eigen::RowMajor>(M1.P.rows(), M1.P.cols()));
 		const EigenMatrix term3 = Ycol * Ycol.transpose() / M2.Inner(Y, S);
-		
 		EigenMatrix H = Cinv * ( TildeH - term2 + term3 ) * C;
 		M2.Hrm = Diagonalize(H, basis_set);
 		M2.Hr = [&hrm = M2.Hrm](EigenMatrix v){

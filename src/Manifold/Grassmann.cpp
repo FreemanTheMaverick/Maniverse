@@ -7,10 +7,8 @@
 #include <cmath>
 #include <functional>
 #include <tuple>
-#include <deque>
-#include <cstdio>
-#include <chrono>
 #include <cassert>
+#include <memory>
 
 #include "../Macro.h"
 
@@ -113,6 +111,10 @@ void Grassmann::getHessian(){
 		const EigenMatrix sum = partA - partB;
 		return EigenMatrix(P * sum - sum * P);
 	};
+}
+
+std::unique_ptr<Manifold> Grassmann::Clone() const{
+	return std::make_unique<Grassmann>(*this);
 }
 
 void Init_Grassmann(pybind11::module_& m){
