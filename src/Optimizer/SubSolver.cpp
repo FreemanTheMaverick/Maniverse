@@ -115,5 +115,5 @@ EigenMatrix RestartTCG(Manifold& M, std::vector<std::tuple<double, EigenMatrix, 
 
 void Init_SubSolver(pybind11::module_& m){
 	m.def("TruncatedConjugateGradient", &TruncatedConjugateGradient);
-	m.def("RestartTCG", & RestartTCG);
+	m.def("RestartTCG", &RestartTCG);
 }
