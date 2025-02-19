@@ -30,22 +30,20 @@ void BroydenFletcherGoldfarbShanno(Manifold& M1, Manifold& M2, EigenMatrix step1
 		};
 	}else{
 		EigenMatrix TildeH = EigenZero(M1.P.size(), M1.P.size());
-		std::vector<EigenMatrix> basis_set(M1.getDimension(), EigenZero(M1.P.size(), M1.P.size()));
 		EigenMatrix C = EigenZero(M1.P.size(), M1.getDimension());
 		for ( int i = 0; i < M1.getDimension(); i++ ){
-			basis_set[i] =  M1.TransportManifold(std::get<1>(M1.Hrm[i]), M2.P);
-			C.col(i) = basis_set[i].reshaped<Eigen::RowMajor>();
-			TildeH += std::get<0>(M1.Hrm[i]) * C.col(i) * C.col(i).transpose();
+			const EigenMatrix new_vec = M1.TransportManifold(std::get<1>(M1.Hrm[i]), M2.P).reshaped<Eigen::RowMajor>();
+			TildeH += std::get<0>(M1.Hrm[i]) * new_vec * new_vec.transpose();
+			C.col(i) = M2.BasisSet[i].reshaped<Eigen::RowMajor>();
 		}
 		const EigenMatrix Cinv = C.completeOrthogonalDecomposition().pseudoInverse();
 		const EigenMatrix Scol = S.reshaped<Eigen::RowMajor>();
 		const EigenMatrix Ycol = Y.reshaped<Eigen::RowMajor>();
 		const EigenMatrix TildeHS = TildeH * Scol;
-		const EigenMatrix InnerM = Cinv.transpose() * Cinv;
-		const EigenMatrix term2 = TildeHS * Scol.transpose() * InnerM * TildeH / M2.Inner(S, TildeHS.reshaped<Eigen::RowMajor>(M1.P.rows(), M1.P.cols()));
+		const EigenMatrix term2 = TildeHS * Scol.transpose() * Cinv.transpose() * Cinv * TildeH / M2.Inner(S, TildeHS.reshaped<Eigen::RowMajor>(M1.P.rows(), M1.P.cols()));
 		const EigenMatrix term3 = Ycol * Ycol.transpose() / M2.Inner(Y, S);
-		EigenMatrix H = Cinv * ( TildeH - term2 + term3 ) * C;
-		M2.Hrm = Diagonalize(H, basis_set);
+		EigenMatrix H = Cinv * ( TildeH - term2 + term3 ) * Cinv.transpose();
+		M2.Hrm = Diagonalize(H, M2.BasisSet);
 		M2.Hr = [&hrm = M2.Hrm](EigenMatrix v){
 			EigenMatrix Hv = EigenZero(v.rows(), v.cols());
 			for ( auto [eigenvalue, eigenvector] : hrm ){

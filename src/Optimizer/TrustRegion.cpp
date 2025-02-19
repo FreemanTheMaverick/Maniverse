@@ -48,7 +48,7 @@ bool TrustRegion(
 	const auto start = __now__;
 
 	const double R0 = 1;
-	const double rho_thres = 0.1;
+	const double rho_thres = 0.01;
 	double R = R0;
 	double oldL = 0;
 	double actual_delta_L = 0;
@@ -77,7 +77,6 @@ bool TrustRegion(
 			M.Update(P, 1);
 			M.Ge = Ge;
 			M.He = He;
-			Ms.push_back(M.Clone());
 		}
 
 		// Adjusting the trust radius according to the score
@@ -99,14 +98,14 @@ bool TrustRegion(
 		}
 
 		if (accepted){
+			if ( ! M.MatrixFree ) M.getBasisSet();
 			if (calc_hess){
 				Ms.clear();
 				M.getHessian();
+				if ( ! M.MatrixFree ) M.getHessianMatrix();
 			}else BroydenFletcherGoldfarbShanno(*(Ms.back()), M, S);
 
 			if ( ! M.MatrixFree ){
-				M.getBasisSet();
-				M.getHessianMatrix();
 				int negative = 0;
 				for ( auto& [eigenvalue, _] : M.Hrm ){
 					if ( eigenvalue < 0 ) negative++;
@@ -122,6 +121,7 @@ bool TrustRegion(
 				0.1*tol2/M.getDimension()
 			};
 			Ss = TruncatedConjugateGradient(M, R, tcg_tol, output-1);
+			Ms.push_back(M.Clone());
 		}
 
 		// Obtaining the new step within the trust region

@@ -75,8 +75,17 @@ double TransRotInvPointCloud::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return (X.cwiseProduct(Y)).sum(); // On the horizontal space
 }
 
+static EigenMatrix Procrustes(EigenMatrix P, EigenMatrix Q, EigenMatrix X){
+	Eigen::JacobiSVD<EigenMatrix> svd;
+	const EigenMatrix Qinv = Q.completeOrthogonalDecomposition().pseudoInverse();
+	svd.compute(Qinv * P, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	const EigenMatrix Rotation = svd.matrixU() * svd.matrixV().transpose();
+	return X * Rotation;
+}
+
 EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X) const{
-	return this->P + X;
+	const EigenMatrix Q = this->P + X;
+	return Procrustes(this->P, Q, Q);
 }
 
 EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q) const{
@@ -98,15 +107,15 @@ EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A) const{
 }
 
 EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, EigenMatrix q) const{
-	return HorizontalLift(q, X);
+	const EigenMatrix rotatedX = Procrustes(q, this->P, X);
+	return HorizontalLift(q, rotatedX);
 }
 
 void TransRotInvPointCloud::Update(EigenMatrix p, bool purify){
 	const int rank = getRank(p);
 	assert( rank == p.cols() && "The matrix is column-rank-deficient!" );
 	this->P = p;
-	if (purify)
-		this->P = this->TangentPurification(p);
+	if (purify) this->P = this->TangentPurification(p);
 }
 
 void TransRotInvPointCloud::getGradient(){
