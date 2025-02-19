@@ -7,3 +7,5 @@
 
 #define Diag(X) (X).diagonal().asDiagonal()
 #define Dot(X, Y) ( (X).transpose() * (Y) ).trace()
+
+#define __True_False__(x) ( x ? "True" : "False" )
