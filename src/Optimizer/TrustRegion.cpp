@@ -13,13 +13,22 @@
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+#include "TrustRegion.h"
 #include "SubSolver.h"
 #include "HessUpdate.h"
 
 #include <iostream>
 
 
-#define __Calc_Hess__(n) ( n % recalc_hess == 0 )
+TrustRegionSetting::TrustRegionSetting(){
+	this->R0 = 1;
+	this->RhoThreshold = 0.1;
+	this->Update = [&R0 = this->R0, &RhoThreshold = this->RhoThreshold](double R, double Rho, double S2){
+		if ( Rho < 0.25 ) R *= 0.25;
+		else if ( Rho > 0.75 || std::abs(S2 - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
+		return R;
+	};
+}
 
 bool TrustRegion(
 		std::function<
@@ -29,6 +38,7 @@ bool TrustRegion(
 				std::function<EigenMatrix (EigenMatrix)>
 			> (EigenMatrix, int)
 		>& func,
+		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output){
@@ -47,9 +57,7 @@ bool TrustRegion(
 
 	const auto start = __now__;
 
-	const double R0 = 1;
-	const double rho_thres = 0.01;
-	double R = R0;
+	double R = tr_setting.R0;
 	double oldL = 0;
 	double actual_delta_L = 0;
 	double predicted_delta_L = 0;
@@ -72,7 +80,7 @@ bool TrustRegion(
 		// Scoring the new step
 		actual_delta_L = L - oldL;
 		const double rho = actual_delta_L / predicted_delta_L;
-		if ( ( accepted = ( rho > rho_thres || iiter == 0 ) ) ){
+		if ( ( accepted = ( rho > tr_setting.RhoThreshold || iiter == 0 ) ) ){
 			oldL = L;
 			M.Update(P, 1);
 			M.Ge = Ge;
@@ -80,10 +88,7 @@ bool TrustRegion(
 		}
 
 		// Adjusting the trust radius according to the score
-		if ( iiter > 0 ){
-			if ( rho < 0.25 ) R *= 0.25;
-			else if ( rho > 0.75 || std::abs(S2 - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
-		}
+		if ( iiter > 0 ) R = tr_setting.Update(R, rho, S2);
 
 		// Obtaining Riemannian gradient
 		M.getGradient();
@@ -140,7 +145,7 @@ bool TrustRegion(
 	return 0;
 }
 
-bool TrustRegionRationalFunctionOptimization(
+bool TrustRegionRationalFunction(
 		std::function<
 			std::tuple<
 				double,
@@ -148,6 +153,7 @@ bool TrustRegionRationalFunctionOptimization(
 				std::function<EigenMatrix (EigenMatrix)>
 			> (EigenMatrix, int)
 		>& func,
+		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output){
@@ -166,9 +172,7 @@ bool TrustRegionRationalFunctionOptimization(
 
 	const auto start = __now__;
 
-	const double R0 = 1;
-	const double rho_thres = 0.1;
-	double R = R0;
+	double R = tr_setting.R0;
 	double oldL = 0;
 	double actual_delta_L = 0;
 	double predicted_delta_L = 0;
@@ -191,19 +195,15 @@ bool TrustRegionRationalFunctionOptimization(
 		// Scoring the new step
 		actual_delta_L = L - oldL;
 		const double rho = actual_delta_L / predicted_delta_L;
-		if ( ( accepted = ( rho > rho_thres || iiter == 0 ) ) ){
+		if ( ( accepted = ( rho > tr_setting.RhoThreshold || iiter == 0 ) ) ){
 			oldL = L;
 			M.Update(P, 1);
 			M.Ge = Ge;
 			M.He = He;
-			Ms.push_back(M.Clone());
 		}
 
 		// Adjusting the trust radius according to the score
-		if ( iiter > 0 ){
-			if ( rho < 0.25 ) R *= 0.25;
-			else if ( rho > 0.75 || std::abs(S2 - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
-		}
+		if ( iiter > 0 ) R = tr_setting.Update(R, rho, S2);
 
 		// Obtaining Riemannian gradient
 		M.getGradient();
@@ -218,14 +218,14 @@ bool TrustRegionRationalFunctionOptimization(
 		}
 
 		if (accepted){
+			if ( ! M.MatrixFree ) M.getBasisSet();
 			if (calc_hess){
 				Ms.clear();
 				M.getHessian();
+				if ( ! M.MatrixFree ) M.getHessianMatrix();
 			}else BroydenFletcherGoldfarbShanno(*(Ms.back()), M, S);
 
 			if ( ! M.MatrixFree ){
-				M.getBasisSet();
-				M.getHessianMatrix();
 				int negative = 0;
 				for ( auto& [eigenvalue, _] : M.Hrm ){
 					if ( eigenvalue < 0 ) negative++;
@@ -241,6 +241,7 @@ bool TrustRegionRationalFunctionOptimization(
 				0.1*tol2/M.getDimension()
 			};
 			Ss = TruncatedConjugateGradient(M, R, tcg_tol, output-1);
+			Ms.push_back(M.Clone());
 		}
 
 		// Obtaining the new step within the trust region
@@ -260,6 +261,11 @@ bool TrustRegionRationalFunctionOptimization(
 }
 
 void Init_TrustRegion(pybind11::module_& m){
+	pybind11::class_<TrustRegionSetting>(m, "TrustRegionSetting")
+		.def_readwrite("R0", &TrustRegionSetting::R0)
+		.def_readwrite("RhoThreshold", &TrustRegionSetting::RhoThreshold)
+		.def_readwrite("Update", &TrustRegionSetting::Update)
+		.def(pybind11::init<>());
 	m.def("TrustRegion", &TrustRegion);
-	m.def("TrustRegionRationalFunctionOptimization", &TrustRegionRationalFunctionOptimization);
+	m.def("TrustRegionRationalFunction", &TrustRegionRationalFunction);
 }

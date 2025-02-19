@@ -1,3 +1,10 @@
+class TrustRegionSetting{ public:
+	double R0;
+	double RhoThreshold;
+	std::function<double (double, double, double)> Update;
+	TrustRegionSetting();
+};
+
 bool TrustRegion(
 		std::function<
 			std::tuple<
@@ -6,11 +13,12 @@ bool TrustRegion(
 				std::function<EigenMatrix (EigenMatrix)>
 			> (EigenMatrix, int)
 		>& func,
+		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output);
 
-bool TrustRegionRationalFunctionOptimization(
+bool TrustRegionRationalFunction(
 		std::function<
 			std::tuple<
 				double,
@@ -18,7 +26,7 @@ bool TrustRegionRationalFunctionOptimization(
 				std::function<EigenMatrix (EigenMatrix)>
 			> (EigenMatrix, int)
 		>& func,
-		int order,
+		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
-		int max_iter,
+		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output);
