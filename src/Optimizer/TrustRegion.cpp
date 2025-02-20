@@ -49,7 +49,7 @@ bool TrustRegion(
 	if (output > 0){
 		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
 		std::printf("Manifold: %s\n", M.Name.c_str());
-		std::printf("Matrix free : %s\n", __True_False__(M.MatrixFree));
+		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
 		std::printf("Trust region settings:\n");
@@ -83,7 +83,7 @@ bool TrustRegion(
 		const auto iter_start = __now__;
 
 		const bool calc_hess = iiter == 0 || (int)Ms.size() == recalc_hess;
-		if (output) std::printf("Calculating hessian: %s\n", __True_False__(calc_hess));
+		if (output) std::printf("Calculate true hessian: %s\n", __True_False__(calc_hess));
 
 		std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
 
@@ -98,7 +98,7 @@ bool TrustRegion(
 		}
 		if (output){
 			std::printf("Target = %.10f\n", L);
-			std::printf("Actual change = %.10f; Predicted change = %.10f\n", actual_delta_L, predicted_delta_L);
+			std::printf("Actual change = %E; Predicted change = %E\n", actual_delta_L, predicted_delta_L);
 			if (accepted) std::printf("Score of the new step Rho = %f, compared with RhoThreshold %f. Step accepted.\n", rho, tr_setting.RhoThreshold);
 			else std::printf("Score of the new step Rho = %f, compared with RhoThreshold %f. Step rejected.\n", rho, tr_setting.RhoThreshold);
 		}
@@ -110,9 +110,9 @@ bool TrustRegion(
 		// Checking convergence
 		if (output){
 			std::printf("Convergence info: current / threshold / converged?\n");
-			std::printf("| Target    change: % .10f / %.10f / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
-			std::printf("| Gradient    norm: % .10f / %.10f / %s\n", Gnorm, tol1, __True_False__(Gnorm < tol1));
-			std::printf("| Step length norm: % .10f / %.10f / %s\n", std::sqrt(S2), tol2, __True_False__(std::sqrt(S2) < tol2));
+			std::printf("| Target    change: % E / %E / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
+			std::printf("| Gradient    norm: % E / %E / %s\n", Gnorm, tol1, __True_False__(Gnorm < tol1));
+			std::printf("| Step length norm: % E / %E / %s\n", std::sqrt(S2), tol2, __True_False__(std::sqrt(S2) < tol2));
 			if ( std::abs(actual_delta_L) < tol0 && Gnorm < tol1 && std::sqrt(S2) < tol2 ) std::printf("| Converged!\n");
 			else std::printf("| Not converged yet!\n");
 		}
@@ -145,7 +145,8 @@ bool TrustRegion(
 				for ( auto& [eigenvalue, _] : M.Hrm ) eigenvalue += shift;
 				if (output){
 					std::printf("Hessian has %d negative eigenvalues\n", negative);
-					std::printf("Lowest eigenvalue is %f, which will be shifted up to %f together with all other eigenvalues\n", std::get<0>(M.Hrm[0]) - shift, std::get<0>(M.Hrm[0]));
+					std::printf("Lowest eigenvalue is %f\n", std::get<0>(M.Hrm[0]) - shift);
+					if (negative) std::printf("All eigenvalues will be shifted up by %f\n", shift);
 				}
 			}
 
@@ -159,7 +160,7 @@ bool TrustRegion(
 			Ms.push_back(M.Clone());
 		}
 
-		// Obtaining the new step within the trust region
+		// Obtaining the next step within the trust region
 		if ( ! converged ){
 			S = RestartTCG(M, Ss, R); // "RestartTCG" is supposed to give the step that is the most compatible with the trust radius.
 			S2 = M.Inner(S, S);
@@ -167,8 +168,8 @@ bool TrustRegion(
 			predicted_delta_L = M.Inner(M.Gr + 0.5 * M.Hr(S), S);
 			if (output){
 				std::printf("Next step:\n");
-				std::printf("| Step length: %f\n", std::sqrt(S2));
-				std::printf("| Predicted change in targe: %f\n", predicted_delta_L);
+				std::printf("| Step length: %E\n", std::sqrt(S2));
+				std::printf("| Predicted change in target: %E\n", predicted_delta_L);
 			}
 		}
 
