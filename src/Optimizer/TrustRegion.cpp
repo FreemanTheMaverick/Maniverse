@@ -1,7 +1,9 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
@@ -295,6 +297,7 @@ bool TrustRegionRationalFunction(
 	return 0;
 }
 
+#ifdef __PYTHON__
 void Init_TrustRegion(pybind11::module_& m){
 	pybind11::class_<TrustRegionSetting>(m, "TrustRegionSetting")
 		.def_readwrite("R0", &TrustRegionSetting::R0)
@@ -304,3 +307,4 @@ void Init_TrustRegion(pybind11::module_& m){
 	m.def("TrustRegion", &TrustRegion);
 	m.def("TrustRegionRationalFunction", &TrustRegionRationalFunction);
 }
+#endif

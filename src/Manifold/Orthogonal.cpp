@@ -1,11 +1,14 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <functional>
 #include <cassert>
+#include <memory>
 
 #include "../Macro.h"
 
@@ -72,7 +75,9 @@ std::unique_ptr<Manifold> Orthogonal::Clone() const{
 	return std::make_unique<Orthogonal>(*this);
 }
 
+#ifdef __PYTHON__
 void Init_Orthogonal(pybind11::module_& m){
 	pybind11::class_<Orthogonal, Manifold>(m, "Orthogonal")
 		.def(pybind11::init<EigenMatrix, bool>());
 }
+#endif

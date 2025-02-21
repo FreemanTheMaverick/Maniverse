@@ -9,4 +9,4 @@ OPTIMIZER:
 	$(MAKE) -C Optimizer
 
 PYMANIVERSE: PyManiverse.cpp
-	$(CXX) -o ../obj/PyManiverse.o PyManiverse.cpp -c $(Flags)
+	$(CXX) -o ../obj/$(LANG)PyManiverse.o PyManiverse.cpp -c $(Flags)

@@ -1,7 +1,9 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
@@ -93,7 +95,9 @@ std::unique_ptr<Manifold> Simplex::Clone() const{
 	return std::make_unique<Simplex>(*this);
 }
 
+#ifdef __PYTHON__
 void Init_Simplex(pybind11::module_& m){
 	pybind11::class_<Simplex, Manifold>(m, "Simplex")
 		.def(pybind11::init<EigenMatrix, bool>());
 }
+#endif

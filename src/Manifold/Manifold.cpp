@@ -1,7 +1,9 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <typeinfo>
 #include <memory>
@@ -189,6 +191,7 @@ std::unique_ptr<Manifold> Manifold::Clone() const{
 	return std::make_unique<Manifold>(*this);
 }
 
+#ifdef __PYTHON__
 void Init_Manifold(pybind11::module_& m){
 	pybind11::class_<Manifold>(m, "Manifold")
 		.def_readwrite("Name", &Manifold::Name)
@@ -218,3 +221,4 @@ void Init_Manifold(pybind11::module_& m){
 		.def("Clone", &Manifold::Clone);
 	m.def("Diagonalize", &Diagonalize);
 }
+#endif
