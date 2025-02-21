@@ -100,9 +100,11 @@ bool TrustRegion(
 		}
 		if (output){
 			std::printf("Target = %.10f\n", L);
-			std::printf("Actual change = %E; Predicted change = %E\n", actual_delta_L, predicted_delta_L);
-			if (accepted) std::printf("Score of the new step Rho = %f, compared with RhoThreshold %f. Step accepted.\n", rho, tr_setting.RhoThreshold);
-			else std::printf("Score of the new step Rho = %f, compared with RhoThreshold %f. Step rejected.\n", rho, tr_setting.RhoThreshold);
+			std::printf("Step score:\n");
+			std::printf("| Predicted and actual changes in target = %E, %E\n", predicted_delta_L, actual_delta_L);
+			std::printf("| Score of the new step Rho = %f, compared with RhoThreshold %f\n", rho, tr_setting.RhoThreshold);
+			if (accepted) std::printf("| Step accepted\n");
+			else std::printf("| Step rejected\n");
 		}
 
 		// Obtaining Riemannian gradient
