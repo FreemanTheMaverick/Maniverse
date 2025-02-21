@@ -8,7 +8,7 @@ export AR = ar
 export OBJ = __CPP__
 # Should be "__CPP__" or "__PYTHON__"
 
-# IF $(OBJ) is "__PYTHON__", you need to set $(PYTHON3) and $(PYBIND11).
+# If $(OBJ) is "__PYTHON__", you need to set $(PYTHON3) and $(PYBIND11).
 export PYTHON3 = /home/yzhangnn/scratch/anaconda3/include/python3.11
 # The path where you can find "Python.h".
 export PYBIND11 = /home/yzhangnn/pybind11/include/
