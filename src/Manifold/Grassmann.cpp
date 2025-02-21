@@ -3,8 +3,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
-#include <Eigen/Dense>
 #endif
+#include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
 #include <functional>
