@@ -1,8 +1,10 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #include <Eigen/Dense>
+#endif
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
 #include <functional>
@@ -117,7 +119,9 @@ std::unique_ptr<Manifold> Grassmann::Clone() const{
 	return std::make_unique<Grassmann>(*this);
 }
 
+#ifdef __PYTHON__
 void Init_Grassmann(pybind11::module_& m){
 	pybind11::class_<Grassmann, Manifold>(m, "Grassmann")
 		.def(pybind11::init<EigenMatrix, bool>());
 }
+#endif

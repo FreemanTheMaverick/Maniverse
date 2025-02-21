@@ -1,6 +1,8 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <cmath>
 #include <vector>
@@ -11,6 +13,7 @@
 #include <cassert>
 #include <string>
 #include <tuple>
+#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
@@ -113,7 +116,9 @@ EigenMatrix RestartTCG(Manifold& M, std::vector<std::tuple<double, EigenMatrix, 
 	return std::get<1>(Vs.back());
 }
 
+#ifdef __PYTHON__
 void Init_SubSolver(pybind11::module_& m){
 	m.def("TruncatedConjugateGradient", &TruncatedConjugateGradient);
 	m.def("RestartTCG", &RestartTCG);
 }
+#endif

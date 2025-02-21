@@ -1,6 +1,8 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <cmath>
 #include <tuple>
@@ -8,6 +10,7 @@
 #include <functional>
 #include <string>
 #include <cassert>
+#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
@@ -54,6 +57,8 @@ void BroydenFletcherGoldfarbShanno(Manifold& M1, Manifold& M2, EigenMatrix step1
 	}
 }
 
+#ifdef __PYTHON__
 void Init_HessUpdate(pybind11::module_& m){
 	m.def("BroydenFletcherGoldfarbShanno", &BroydenFletcherGoldfarbShanno);
 }
+#endif

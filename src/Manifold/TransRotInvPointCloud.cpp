@@ -1,12 +1,15 @@
+#ifdef __PYTHON__
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
+#endif
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
 #include <string>
 #include <cassert>
+#include <memory>
 
 #include "../Macro.h"
 
@@ -139,7 +142,9 @@ std::unique_ptr<Manifold> TransRotInvPointCloud::Clone() const{
 	return std::make_unique<TransRotInvPointCloud>(*this);
 }
 
+#ifdef __PYTHON__
 void Init_TransRotInvPointCloud(pybind11::module_& m){
 	pybind11::class_<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
 		.def(pybind11::init<EigenMatrix, bool>());
 }
+#endif
