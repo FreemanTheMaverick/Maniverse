@@ -27,6 +27,8 @@ all:
 	mkdir -p include/Maniverse/Optimizer/
 	find src/Manifold/ -type f -name "*h" ! -name "Py*" -exec cp {} include/Maniverse/Manifold/ \;
 	find src/Optimizer/ -type f -name "*h" ! -name "Py*" -exec cp {} include/Maniverse/Optimizer/ \;
+	find include/Maniverse/Manifold/ -type f -name "*h" -exec sed -i "s/EigenMatrix/Eigen::MatrixXd/g" {} \;
+	find include/Maniverse/Optimizer/ -type f -name "*h" -exec sed -i "s/EigenMatrix/Eigen::MatrixXd/g" {} \;
 
 clean:
 	rm -rf obj/ lib/ include/
