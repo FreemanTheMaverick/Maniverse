@@ -179,7 +179,7 @@ bool TrustRegion(
 		if (output) std::printf("Elapsed time: %f seconds for current iteration; %f seconds in total\n\n", __duration__(iter_start, __now__), __duration__(all_start, __now__));
 	}
 
-	return 0;
+	return converged;
 }
 
 bool TrustRegionRationalFunction(
