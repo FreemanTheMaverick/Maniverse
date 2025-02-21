@@ -61,6 +61,7 @@ EigenMatrix Grassmann::Logarithm(EigenMatrix q) const{
 
 EigenMatrix Grassmann::TangentProjection(EigenMatrix X) const{
 	// X must be symmetric.
+	// https://sites.uclouvain.be/absil/2013.01
 	const EigenMatrix adPX = this->P * X - X * this->P;
 	return this->P * adPX - adPX * this->P;
 }
@@ -103,15 +104,13 @@ void Grassmann::getGradient(){
 }
 
 void Grassmann::getHessian(){
-	const EigenMatrix P = this->P;
-	const EigenMatrix Gt = this->Ge;
-	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [P, Gt, He](EigenMatrix v){
+	// https://arxiv.org/abs/0709.2205
+	this->Hr = [P = this->P, Ge = this->Ge, He = this->He](EigenMatrix v){
 		const EigenMatrix he = He(v);
 		const EigenMatrix partA = P * he - he * P;
-		const EigenMatrix partB = Gt * v - v * Gt;
+		const EigenMatrix partB = Ge * v - v * Ge;
 		const EigenMatrix sum = partA - partB;
-		return EigenMatrix(P * sum - sum * P);
+		return (EigenMatrix)(P * sum - sum * P);
 	};
 }
 
