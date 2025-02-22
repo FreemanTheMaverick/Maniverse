@@ -45,9 +45,9 @@ bool TrustRegion(
 		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output){
 
-	const double tol0 = std::get<0>(tol) * M.getDimension();
-	const double tol1 = std::get<1>(tol) * M.P.size();
-	const double tol2 = std::get<2>(tol) * M.P.size();
+	const double tol0 = std::get<0>(tol);
+	const double tol1 = std::get<1>(tol);
+	const double tol2 = std::get<2>(tol);
 	if (output > 0){
 		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
 		std::printf("Manifold: %s\n", M.Name.c_str());
@@ -131,45 +131,47 @@ bool TrustRegion(
 			if (output) std::printf("Trust radius is adjusted to %f\n", R);
 		}
 
-		// Preparing hessian
+		// Preparing hessian and storing this step
 		if (accepted && ( ! converged )){
-			if ( ! M.MatrixFree ) M.getBasisSet();
+		   	// Hessian information is stored inside (not outside) the std::vector.
+			// Use Ms.back() instead of M when hessian information is needed.
+			if (calc_hess) Ms.clear();
+			Ms.push_back(M.Clone());
+			if ( ! M.MatrixFree ) Ms.back()->getBasisSet();
 			if (calc_hess){
-				Ms.clear();
-				M.getHessian();
-				if ( ! M.MatrixFree ) M.getHessianMatrix();
-			}else BroydenFletcherGoldfarbShanno(*(Ms.back()), M, S);
+				Ms.back()->getHessian();
+				if ( ! M.MatrixFree ) Ms.back()->getHessianMatrix();
+			}else BroydenFletcherGoldfarbShanno(*(Ms.at(Ms.size() - 2)), *(Ms.back()), S);
 
 			if ( ! M.MatrixFree ){
 				int negative = 0;
-				for ( auto& [eigenvalue, _] : M.Hrm ){
+				for ( auto& [eigenvalue, _] : Ms.back()->Hrm ){
 					if ( eigenvalue < 0 ) negative++;
 				}
-				const double shift = std::get<0>(M.Hrm[negative]) - std::get<0>(M.Hrm[0]);
-				for ( auto& [eigenvalue, _] : M.Hrm ) eigenvalue += shift;
+				const double shift = std::get<0>(Ms.back()->Hrm[negative]) - std::get<0>(Ms.back()->Hrm[0]);
+				for ( auto& [eigenvalue, _] : Ms.back()->Hrm ) eigenvalue += shift;
 				if (output){
 					std::printf("Hessian has %d negative eigenvalues\n", negative);
-					std::printf("Lowest eigenvalue is %f\n", std::get<0>(M.Hrm[0]) - shift);
+					std::printf("Lowest eigenvalue is %f\n", std::get<0>(Ms.back()->Hrm[0]) - shift);
 					if (negative) std::printf("All eigenvalues will be shifted up by %f\n", shift);
 				}
 			}
 
 			// Truncated conjugate gradient
 			const std::tuple<double, double, double> tcg_tol = {
-				tol0/M.getDimension(),
+				tol0,
 				0.1*std::min(M.Inner(M.Gr,M.Gr),std::sqrt(M.Inner(M.Gr,M.Gr)))/M.getDimension(),
-				0.1*tol2/M.getDimension()
+				0.1*tol2/M.getDimension()*M.P.size()
 			};
-			Ss = TruncatedConjugateGradient(M, R, tcg_tol, output-1);
-			Ms.push_back(M.Clone());
+			Ss = TruncatedConjugateGradient(*(Ms.back()), R, tcg_tol, output-1);
 		}
 
 		// Obtaining the next step within the trust region
 		if ( ! converged ){
-			S = RestartTCG(M, Ss, R); // "RestartTCG" is supposed to give the step that is the most compatible with the trust radius.
+			S = RestartTCG(*(Ms.back()), Ss, R); // "RestartTCG" is supposed to give the step that is the most compatible with the trust radius.
 			S2 = M.Inner(S, S);
 			P = M.Exponential(S);
-			predicted_delta_L = M.Inner(M.Gr + 0.5 * M.Hr(S), S);
+			predicted_delta_L = M.Inner(M.Gr + 0.5 * Ms.back()->Hr(S), S);
 			if (output){
 				std::printf("Next step:\n");
 				std::printf("| Step length: %E\n", std::sqrt(S2));

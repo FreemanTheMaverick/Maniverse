@@ -16,6 +16,8 @@
 
 #include "Grassmann.h"
 
+#include <iostream>
+
 
 Grassmann::Grassmann(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Grassmann";
