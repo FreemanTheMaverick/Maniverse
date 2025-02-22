@@ -22,14 +22,15 @@ void BroydenFletcherGoldfarbShanno(Manifold& M1, Manifold& M2, EigenMatrix step1
 	const EigenMatrix S = M1.TransportManifold(step1, M2.P);
 	const EigenMatrix Y = M2.Gr - M1.TransportManifold(M1.Gr, M2.P);
 	const EigenMatrix YoverYS = Y / M2.Inner(Y, S);
-	const EigenMatrix tmp = M1.TransportManifold(M1.Hr(M2.TransportManifold(S, M1.P)), M2.P);
-	const EigenMatrix HSoverSHS = tmp / M2.Inner(S, tmp);
+	const EigenMatrix HS = M1.TransportManifold(M1.Hr(step1), M2.P);
+	const EigenMatrix HSoverSHS = HS / M2.Inner(S, HS);
 	if ( M1.MatrixFree ){
-		M2.Hr = [M1, &M2, S, Y, YoverYS, HSoverSHS](EigenMatrix v){
+		M2.Hr = [&M1, &M2, S, Y, YoverYS, HSoverSHS](EigenMatrix v){
 			const EigenMatrix Hv1 = M1.TransportManifold(M1.Hr(M2.TransportManifold(v, M1.P)), M2.P);
 			const EigenMatrix Hv2 = M2.Inner(Y, v) * YoverYS;
 			const EigenMatrix Hv3 = M2.Inner(S, Hv1) * HSoverSHS;
-			return Hv1 + Hv2 - Hv3;
+			const EigenMatrix result = Hv1 + Hv2 - Hv3;
+			return result;
 		};
 	}else{
 		EigenMatrix TildeH = EigenZero(M1.P.size(), M1.P.size());
