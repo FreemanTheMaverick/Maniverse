@@ -53,7 +53,10 @@ EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
 	return expXp * this->P * exppX;
 }
 
-EigenMatrix Grassmann::Logarithm(EigenMatrix q) const{
+EigenMatrix Grassmann::Logarithm(Manifold& N) const{
+	__Check_Log_Map__
+	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
+	const EigenMatrix q = N_.P;
 	const EigenMatrix Omega = 0.5 * (
 			( EigenOne(q.rows(), q.cols()) - 2 * q ) *
 			( EigenOne(q.rows(), q.cols()) - 2 * this->P )
@@ -84,10 +87,12 @@ EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 	return expdp * X * exppd;
 }
 
-EigenMatrix Grassmann::TransportManifold(EigenMatrix X, EigenMatrix q) const{
+EigenMatrix Grassmann::TransportManifold(EigenMatrix X, Manifold& N) const{
 	// X - Vector to transport from P
 	// q - Destination on the manifold
-	const EigenMatrix Y = this->Logarithm(q);
+	__Check_Vec_Transport__
+	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
+	const EigenMatrix Y = this->Logarithm(N_);
 	return this->TransportTangent(X, Y);
 }
 

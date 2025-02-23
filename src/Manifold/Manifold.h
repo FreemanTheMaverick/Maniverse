@@ -1,5 +1,15 @@
 #pragma once
 
+#define __Check_Log_Map__\
+	std::string class_name = typeid(this).name();\
+	if ( typeid(N) != typeid(this) )\
+		throw std::runtime_error("The point to logarithm map is not in " + class_name + "!");
+
+#define __Check_Vec_Transport__\
+	std::string class_name = typeid(this).name();\
+	if ( typeid(N) != typeid(this) )\
+		throw std::runtime_error("The destination of vector transport is not in " + class_name + "!");
+
 class Manifold{ public:
 	std::string Name;
 	EigenMatrix P;
@@ -19,13 +29,13 @@ class Manifold{ public:
 	void getHessianMatrix();
 
 	virtual EigenMatrix Exponential(EigenMatrix X) const;
-	virtual EigenMatrix Logarithm(EigenMatrix q) const;
+	virtual EigenMatrix Logarithm(Manifold& N) const;
 
 	virtual EigenMatrix TangentProjection(EigenMatrix A) const;
 	virtual EigenMatrix TangentPurification(EigenMatrix A) const;
 
 	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
-	virtual EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) const;
+	virtual EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const;
 
 	virtual void Update(EigenMatrix p, bool purify);
 	virtual void getGradient();
