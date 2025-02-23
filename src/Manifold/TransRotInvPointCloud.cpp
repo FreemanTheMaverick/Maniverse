@@ -91,7 +91,9 @@ EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X) const{
 	return Procrustes(this->P, Q, Q);
 }
 
-EigenMatrix TransRotInvPointCloud::Logarithm(EigenMatrix q) const{
+EigenMatrix TransRotInvPointCloud::Logarithm(Manifold& N) const{
+	__Check_Vec_Transport__
+	const EigenMatrix q = N.P;
 	return HorizontalLift(this->P, q);
 }
 
@@ -109,7 +111,9 @@ EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A) const{
 	return tmp;
 }
 
-EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, EigenMatrix q) const{
+EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, Manifold& N) const{
+	__Check_Vec_Transport__
+	const EigenMatrix q = N.P;
 	const EigenMatrix rotatedX = Procrustes(q, this->P, X);
 	return HorizontalLift(q, rotatedX);
 }

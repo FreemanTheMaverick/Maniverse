@@ -8,6 +8,7 @@
 #include <unsupported/Eigen/MatrixFunctions>
 #include <functional>
 #include <cassert>
+#include <typeinfo>
 #include <memory>
 
 #include "../Macro.h"
@@ -33,7 +34,9 @@ EigenMatrix Orthogonal::Exponential(EigenMatrix X) const{
 	return (X * this->P.transpose()).exp() * this->P;
 }
 
-EigenMatrix Orthogonal::Logarithm(EigenMatrix q) const{
+EigenMatrix Orthogonal::Logarithm(Manifold& N) const{
+	__Check_Log_Map__
+	const EigenMatrix q = N.P;
 	return ( this->P.transpose() * q ).log();
 }
 

@@ -8,13 +8,13 @@ class Simplex: public Manifold{ public:
 	double Inner(EigenMatrix X, EigenMatrix Y) const override;
 
 	EigenMatrix Exponential(EigenMatrix X) const override;
-	EigenMatrix Logarithm(EigenMatrix q) const override;
+	EigenMatrix Logarithm(Manifold& N) const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
 	EigenMatrix TangentPurification(EigenMatrix A) const override;
 
 	//EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
-	//EigenMatrix TransportManifold(EigenMatrix X, EigenMatrix q) override;
+	//EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) override;
 
 	void Update(EigenMatrix p, bool purify) override;
 	void getGradient() override;

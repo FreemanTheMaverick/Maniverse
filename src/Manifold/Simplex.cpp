@@ -42,7 +42,9 @@ EigenMatrix Simplex::Exponential(EigenMatrix X) const{
 	return tmp1 + tmp2 + tmp3;
 }
 
-EigenMatrix Simplex::Logarithm(EigenMatrix q) const{
+EigenMatrix Simplex::Logarithm(Manifold& N) const{
+	__Check_Log_Map__
+	const EigenMatrix q = N.P;
 	const double dot = Dot( this->P.cwiseSqrt(), q.cwiseSqrt() );
 	const double tmp1 = Distance(this->P, q);
 	const double tmp2 = 1. - dot;

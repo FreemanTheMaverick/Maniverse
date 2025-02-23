@@ -145,9 +145,9 @@ EigenMatrix Manifold::Exponential(EigenMatrix X) const{
 	return EigenZero(X.rows(), X.cols());
 }
 
-EigenMatrix Manifold::Logarithm(EigenMatrix X) const{
+EigenMatrix Manifold::Logarithm(Manifold& N) const{
 	__Not_Implemented__
-	return EigenZero(X.rows(), X.cols());
+	return EigenZero(N.P.rows(), N.P.cols());
 }
 
 EigenMatrix Manifold::TangentProjection(EigenMatrix A) const{
@@ -165,9 +165,9 @@ EigenMatrix Manifold::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 	return EigenZero(X.rows(), Y.cols());
 }
 
-EigenMatrix Manifold::TransportManifold(EigenMatrix X, EigenMatrix q) const{
+EigenMatrix Manifold::TransportManifold(EigenMatrix X, Manifold& N) const{
 	__Not_Implemented__
-	return EigenZero(X.rows(), q.cols());
+	return EigenZero(X.rows(), N.P.cols());
 }
 
 void Manifold::Update(EigenMatrix p, bool purify){
