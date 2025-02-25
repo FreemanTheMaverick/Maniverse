@@ -25,9 +25,9 @@
 TrustRegionSetting::TrustRegionSetting(){
 	this->R0 = 1;
 	this->RhoThreshold = 0.1;
-	this->Update = [&R0 = this->R0, &RhoThreshold = this->RhoThreshold](double R, double Rho, double S2){
+	this->Update = [&R0 = this->R0, &RhoThreshold = this->RhoThreshold](double R, double Rho, double Snorm){
 		if ( Rho < 0.25 ) R *= 0.25;
-		else if ( Rho > 0.75 || std::abs(S2 - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
+		else if ( Rho > 0.75 || std::abs(Snorm * Snorm - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
 		return R;
 	};
 }
@@ -70,10 +70,11 @@ bool TrustRegion(
 	double actual_delta_L = 0;
 	double predicted_delta_L = 0;
 
-	std::vector<std::unique_ptr<Manifold>> Ms; Ms.reserve(recalc_hess);
-	std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> Ss;
+	BroydenFletcherGoldfarbShanno bfgs(recalc_hess);
+	std::function<EigenMatrix (EigenMatrix)> bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
+	TruncatedConjugateGradient tcg{&M, &bfgs_hess, output > 0, 1};
 	EigenMatrix S = EigenZero(M.P.rows(), M.P.cols());
-	double S2 = 0;
+	double Snorm = 0;
 	EigenMatrix P = M.P;
 	EigenMatrix Ge = EigenZero(P.rows(), P.cols());
 	std::function<EigenMatrix (EigenMatrix)> He = [](EigenMatrix v){return v;};
@@ -84,7 +85,7 @@ bool TrustRegion(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		const bool calc_hess = iiter == 0 || (int)Ms.size() == recalc_hess;
+		const bool calc_hess = iiter == 0 || (int)bfgs.Ms.size() == recalc_hess;
 		if (output) std::printf("Calculate true hessian: %s\n", __True_False__(calc_hess));
 
 		std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
@@ -116,18 +117,18 @@ bool TrustRegion(
 			std::printf("Convergence info: current / threshold / converged?\n");
 			std::printf("| Target    change: % E / %E / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
 			std::printf("| Gradient    norm: % E / %E / %s\n", Gnorm, tol1, __True_False__(Gnorm < tol1));
-			std::printf("| Step length norm: % E / %E / %s\n", std::sqrt(S2), tol2, __True_False__(std::sqrt(S2) < tol2));
-			if ( std::abs(actual_delta_L) < tol0 && Gnorm < tol1 && std::sqrt(S2) < tol2 ) std::printf("| Converged!\n");
+			std::printf("| Step length norm: % E / %E / %s\n", Snorm, tol2, __True_False__(Snorm < tol2));
+			if ( std::abs(actual_delta_L) < tol0 && Gnorm < tol1 && Snorm < tol2 ) std::printf("| Converged!\n");
 			else std::printf("| Not converged yet!\n");
 		}
 		if ( Gnorm < tol1 ){
 			if ( iiter == 0 ) converged = 1;
-			else if ( std::abs(actual_delta_L) < tol0 && std::sqrt(S2) < tol2 ) converged = 1;
+			else if ( std::abs(actual_delta_L) < tol0 && Snorm < tol2 ) converged = 1;
 		}
 
 		// Adjusting the trust radius according to the score
 		if ( ! converged ){
-			if ( iiter > 0 ) R = tr_setting.Update(R, rho, S2);
+			if ( iiter > 0 ) R = tr_setting.Update(R, rho, Snorm);
 			if (output) std::printf("Trust radius is adjusted to %f\n", R);
 		}
 
@@ -135,46 +136,46 @@ bool TrustRegion(
 		if (accepted && ( ! converged )){
 		   	// Hessian information is stored inside (not outside) the std::vector.
 			// Use Ms.back() instead of M when hessian information is needed.
-			if (calc_hess) Ms.clear();
-			Ms.push_back(M.Clone());
-			if ( ! M.MatrixFree ) Ms.back()->getBasisSet();
+			if (calc_hess) bfgs.Clear();
+			if ( ! M.MatrixFree ) M.getBasisSet();
 			if (calc_hess){
-				Ms.back()->getHessian();
-				if ( ! M.MatrixFree ) Ms.back()->getHessianMatrix();
-			}else BroydenFletcherGoldfarbShanno(*(Ms.at(Ms.size() - 2)), *(Ms.back()), S);
-
+				M.getHessian();
+				if ( ! M.MatrixFree ) M.getHessianMatrix();
+			}
+			bfgs.Append(M, S);
 			if ( ! M.MatrixFree ){
 				int negative = 0;
-				for ( auto& [eigenvalue, _] : Ms.back()->Hrm ){
+				for ( auto& [eigenvalue, _] : bfgs.EigenPairs ){
 					if ( eigenvalue < 0 ) negative++;
 				}
-				const double shift = std::get<0>(Ms.back()->Hrm[negative]) - std::get<0>(Ms.back()->Hrm[0]);
-				for ( auto& [eigenvalue, _] : Ms.back()->Hrm ) eigenvalue += shift;
+				const double shift = std::get<0>(bfgs.EigenPairs[negative]) - std::get<0>(bfgs.EigenPairs[0]);
+				for ( auto& [eigenvalue, _] : bfgs.EigenPairs ) eigenvalue += shift;
 				if (output){
 					std::printf("Hessian has %d negative eigenvalues\n", negative);
-					std::printf("Lowest eigenvalue is %f\n", std::get<0>(Ms.back()->Hrm[0]) - shift);
+					std::printf("Lowest eigenvalue is %f\n", std::get<0>(bfgs.EigenPairs[0]) - shift);
 					if (negative) std::printf("All eigenvalues will be shifted up by %f\n", shift);
 				}
 			}
 
 			// Truncated conjugate gradient
-			const std::tuple<double, double, double> tcg_tol = {
+			tcg.Tolerance = {
 				tol0,
 				0.1*std::min(M.Inner(M.Gr,M.Gr),std::sqrt(M.Inner(M.Gr,M.Gr)))/M.getDimension(),
 				0.1*tol2/M.getDimension()*M.P.size()
 			};
-			Ss = TruncatedConjugateGradient(*(Ms.back()), R, tcg_tol, output-1);
+			tcg.Radius = R;
+			tcg.Run();
 		}
 
 		// Obtaining the next step within the trust region
 		if ( ! converged ){
-			S = RestartTCG(*(Ms.back()), Ss, R); // "RestartTCG" is supposed to give the step that is the most compatible with the trust radius.
-			S2 = M.Inner(S, S);
+			tcg.Radius = R;
+			std::tie(Snorm, S) = tcg.Find();
 			P = M.Exponential(S);
-			predicted_delta_L = M.Inner(M.Gr + 0.5 * Ms.back()->Hr(S), S);
+			predicted_delta_L = M.Inner(M.Gr + 0.5 * bfgs_hess(S), S);
 			if (output){
 				std::printf("Next step:\n");
-				std::printf("| Step length: %E\n", std::sqrt(S2));
+				std::printf("| Step length: %E\n", Snorm);
 				std::printf("| Predicted change in target: %E\n", predicted_delta_L);
 			}
 		}
@@ -186,120 +187,6 @@ bool TrustRegion(
 	return converged;
 }
 
-bool TrustRegionRationalFunction(
-		std::function<
-			std::tuple<
-				double,
-				EigenMatrix,
-				std::function<EigenMatrix (EigenMatrix)>
-			> (EigenMatrix, int)
-		>& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		int recalc_hess, int max_iter,
-		double& L, Manifold& M, int output){
-
-	const double tol0 = std::get<0>(tol) * M.getDimension();
-	const double tol1 = std::get<1>(tol) * M.P.size();
-	const double tol2 = std::get<2>(tol) * M.P.size();
-	if (output > 0){
-		std::printf("Using trust region optimizer on %s manifold\n", M.Name.c_str());
-		std::printf("Convergence threshold:\n");
-		std::printf("| Target change (T. C.)               : %E\n", tol0);
-		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
-		std::printf("| Independent variable update (V. U.) : %E\n", tol2);
-		std::printf("| Itn. |       Target        |   T. C.  |  Grad.  | Update |  V. U.  |  Time  |\n");
-	}
-
-	const auto start = __now__;
-
-	double R = tr_setting.R0;
-	double oldL = 0;
-	double actual_delta_L = 0;
-	double predicted_delta_L = 0;
-
-	std::vector<std::unique_ptr<Manifold>> Ms; Ms.reserve(recalc_hess);
-	std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> Ss;
-	EigenMatrix S = EigenZero(M.P.rows(), M.P.cols());
-	double S2 = 0;
-	EigenMatrix P = M.P;
-	EigenMatrix Ge = EigenZero(P.rows(), P.cols());
-	std::function<EigenMatrix (EigenMatrix)> He = [](EigenMatrix v){return v;};
-	bool accepted = 1;
-
-	for ( int iiter = 0; iiter < max_iter; iiter++ ){
-
-		const bool calc_hess = iiter == 0 || (int)Ms.size() == recalc_hess;
-
-		std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
-
-		// Scoring the new step
-		actual_delta_L = L - oldL;
-		const double rho = actual_delta_L / predicted_delta_L;
-		if ( ( accepted = ( rho > tr_setting.RhoThreshold || iiter == 0 ) ) ){
-			oldL = L;
-			M.Update(P, 1);
-			M.Ge = Ge;
-			M.He = He;
-		}
-
-		// Adjusting the trust radius according to the score
-		if ( iiter > 0 ) R = tr_setting.Update(R, rho, S2);
-
-		// Obtaining Riemannian gradient
-		M.getGradient();
-
-		// Checking convergence
-		if ( M.Gr.norm() < tol1 ){
-			if ( iiter == 0 ){
-				if ( std::sqrt(S2) < tol2 ) return 1;
-			}else{
-				if ( std::abs(actual_delta_L) < tol0 && std::sqrt(S2) < tol2 ) return 1;
-			}
-		}
-
-		if (accepted){
-			if ( ! M.MatrixFree ) M.getBasisSet();
-			if (calc_hess){
-				Ms.clear();
-				M.getHessian();
-				if ( ! M.MatrixFree ) M.getHessianMatrix();
-			}else BroydenFletcherGoldfarbShanno(*(Ms.back()), M, S);
-
-			if ( ! M.MatrixFree ){
-				int negative = 0;
-				for ( auto& [eigenvalue, _] : M.Hrm ){
-					if ( eigenvalue < 0 ) negative++;
-				}
-				const double shift = std::get<0>(M.Hrm[negative]) - std::get<0>(M.Hrm[0]);
-				for ( auto& [eigenvalue, _] : M.Hrm ) eigenvalue += shift;
-			}
-
-			// Truncated conjugate gradient
-			const std::tuple<double, double, double> tcg_tol = {
-				tol0/M.getDimension(),
-				0.1*std::min(M.Inner(M.Gr,M.Gr),std::sqrt(M.Inner(M.Gr,M.Gr)))/M.getDimension(),
-				0.1*tol2/M.getDimension()
-			};
-			Ss = TruncatedConjugateGradient(M, R, tcg_tol, output-1);
-			Ms.push_back(M.Clone());
-		}
-
-		// Obtaining the new step within the trust region
-		S = RestartTCG(M, Ss, R); // "RestartTCG" is supposed to give the step that is the most compatible with the trust radius.
-		S2 = M.Inner(S, S);
-		P = M.Exponential(S);
-		predicted_delta_L = M.Inner(M.Gr + 0.5 * M.Hr(S), S);
-
-		// Determining whether to accept or reject the step
-		if (output > 0){
-			if (accepted) std::printf("| %4d |  %17.10f  | % 5.1E | %5.1E | Accept | %5.1E | %6.3f |\n", iiter, L, actual_delta_L, M.Gr.norm(), std::sqrt(S2), __duration__(start, __now__));
-			else std::printf("| %4d |  %17.10f  | % 5.1E | %5.1E | Reject | %5.1E | %6.3f |\n", iiter, L, actual_delta_L, M.Gr.norm(), std::sqrt(S2), __duration__(start, __now__));
-		}
-	}
-
-	return 0;
-}
 
 #ifdef __PYTHON__
 void Init_TrustRegion(pybind11::module_& m){
@@ -309,6 +196,5 @@ void Init_TrustRegion(pybind11::module_& m){
 		.def_readwrite("Update", &TrustRegionSetting::Update)
 		.def(pybind11::init<>());
 	m.def("TrustRegion", &TrustRegion);
-	m.def("TrustRegionRationalFunction", &TrustRegionRationalFunction);
 }
 #endif

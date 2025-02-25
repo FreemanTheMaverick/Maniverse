@@ -1,5 +1,16 @@
-std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> TruncatedConjugateGradient(
-		Manifold& M, double R,
-		std::tuple<double, double, double> tol, int output);
-
-EigenMatrix RestartTCG(Manifold& M, std::vector<std::tuple<double, EigenMatrix, EigenMatrix>>& Vs, double R);
+class TruncatedConjugateGradient{ public:
+	Manifold* M;
+	std::function<EigenMatrix (EigenMatrix)>* Func;
+	bool Verbose;
+	bool ShowTarget;
+	double Radius;
+	std::tuple<double, double, double> Tolerance;
+	std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> Sequence; // Step size, S, P.
+	TruncatedConjugateGradient(){};
+	TruncatedConjugateGradient(
+			Manifold* m, std::function<EigenMatrix (EigenMatrix)>* func,
+			bool verbose, bool showtarget
+	): M(m), Func(func), Verbose(verbose), ShowTarget(showtarget){};
+	void Run();
+	std::tuple<double, EigenMatrix> Find(); // Step size, S.
+};

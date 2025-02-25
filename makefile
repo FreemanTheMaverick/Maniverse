@@ -5,7 +5,7 @@
 export MAKE = make
 export CXX = g++
 export AR = ar
-export OBJ = __CPP__
+export OBJ = __PYTHON__
 # Should be "__CPP__" or "__PYTHON__"
 
 # If $(OBJ) is "__PYTHON__", you need to set $(PYTHON3) and $(PYBIND11).
