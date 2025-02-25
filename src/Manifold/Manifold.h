@@ -2,12 +2,12 @@
 
 #define __Check_Log_Map__\
 	std::string class_name = typeid(this).name();\
-	if ( typeid(N) != typeid(this) )\
+	if ( typeid(N) != typeid(*this) )\
 		throw std::runtime_error("The point to logarithm map is not in " + class_name + "!");
 
 #define __Check_Vec_Transport__\
 	std::string class_name = typeid(this).name();\
-	if ( typeid(N) != typeid(this) )\
+	if ( typeid(N) != typeid(*this) )\
 		throw std::runtime_error("The destination of vector transport is not in " + class_name + "!");
 
 class Manifold{ public:
@@ -41,7 +41,7 @@ class Manifold{ public:
 	virtual void getGradient();
 	virtual void getHessian();
 
-	~Manifold() = default;
+	virtual ~Manifold() = default;
 	virtual std::unique_ptr<Manifold> Clone() const;
 };
 

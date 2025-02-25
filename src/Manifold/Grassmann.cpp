@@ -56,12 +56,18 @@ EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
 EigenMatrix Grassmann::Logarithm(Manifold& N) const{
 	__Check_Log_Map__
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
-	const EigenMatrix q = N_.P;
-	const EigenMatrix Omega = 0.5 * (
-			( EigenOne(q.rows(), q.cols()) - 2 * q ) *
-			( EigenOne(q.rows(), q.cols()) - 2 * this->P )
-	).log();
-	return Omega * this->P - this->P * Omega;
+	const EigenMatrix U = this->Projector;
+	const EigenMatrix Y = N_.Projector;
+	Eigen::JacobiSVD<EigenMatrix> svd;
+	svd.compute(Y.transpose() * U, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	const EigenMatrix Ystar = Y * svd.matrixU() * svd.matrixV().transpose();
+	svd.compute( (EigenOne(U.rows(), U.rows()) - U * U.transpose() ) * Ystar);
+	const EigenArray Sigma = svd.singularValues().array().asin();
+	EigenMatrix SIGMA = EigenZero(U.rows(), U.cols());
+	for ( int i = 0; i < Sigma.size(); i++ ) SIGMA(i, i) = Sigma[i];
+	const EigenMatrix Delta = svd.matrixU() * SIGMA * svd.matrixV().transpose();
+	const EigenMatrix Log = Delta * U.transpose() + U * Delta.transpose();
+	return this->TangentPurification(Log);
 }
 
 EigenMatrix Grassmann::TangentProjection(EigenMatrix X) const{
@@ -89,7 +95,6 @@ EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 
 EigenMatrix Grassmann::TransportManifold(EigenMatrix X, Manifold& N) const{
 	// X - Vector to transport from P
-	// q - Destination on the manifold
 	__Check_Vec_Transport__
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
 	const EigenMatrix Y = this->Logarithm(N_);
@@ -107,7 +112,7 @@ void Grassmann::Update(EigenMatrix p, bool purify){
 }
 
 void Grassmann::getGradient(){
-	this->Gr = this->TangentProjection(this->Ge);
+	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
 }
 
 void Grassmann::getHessian(){

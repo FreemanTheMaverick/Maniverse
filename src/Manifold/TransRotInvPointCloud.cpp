@@ -92,7 +92,7 @@ EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X) const{
 }
 
 EigenMatrix TransRotInvPointCloud::Logarithm(Manifold& N) const{
-	__Check_Vec_Transport__
+	__Check_Log_Map__
 	const EigenMatrix q = N.P;
 	return HorizontalLift(this->P, q);
 }

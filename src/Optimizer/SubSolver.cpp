@@ -17,19 +17,17 @@
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+#include "SubSolver.h"
 
 #include <iostream>
 
 
-std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> TruncatedConjugateGradient(
-		Manifold& M, double R,
-		std::tuple<double, double, double> tol, int output){
-
-	const double tol0 = std::get<0>(tol) * M.getDimension();
-	const double tol1 = std::get<1>(tol) * M.P.size();
-	const double tol2 = std::get<2>(tol) * M.P.size();
-	if (output > 0){
-		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", M.Name.c_str());
+void TruncatedConjugateGradient::Run(){
+	const double tol0 = std::get<0>(this->Tolerance) * this->M->getDimension();
+	const double tol1 = std::get<1>(this->Tolerance) * this->M->P.size();
+	const double tol2 = std::get<2>(this->Tolerance) * this->M->P.size();
+	if (this->Verbose){
+		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->Name.c_str());
 		std::printf("Convergence threshold:\n");
         std::printf("| Target change (T. C.)               : %E\n", tol0);
 		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
@@ -37,35 +35,36 @@ std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> TruncatedConjugateGrad
 		std::printf("| Itn. |       Target        |   T. C.  |  Grad.  |  V. U.  |  Time  |\n");
 	}
 
-	std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> Vs; Vs.reserve(20);
-	const double b2 = M.Inner(M.Gr, M.Gr);
-	EigenMatrix v = EigenZero(M.Gr.rows(), M.Gr.cols());
-	EigenMatrix r = -M.Gr;
-	EigenMatrix p = -M.Gr;
+	this->Sequence.clear(); this->Sequence.reserve(20);
+	const double b2 = this->M->Inner(this->M->Gr, this->M->Gr);
+	EigenMatrix v = EigenZero(this->M->Gr.rows(), this->M->Gr.cols());
+	EigenMatrix r = - this->M->Gr;
+	EigenMatrix p = - this->M->Gr;
 	double vnorm = 0;
 	double vplusnorm = 0;
 	double r2 = b2;
 	double L = 0;
 	const auto start = __now__;
 
-	EigenMatrix Hp = EigenZero(M.Gr.rows(), M.Gr.cols());
-	EigenMatrix vplus = EigenZero(M.Gr.rows(), M.Gr.cols());
+	EigenMatrix Hp = EigenZero(this->M->Gr.rows(), this->M->Gr.cols());
+	EigenMatrix vplus = EigenZero(this->M->Gr.rows(), this->M->Gr.cols());
 
-	for ( int iiter = 0; iiter < M.getDimension(); iiter++ ){
-		if (output > 0) std::printf("| %4d |", iiter);
-		Hp = M.TangentPurification(M.Hr(p));
-		const double pHp = M.Inner(p, Hp);
+	for ( int iiter = 0; iiter < this->M->getDimension(); iiter++ ){
+		if (this->Verbose) std::printf("| %4d |", iiter);
+		Hp = this->M->TangentPurification((*(this->Func))(p));
+		const double pHp = this->M->Inner(p, Hp);
 		const double Llast = L;
-		L = 0.5 * M.Inner(M.Hr(v), v) + M.Inner(M.Gr, v);
+		if (this->ShowTarget) L = 0.5 * this->M->Inner((*(this->Func))(v), v) + this->M->Inner(this->M->Gr, v);
+		else L = std::nan("");
 		const double deltaL = L - Llast;
-		if (output > 0) std::printf("  %17.10f  | % 5.1E | %5.1E |", L, deltaL, std::sqrt(r2));
+		if (this->Verbose) std::printf("  %17.10f  | % 5.1E | %5.1E |", L, deltaL, std::sqrt(r2));
 
 		const double alpha = r2 / pHp;
-		vplus = M.TangentPurification(v + alpha * p);
-		vplusnorm = std::sqrt(M.Inner(vplus, vplus));
-		vnorm = std::sqrt(M.Inner(v, v));
-		const double step = std::abs(alpha) * std::sqrt(M.Inner(p, p));
-		if (output > 0) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
+		vplus = this->M->TangentPurification(v + alpha * p);
+		vplusnorm = std::sqrt(this->M->Inner(vplus, vplus));
+		vnorm = std::sqrt(this->M->Inner(v, v));
+		const double step = std::abs(alpha) * std::sqrt(this->M->Inner(p, p));
+		if (this->Verbose) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
 		if (
 			iiter > 0 && (
 				(
@@ -75,50 +74,63 @@ std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> TruncatedConjugateGrad
 				) || std::abs(deltaL) < tol0 * tol0 /1000
 			)
 		){
-			if (output > 0) std::printf("Tolerance met!\n");
-			Vs.push_back(std::make_tuple(vnorm, v, p));
-			return Vs;
+			if (this->Verbose) std::printf("Tolerance met!\n");
+			this->Sequence.push_back(std::make_tuple(vnorm, v, p));
+			return;
 		}
 
-		if ( pHp <= 0 || vplusnorm >= R ){
-			const double A = M.Inner(p, p);
-			const double B = M.Inner(v, p) * 2.;
-			const double C = vnorm * vnorm - R * R;
+		if ( pHp <= 0 || vplusnorm >= this->Radius ){
+			const double A = this->M->Inner(p, p);
+			const double B = this->M->Inner(v, p) * 2.;
+			const double C = vnorm * vnorm - this->Radius * this->Radius;
 			const double t = ( std::sqrt( B * B - 4. * A * C ) - B ) / 2. / A;
-			if (output > 0 && pHp <= 0) std::printf("Non-positive curvature!\n");
-			if (output > 0 && vplusnorm >= R) std::printf("Out of trust region!\n");
-			Vs.push_back(std::make_tuple(R, v + t * p, p));
-			return Vs;
+			if (this->Verbose && pHp <= 0) std::printf("Non-positive curvature!\n");
+			if (this->Verbose && vplusnorm >= this->Radius) std::printf("Out of trust region!\n");
+			this->Sequence.push_back(std::make_tuple(this->Radius, v + t * p, p));
+			return;
 		}
 		v = vplus;
 		vnorm = vplusnorm;
-		Vs.push_back(std::make_tuple(vnorm, v, p));
+		this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 		const double r2old = r2;
-		r = M.TangentPurification(r - alpha * Hp);
-		r2 = M.Inner(r, r);
+		r = this->M->TangentPurification(r - alpha * Hp);
+		r2 = this->M->Inner(r, r);
 		const double beta = r2 / r2old;
-		p = M.TangentPurification(r + beta * p);
+		p = this->M->TangentPurification(r + beta * p);
 	}
-	if (output > 0) std::printf("Dimension completed!\n");
-	return Vs;
+	if (this->Verbose) std::printf("Dimension completed!\n");
 }
 
-EigenMatrix RestartTCG(Manifold& M, std::vector<std::tuple<double, EigenMatrix, EigenMatrix>>& Vs, double R){
-	for ( int i = 0; i < (int)Vs.size(); i++ ) if ( std::get<0>(Vs[i]) > R ){
-		const EigenMatrix v = std::get<1>(Vs[i]);
-		const EigenMatrix p = std::get<2>(Vs[i]);
-		const double A = M.Inner(p, p);
-		const double B = M.Inner(v, p) * 2.;
-		const double C = M.Inner(v, v) - R * R;
+std::tuple<double, EigenMatrix> TruncatedConjugateGradient::Find(){
+	for ( int i = 0; i < (int)this->Sequence.size(); i++ ) if ( std::get<0>(this->Sequence[i]) > this->Radius ){
+		const EigenMatrix v = std::get<1>(this->Sequence[i]);
+		const EigenMatrix p = std::get<2>(this->Sequence[i]);
+		const double A = this->M->Inner(p, p);
+		const double B = this->M->Inner(v, p) * 2.;
+		const double C = this->M->Inner(v, v) - this->Radius * this->Radius;
 		const double t = ( std::sqrt( B * B - 4. * A * C ) - B ) / 2. / A;
-		return v + t * p;
+		const EigenMatrix vnew = v + t * p;
+		return std::make_tuple(this->Radius, vnew);
 	}
-	return std::get<1>(Vs.back());
+	return std::make_tuple(
+			std::get<0>(this->Sequence.back()),
+			std::get<1>(this->Sequence.back())
+	);
 }
 
 #ifdef __PYTHON__
 void Init_SubSolver(pybind11::module_& m){
-	m.def("TruncatedConjugateGradient", &TruncatedConjugateGradient);
-	m.def("RestartTCG", &RestartTCG);
+	pybind11::class_<TruncatedConjugateGradient>(m, "TruncatedConjugateGradient")
+		.def_readwrite("M", &TruncatedConjugateGradient::M)
+		.def_readwrite("Func", &TruncatedConjugateGradient::Func)
+		.def_readwrite("Verbose", &TruncatedConjugateGradient::Verbose)
+		.def_readwrite("ShowTarget", &TruncatedConjugateGradient::ShowTarget)
+		.def_readwrite("Radius", &TruncatedConjugateGradient::Radius)
+		.def_readwrite("Tolerance", &TruncatedConjugateGradient::Tolerance)
+		.def_readwrite("Sequence", &TruncatedConjugateGradient::Sequence)
+		.def(pybind11::init<>())
+		.def(pybind11::init<Manifold*, std::function<EigenMatrix (EigenMatrix)>*, bool, bool>())
+		.def("Run", &TruncatedConjugateGradient::Run)
+		.def("Find", &TruncatedConjugateGradient::Find);
 }
 #endif
