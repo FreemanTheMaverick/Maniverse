@@ -5,8 +5,11 @@
 export MAKE = make
 export CXX = g++
 export AR = ar
-export OBJ = __PYTHON__
-# Should be "__CPP__" or "__PYTHON__"
+export OBJ = __CPP__
+# $(OBJ) should be either "__CPP__" or "__PYTHON__".
+# The two versions can coexist.
+# You may compile twice, once with "__CPP__" and the other with "__PYTHON__", to obtain both versions.
+# In the "lib/" directory, "libmaniverse.a" and "libmaniverse.so" are for CPP and "Maniverse.so" is for Python.
 
 # If $(OBJ) is "__PYTHON__", you need to set $(PYTHON3) and $(PYBIND11).
 export PYTHON3 = /home/yzhangnn/scratch/anaconda3/include/python3.11
