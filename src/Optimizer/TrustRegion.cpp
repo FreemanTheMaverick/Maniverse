@@ -8,6 +8,7 @@
 #include <cmath>
 #include <functional>
 #include <tuple>
+#include <map>
 #include <cstdio>
 #include <chrono>
 #include <string>
