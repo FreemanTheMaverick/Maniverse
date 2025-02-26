@@ -18,8 +18,10 @@
 
 Orthogonal::Orthogonal(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Orthogonal";
-	assert( p.rows() == p.cols() && "An orthogonal matrix must be square!" );
-	assert( ( p * p.transpose() - p.transpose() * p ).norm() > 1e-8 && "An orthogonal matrix must fulfill U.Ut = Ut.U!" );
+	if ( p.rows() != p.cols() )
+		throw std::runtime_error("An orthogonal matrix must be square!");
+	if ( ( p * p.transpose() - p.transpose() * p ).norm() > 1e-8 )
+		throw std::runtime_error("An orthogonal matrix must fulfill U.Ut = Ut.U!");
 }
 
 int Orthogonal::getDimension() const{
