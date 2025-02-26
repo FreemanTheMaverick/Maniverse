@@ -69,7 +69,7 @@ void TruncatedConjugateGradient::Run(){
 			iiter > 0 && (
 				(
 					std::abs(deltaL) < tol0
-					&& r2 < std::pow(tol1, 2)
+					&& r2 < tol1 * tol1
 					&& step < tol2
 				) || std::abs(deltaL) < tol0 * tol0 /1000
 			)
