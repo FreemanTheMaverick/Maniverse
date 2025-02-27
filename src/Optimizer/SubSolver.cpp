@@ -23,9 +23,9 @@
 
 
 void TruncatedConjugateGradient::Run(){
-	const double tol0 = std::get<0>(this->Tolerance) * this->M->getDimension();
-	const double tol1 = std::get<1>(this->Tolerance) * this->M->P.size();
-	const double tol2 = std::get<2>(this->Tolerance) * this->M->P.size();
+	const double tol0 = std::get<0>(this->Tolerance);
+	const double tol1 = std::get<1>(this->Tolerance);
+	const double tol2 = std::get<2>(this->Tolerance);
 	if (this->Verbose){
 		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->Name.c_str());
 		std::printf("Convergence threshold:\n");

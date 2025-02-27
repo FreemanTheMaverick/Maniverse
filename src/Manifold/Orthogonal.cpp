@@ -29,7 +29,7 @@ int Orthogonal::getDimension() const{
 }
 
 double Orthogonal::Inner(EigenMatrix X, EigenMatrix Y) const{
-	return 0.5 * Dot(X, Y);
+	return Dot(X, Y);
 }
 
 EigenMatrix Orthogonal::Exponential(EigenMatrix X) const{
@@ -43,7 +43,11 @@ EigenMatrix Orthogonal::Logarithm(Manifold& N) const{
 }
 
 EigenMatrix Orthogonal::TangentProjection(EigenMatrix A) const{
-	return 0.5 * ( A - this->P * A.transpose() * this->P );
+	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
+	const EigenMatrix PtA = this->P.transpose() * A;
+	const EigenMatrix symPtA = ( PtA + PtA.transpose() ) / 2;
+	const EigenMatrix projA = A - this->P * symPtA;
+	return projA;
 }
 
 EigenMatrix Orthogonal::TangentPurification(EigenMatrix A) const{
@@ -65,14 +69,16 @@ void Orthogonal::getGradient(){
 }
 
 void Orthogonal::getHessian(){
+	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
 	const EigenMatrix P = this->P;
-	const EigenMatrix Grp = this->Ge - this->Gr;
-	const EigenMatrix PGrpT = this->P * Grp.transpose();
+	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
 	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [P, Grp, PGrpT, He](EigenMatrix v){
-		const EigenMatrix Hev = He(v);
-		const EigenMatrix TprojHev = 0.5 * ( Hev - P * Hev.transpose() * P );
-		return (EigenMatrix)( TprojHev - 0.5 * ( PGrpT * v - P * v.transpose() * Grp ) );
+	this->Hr = [P, tmp, He](EigenMatrix v){
+		const EigenMatrix A = He(v) - 0.5 * v * tmp;
+		const EigenMatrix PtA = P.transpose() * A;
+		const EigenMatrix symPtA = ( PtA + PtA.transpose() ) / 2;
+		const EigenMatrix projA = A - P * symPtA;
+		return (EigenMatrix)(projA);
 	};
 }
 

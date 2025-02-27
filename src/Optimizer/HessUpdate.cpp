@@ -20,10 +20,6 @@
 
 #include <iostream>
 
-#define __Not_Implemented__\
-	std::string func_name = __func__;\
-	std::string class_name = typeid(this).name();\
-	throw std::runtime_error(func_name + " for " + class_name + " is not implemented!");
 
 HessUpdate::HessUpdate(int n){
 	this->Size = n;
