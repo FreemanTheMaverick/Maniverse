@@ -1,14 +1,12 @@
 #pragma once
 
 #define __Check_Log_Map__\
-	std::string class_name = typeid(this).name();\
 	if ( typeid(N) != typeid(*this) )\
-		throw std::runtime_error("The point to logarithm map is not in " + class_name + "!");
+		throw std::runtime_error("The point to logarithm map is not in " + std::string(typeid(*this).name()) + "but in " + std::string(typeid(N).name()) + "!");
 
 #define __Check_Vec_Transport__\
-	std::string class_name = typeid(this).name();\
 	if ( typeid(N) != typeid(*this) )\
-		throw std::runtime_error("The destination of vector transport is not in " + class_name + "!");
+		throw std::runtime_error("The destination of vector transport is not in " + std::string(typeid(*this).name()) + "but in " + std::string(typeid(N).name()) + "!");
 
 class Manifold{ public:
 	std::string Name;
