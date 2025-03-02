@@ -2,6 +2,8 @@
 
 class Grassmann: public Manifold{ public:
 	EigenMatrix Projector;
+	mutable std::vector<std::tuple<EigenMatrix, EigenMatrix>> LogCache;
+	mutable std::vector<std::tuple<EigenMatrix, EigenMatrix, EigenMatrix>> TransportTangentCache;
 
 	Grassmann(EigenMatrix p, bool matrix_free);
 
