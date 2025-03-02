@@ -56,5 +56,7 @@ $ git clone https://github.com/FreemanTheMaverick/Maniverse.git
     ```
   * For Python,
     ```
+    $ export PYTHONPATH=$PYTHONPATH:$(MANIVERSE)/lib/
+    $ python
     >>> import Maniverse as mv
     ```
