@@ -26,7 +26,7 @@
 TrustRegionSetting::TrustRegionSetting(){
 	this->R0 = 1;
 	this->RhoThreshold = 0.1;
-	this->Update = [&R0 = this->R0, &RhoThreshold = this->RhoThreshold](double R, double Rho, double Snorm){
+	this->Update = [&R0 = this->R0](double R, double Rho, double Snorm){
 		if ( Rho < 0.25 ) R *= 0.25;
 		else if ( Rho > 0.75 || std::abs(Snorm * Snorm - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
 		return R;
@@ -135,8 +135,6 @@ bool TrustRegion(
 
 		// Preparing hessian and storing this step
 		if (accepted && ( ! converged )){
-		   	// Hessian information is stored inside (not outside) the std::vector.
-			// Use Ms.back() instead of M when hessian information is needed.
 			if (calc_hess) bfgs.Clear();
 			if ( ! M.MatrixFree ) M.getBasisSet();
 			if (calc_hess){

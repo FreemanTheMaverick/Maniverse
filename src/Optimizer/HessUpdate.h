@@ -9,6 +9,7 @@ class HessUpdate{ public:
 	EigenMatrix Hessian(EigenMatrix v);
 	virtual EigenMatrix HessianMatrixFree(EigenMatrix v);
 	void Clear();
+	virtual ~HessUpdate() = default;
 };
 
 class BroydenFletcherGoldfarbShanno: public HessUpdate{ public:

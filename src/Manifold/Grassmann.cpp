@@ -54,6 +54,8 @@ EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
 }
 
 EigenMatrix Grassmann::Logarithm(Manifold& N) const{
+	for ( auto& [cached_NP, cached_Log] : this->LogCache )
+		if ( N.P.isApprox(cached_NP) ) return cached_Log;
 	__Check_Log_Map__
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
 	const EigenMatrix U = this->Projector;
@@ -67,7 +69,9 @@ EigenMatrix Grassmann::Logarithm(Manifold& N) const{
 	for ( int i = 0; i < Sigma.size(); i++ ) SIGMA(i, i) = Sigma[i];
 	const EigenMatrix Delta = svd.matrixU() * SIGMA * svd.matrixV().transpose();
 	const EigenMatrix Log = Delta * U.transpose() + U * Delta.transpose();
-	return this->TangentPurification(Log);
+	const EigenMatrix result = this->TangentPurification(Log);
+	this->LogCache.push_back(std::make_tuple(N_.P, result));
+	return result;
 }
 
 EigenMatrix Grassmann::TangentProjection(EigenMatrix X) const{
@@ -86,10 +90,13 @@ EigenMatrix Grassmann::TangentPurification(EigenMatrix A) const{
 EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 	// X - Vector to transport from P
 	// Y - Destination on the tangent space of P
+	for ( auto& [cached_Y, cached_expdp, cached_exppd]: this->TransportTangentCache )
+		if ( Y.isApprox(cached_Y) ) return cached_expdp * X * cached_exppd;
 	const EigenMatrix dp = Y * this->P - this->P * Y;
 	const EigenMatrix pd = - dp;
 	const EigenMatrix expdp = dp.exp();
 	const EigenMatrix exppd = pd.exp();
+	this->TransportTangentCache.push_back(std::make_tuple(Y, expdp, exppd));
 	return expdp * X * exppd;
 }
 
@@ -108,6 +115,8 @@ void Grassmann::Update(EigenMatrix p, bool purify){
 	const EigenMatrix eigenvectors = eigensolver.eigenvectors();
 	const int ncols = this->Projector.cols();
 	this->Projector = eigenvectors.rightCols(ncols);
+	this->LogCache.clear();
+	this->TransportTangentCache.clear();
 	if (purify) this->P = this->Projector * this->Projector.transpose();
 }
 
