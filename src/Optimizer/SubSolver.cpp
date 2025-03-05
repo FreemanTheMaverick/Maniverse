@@ -23,15 +23,8 @@
 
 
 void TruncatedConjugateGradient::Run(){
-	const double tol0 = std::get<0>(this->Tolerance);
-	const double tol1 = std::get<1>(this->Tolerance);
-	const double tol2 = std::get<2>(this->Tolerance);
 	if (this->Verbose){
 		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->Name.c_str());
-		std::printf("Convergence threshold:\n");
-        std::printf("| Target change (T. C.)               : %E\n", tol0);
-		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
-		std::printf("| Independent variable update (V. U.) : %E\n", tol2);
 		std::printf("| Itn. |       Target        |   T. C.  |  Grad.  |  V. U.  |  Time  |\n");
 	}
 
@@ -65,15 +58,7 @@ void TruncatedConjugateGradient::Run(){
 		vnorm = std::sqrt(this->M->Inner(v, v));
 		const double step = std::abs(alpha) * std::sqrt(this->M->Inner(p, p));
 		if (this->Verbose) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
-		if (
-			iiter > 0 && (
-				(
-					std::abs(deltaL) < tol0
-					&& r2 < tol1 * tol1
-					&& step < tol2
-				) || std::abs(deltaL) < tol0 * tol0 /1000
-			)
-		){
+		if ( iiter > 0 && ( this->Tolerance(deltaL, L, std::sqrt(r2), step) ) ){
 			if (this->Verbose) std::printf("Tolerance met!\n");
 			this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 			return;

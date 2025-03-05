@@ -26,9 +26,9 @@ I would like to keep track of the popular field of OOM and implement more effici
 
 ### Are you an expert on OOM?
 No.
-It has just occurred to me that OOM can be extremely powerful in some topics in quantum chemistry in middle 2024, so I set out to develop Manivese.
-However, my knowledge in OOM is deficient, and I am still learning through texts books, papers and discussions on webs.
-For helping make Maniverse real, I have a long list to thank.
+It has just occurred to me that OOM can be extremely powerful in some topics in quantum chemistry in middle 2024, so I set out to develop Maniverse.
+However, my knowledge in OOM is deficient, and I am still learning through textbooks, papers and discussions on webs.
+For helping make Maniverse real, I have a long namelist to thank.
 The good thing is that the current codes do work as they are expected, at least in my projects.
 
 ## Prerequisites
