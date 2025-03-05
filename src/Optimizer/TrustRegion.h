@@ -15,6 +15,7 @@ bool TrustRegion(
 		>& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
+		double tcg_tol,
 		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output);
 

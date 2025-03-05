@@ -27,7 +27,7 @@ TrustRegionSetting::TrustRegionSetting(){
 	this->R0 = 1;
 	this->RhoThreshold = 0.1;
 	this->Update = [&R0 = this->R0](double R, double Rho, double Snorm){
-		if ( Rho < 0.25 ) R *= 0.25;
+		if ( Rho < 0.25 ) R = std::min(0.25 * R, 0.75 * Snorm);
 		else if ( Rho > 0.75 || std::abs(Snorm * Snorm - R * R) < 1.e-10 ) R = std::min(2 * R, R0);
 		return R;
 	};
@@ -43,6 +43,7 @@ bool TrustRegion(
 		>& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
+		double tcg_tol,
 		int recalc_hess, int max_iter,
 		double& L, Manifold& M, int output){
 
@@ -157,10 +158,9 @@ bool TrustRegion(
 			}
 
 			// Truncated conjugate gradient
-			tcg.Tolerance = {
-				tol0,
-				0.1*std::min(M.Inner(M.Gr,M.Gr),std::sqrt(M.Inner(M.Gr,M.Gr)))/M.getDimension(),
-				0.1*tol2/M.getDimension()*M.P.size()
+			tcg.Tolerance = [tcg_tol](double deltaL, double L, double rnorm, double step){
+				rnorm += step; // Avoiding unused-variable warning
+				return std::abs(deltaL / L) < tcg_tol;
 			};
 			tcg.Radius = R;
 			tcg.Run();

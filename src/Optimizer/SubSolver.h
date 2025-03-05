@@ -4,7 +4,7 @@ class TruncatedConjugateGradient{ public:
 	bool Verbose;
 	bool ShowTarget;
 	double Radius;
-	std::tuple<double, double, double> Tolerance;
+	std::function<bool (double, double, double, double)> Tolerance;
 	std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> Sequence; // Step size, S, P.
 	TruncatedConjugateGradient(){};
 	TruncatedConjugateGradient(
