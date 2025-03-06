@@ -13,6 +13,7 @@
 #include <string>
 #include <cassert>
 #include <memory>
+#include <cstdio>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
@@ -68,7 +69,17 @@ void BroydenFletcherGoldfarbShanno::AdmittedAppend(Manifold& M, EigenMatrix step
 		if ( ! this->Ms.empty() ){
 			const EigenMatrix S = cache["S"] = this->Ms.back()->TransportManifold(step, M);
 			const EigenMatrix Y = cache["Y"] = M.Gr - this->Ms.back()->TransportManifold(this->Ms.back()->Gr, M);
-			cache["YoverYS"] = Y / M.Inner(Y, S);
+			const double YS = M.Inner(Y, S);
+			if ( this->Verbose ){
+				const double score = YS / M.Inner(S, S);
+				const double threshold = this->CautiousThreshold(std::sqrt(this->Ms.back()->Inner(this->Ms.back()->Gr, this->Ms.back()->Gr)));
+				const bool update = score > threshold;
+				std::printf("Score of hessian update:\n");
+				std::printf("| Score ( <Y, S> / <S, S> ): %E\n", score);
+				std::printf("| Threshold ( CautiousThresholdFunc(sqrt(<Gr, Gr>)) ): %E\n", threshold);
+				std::printf("| Update: %s\n", __True_False__(update));
+			}
+			cache["YoverYS"] = Y / YS;
 			const EigenMatrix HS = this->Ms.back()->TransportManifold(this->Hessian(step), M);
 			cache["HSoverSHS"] = HS / M.Inner(S, HS);
 		}
@@ -101,6 +112,7 @@ static EigenMatrix Recursive_BFGS_Hess(
 		std::unique_ptr<Manifold>* Ms,
 		std::map<std::string, EigenMatrix>* Caches,
 		int length,
+		std::function<double (double)>& CautiousThreshold,
 		EigenMatrix v){
 	if ( length > 1 ){
 		Manifold& M2 = *(Ms[length - 1]);
@@ -112,8 +124,14 @@ static EigenMatrix Recursive_BFGS_Hess(
 		const EigenMatrix& HSoverSHS = Caches[length - 1]["HSoverSHS"];
 
 		const EigenMatrix TV = M2.TransportManifold(v, M1);
-		const EigenMatrix HTV = Recursive_BFGS_Hess(Ms, Caches, length - 1, TV);
+		const EigenMatrix HTV = Recursive_BFGS_Hess(Ms, Caches, length - 1, CautiousThreshold, TV);
 		const EigenMatrix Part1 = M1.TransportManifold(HTV, M2);
+
+		const double score = M2.Inner(Y, S) / M2.Inner(S, S);
+		const double threshold = CautiousThreshold(std::sqrt(M1.Inner(M1.Gr, M1.Gr)));
+		const bool update = score > threshold;
+		if ( ! update ) return Part1;
+
 		const EigenMatrix Part2 = M2.Inner(Y, v) * YoverYS;
 		const EigenMatrix Part3 = M2.Inner(S, Part1) * HSoverSHS;
 		const EigenMatrix Total = Part1 + Part2 - Part3;
@@ -124,7 +142,7 @@ static EigenMatrix Recursive_BFGS_Hess(
 EigenMatrix BroydenFletcherGoldfarbShanno::HessianMatrixFree(EigenMatrix v){
 	return Recursive_BFGS_Hess(
 		this->Ms.data(), this->Caches.data(),
-		this->Caches.size(), v
+		this->Caches.size(), this->CautiousThreshold, v
 	);
 }
 
