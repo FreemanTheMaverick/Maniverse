@@ -15,4 +15,4 @@ Grassmann: Grassmann.cpp
 	$(CXX) -o ../../obj/$(OBJ)Grassmann.o Grassmann.cpp -c $(Flags)
 
 TransRotInvPointCloud: TransRotInvPointCloud.cpp
-	$(CXX) -o ../../obj/$(OBJ)TransRotInvPointCloud.o TransRotInvPointCloud.cpp -c $(Flags) -DEIGEN_NO_STATIC_ASSERT
+	$(CXX) -o ../../obj/$(OBJ)TransRotInvPointCloud.o TransRotInvPointCloud.cpp -c $(Flags)

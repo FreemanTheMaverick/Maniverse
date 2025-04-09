@@ -29,7 +29,7 @@ static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
 	const int rank = p.cols();
 	const int nconstraints = ( rank + 1 ) * rank / 2;
 	EigenMatrix Left = EigenZero(rank * rank + nconstraints, rank * rank + nconstraints);
-	EigenVector Right = EigenZero(rank * rank + nconstraints);
+	EigenVector Right = EigenZero(rank * rank + nconstraints, 1);
 	
 	// PT * P
 	const EigenMatrix PtP = p.transpose() * p;
