@@ -64,8 +64,8 @@ setup(
 		description = "Function optimization on manifolds",
 		version = "0.2",
 		url = "https://github.com/FreemanTheMaverick/Maniverse.git",
-		packages = ["Maniverse"],
-		package_data = { "Maniverse": ["lib/*"] },
+		packages = ["src"],
+		package_data = { "src": ["lib/*"] },
 		cmdclass = { "build": CustomBuild },
 		install_requires = ["pybind11>=2.13.6"],
 		classifiers = ["Programming Language :: Python :: 3"]
