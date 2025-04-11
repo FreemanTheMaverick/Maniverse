@@ -39,6 +39,7 @@ The good thing is that the current codes do work as they are expected, at least 
 * Python3 with numpy (For interface to python)
 
 ## Installation
+### Manual build
 * Cloning the repository
 ```
 $ git clone https://github.com/FreemanTheMaverick/Maniverse.git
@@ -60,3 +61,19 @@ $ git clone https://github.com/FreemanTheMaverick/Maniverse.git
     $ python
     >>> import Maniverse as mv
     ```
+### Pip (for Python use only)
+* Setting environment variables
+```
+$ export PYTHON3=[The path where you can find "Python.h".] # You may check this by the command "locate Python.h".
+$ export EIGEN3=[The path where you can find "Eigen/", "signature_of_eigen3_matrix_library" and "unsupported/".] # This is optional. If this is not set, the Eigen3 library will be downloaded automatically.
+```
+* Installation with `pip`
+```
+pip install Maniverse
+```
+Usually `pip` installs packages to a `lib/` directory that is already in `$PYTHONPATH`, so you do not need to set the environment variable for Maniverse.
+* Utilize Maniverse in your project
+```
+$ python
+>>> import Maniverse as mv
+```
