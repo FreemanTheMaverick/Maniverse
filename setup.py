@@ -1,72 +1,66 @@
 import os
-import urllib.request
+import wget
 import tarfile
 import subprocess
-from setuptools import setup
+from glob import glob
+from setuptools import setup, find_packages
 from setuptools.command.build import build
+import pybind11
+from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-class CustomBuild(build):
-	def run(self):
+__version__ = "0.2.9"
+pwd = os.path.dirname(__file__)
 
-		pwd = os.path.dirname(__file__)
+# Checking dependencies
+PYTHON3 = os.getenv("PYTHON3", default = '')
+print("Looking for Python.h at %s ..." % PYTHON3, end='')
+if os.path.isfile(PYTHON3 + "/Python.h"):
+	print("Found!")
+else:
+	raise RuntimeError("Python.h does not exist!")
+EIGEN3 = os.getenv("EIGEN3", default = '')
+if len(EIGEN3) > 0:
+	print("Looking for Eigen3 at %s ..." % EIGEN3, end='')
+	if os.path.exists(EIGEN3 + "/Eigen/") and os.path.exists(EIGEN3 + "/unsupported/") and os.path.isfile(EIGEN3 + "/signature_of_eigen3_matrix_library"):
+		print("Found!")
+	else:
+		raise RuntimeError("Python.h does not exist!")
+else:
+	print("The environment variable $EIGEN3 is not set. -> Downloading ...")
+	filename = wget.download("https://gitlab.com/libeigen/eigen/-/archive/3.4-rc1/eigen-3.4-rc1.tar.gz", bar = None)
+	with tarfile.open(filename) as tar:
+		tar.extractall(path = pwd) # Directory: eigen-3.4-rc1
+	EIGEN3 = pwd + "/eigen-3.4-rc1/"
+	print("EIGEN3 is %s." % EIGEN3)
+PYBIND11 = pybind11.get_include()
+print("PYBIND11 is %s." % PYBIND11)
 
-		# Checking commands
-		MAKE = os.getenv("MAKE", default = "make")
-		print("MAKE is %s." % MAKE)
-		CXX = os.getenv("CXX", default = "g++")
-		print("CXX is %s." % CXX)
-		AR = os.getenv("AR", default = "ar")
-		print("AR is %s." % AR)
+BASE_DIR = os.path.dirname(__file__)
+os.chdir(BASE_DIR)
 
-		# Checking dependencies
-		PYTHON3 = os.getenv("PYTHON3")
-		print("Looking for Python.h at %s ..." % PYTHON3, end='')
-		if os.path.isfile(PYTHON3 + "Python.h"):
-			print("Found!")
-		else:
-			raise RuntimeError("Python.h does not exist!")
-		EIGEN3 = os.getenv("EIGEN3")
-		if len(EIGEN3) > 0:
-			print("Looking for Eigen3 at %s ..." % EIGEN3, end='')
-			if os.path.exists(EIGEN3 + "/Eigen/") and os.path.exists(EIGEN3 + "/unsupported/") and os.path.isfile(EIGEN3 + "/signature_of_eigen3_matrix_library"):
-				print("Found!")
-			else:
-				raise RuntimeError("Python.h does not exist!")
-		else:
-			print("The environment variable $EIGEN3 is not set. -> Downloading ...")
-			urllib.request.urlretrieve("https://gitlab.com/libeigen/eigen/-/archive/3.4-rc1/eigen-3.4-rc1.tar.gz", pwd)
-			with tarfile.open(tarball_path) as tar:
-				tar.extractall(path = pwd) # Directory: eigen-3.4-rc1
-			EIGEN3 = pwd + "/eigen-3.4-rc1/"
-		PYBIND11 = os.popen("pip show pybind11 | grep 'Location:'").split()[1] + "/pybind11/include/"
+ParallelCompile(
+	"NPY_NUM_BUILD_JOBS",
+	needs_recompile = naive_recompile
+).install()
 
-		# Configuring the makefile
-		subprocess.check_call(["sed", "-i", "'%s/__MAKE__/" + MAKE + "/g", "makefile"])
-		subprocess.check_call(["sed", "-i", "'%s/__CXX__/" + CXX + "/g", "makefile"])
-		subprocess.check_call(["sed", "-i", "'%s/__AR__/" + AR + "/g", "makefile"])
-		subprocess.check_call(["sed", "-i", "'%s/__PYTHON3__/" + PYTHON3 + "/g", "makefile"])
-		subprocess.check_call(["sed", "-i", "'%s/__EIGEN3__/" + EIGEN3 + "/g", "makefile"])
-		subprocess.check_call(["sed", "-i", "'%s/__PYBIND11__/" + PYBIND11 + "/g", "makefile"])
-
-		# Make
-		nproc = os.popen("nproc")
-		subprocess.check_call(["sed", "-i", "'%s/__OBJ__/__CPP__/g", "makefile"])
-		subprocess.check_call([MAKE, "-j", nproc])
-		subprocess.check_call(["sed", "-i", "'%s/__CPP__/__PYTHON__/g", "makefile"])
-		subprocess.check_call([MAKE, "-j", nproc])
-
-		super().run()
-
+MV_CPP = sorted(glob("src/*.cpp") + glob("src/*/*.cpp"))
+MV_HEADER = sorted(glob("src/*.h") + glob("src/*/*.h"))
+ext_modules = [ Pybind11Extension(
+	"Maniverse",
+	MV_CPP,
+	undef_macros = ["DEBUG"],
+	include_dirs = [PYTHON3, EIGEN3, PYBIND11, MV_HEADER],
+	extra_compile_args = ["-O3", "-D__PYTHON__", "-DEIGEN_INITIALIZE_MATRICES_BY_ZERO"],
+	cxx_std = 17,
+	language = "c++"
+)]
 
 setup(
 		name = "Maniverse",
+		version = __version__,
 		author = "FreemanTheMaverick",
 		description = "Function optimization on manifolds",
-		version = "0.2",
+		ext_modules = ext_modules,
 		url = "https://github.com/FreemanTheMaverick/Maniverse.git",
-		packages = ["src"],
-		package_data = { "src": ["lib/*"] },
-		cmdclass = { "build": CustomBuild },
-		install_requires = ["pybind11>=2.13.6"],
 		classifiers = ["Programming Language :: Python :: 3"]
 )
