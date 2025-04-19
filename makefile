@@ -2,21 +2,21 @@
 # Change these for your computer configuration. #
 #################################################
 
-export MAKE = __MAKE__
-export CXX = __CXX__
-export AR = __AR__
-export OBJ = __OBJ__
+export MAKE = make
+export CXX = g++
+export AR = ar
+export OBJ = __CPP__
 # $(OBJ) should be either "__CPP__" or "__PYTHON__".
 # The two versions can coexist.
 # You may compile twice, once with "__CPP__" and the other with "__PYTHON__", to obtain both versions.
 # In the "lib/" directory, "libmaniverse.a" and "libmaniverse.so" are for CPP and "Maniverse.so" is for Python.
 
 # If $(OBJ) is "__PYTHON__", you need to set $(PYTHON3) and $(PYBIND11).
-export PYTHON3 = __PYTHON3__
+export PYTHON3 = /home/freeman/anaconda3/include/python3.11/
 # The path where you can find "Python.h".
-export PYBIND11 = __PYBIND11__
+export PYBIND11 = /home/freeman/anaconda3/lib/python3.11/site-packages/pybind11/include/pybind11
 # The path where you can find "pybind11/attr.h", "pybind11/stl/", etc.
-export EIGEN3 = __EIGEN3__
+export EIGEN3 = /home/freeman/eigen-3.4.0/
 # The path where you can find "Eigen/", "signature_of_eigen3_matrix_library" and "unsupported/".
 
 
@@ -34,10 +34,10 @@ export Flags = $(GeneralFlags) $(PYBIND11Flags) $(EIGEN3Flags)
 all:
 	mkdir -p obj/ lib/ include/
 	$(MAKE) -C src/
-	if [ $(OBJ) == __CPP__ ]; then\
+	if [ $(OBJ) = __CPP__ ]; then\
 		$(AR) -rv lib/libmaniverse.a obj/__CPP__*.o;\
 		$(CXX) -shared -o lib/libmaniverse.so obj/__CPP__*.o;\
-	elif [ $(OBJ) == __PYTHON__ ]; then\
+	elif [ $(OBJ) = __PYTHON__ ]; then\
 		$(CXX) -shared -o lib/Maniverse.so obj/__PYTHON__*.o;\
 	fi
 	mkdir -p include/Maniverse/
