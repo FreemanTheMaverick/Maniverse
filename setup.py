@@ -12,12 +12,6 @@ __version__ = "0.3.0"
 pwd = os.path.dirname(__file__)
 
 # Checking dependencies
-PYTHON3 = os.getenv("PYTHON3", default = '')
-print("Looking for Python.h at %s ..." % PYTHON3, end='')
-if os.path.isfile(PYTHON3 + "/Python.h"):
-	print("Found!")
-else:
-	raise RuntimeError("Python.h does not exist!")
 EIGEN3 = os.getenv("EIGEN3", default = '')
 if len(EIGEN3) > 0:
 	print("Looking for Eigen3 at %s ..." % EIGEN3, end='')
@@ -32,8 +26,6 @@ else:
 		tar.extractall(path = pwd) # Directory: eigen-3.4-rc1
 	EIGEN3 = pwd + "/eigen-3.4-rc1/"
 	print("EIGEN3 is %s." % EIGEN3)
-PYBIND11 = pybind11.get_include()
-print("PYBIND11 is %s." % PYBIND11)
 
 BASE_DIR = os.path.dirname(__file__)
 os.chdir(BASE_DIR)
@@ -49,7 +41,7 @@ ext_modules = [ Pybind11Extension(
 	"Maniverse",
 	MV_CPP,
 	undef_macros = ["DEBUG"],
-	include_dirs = [PYTHON3, EIGEN3, PYBIND11, MV_HEADER],
+	include_dirs = [EIGEN3, MV_HEADER],
 	extra_compile_args = ["-O3", "-D__PYTHON__", "-DEIGEN_INITIALIZE_MATRICES_BY_ZERO"],
 	cxx_std = 17,
 	language = "c++"
