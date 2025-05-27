@@ -8,7 +8,7 @@ from setuptools.command.build import build
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-__version__ = "0.2.9"
+__version__ = "0.3.0"
 pwd = os.path.dirname(__file__)
 
 # Checking dependencies
@@ -24,7 +24,7 @@ if len(EIGEN3) > 0:
 	if os.path.exists(EIGEN3 + "/Eigen/") and os.path.exists(EIGEN3 + "/unsupported/") and os.path.isfile(EIGEN3 + "/signature_of_eigen3_matrix_library"):
 		print("Found!")
 	else:
-		raise RuntimeError("Python.h does not exist!")
+		raise RuntimeError("Eigen3 does not exist!")
 else:
 	print("The environment variable $EIGEN3 is not set. -> Downloading ...")
 	filename = wget.download("https://gitlab.com/libeigen/eigen/-/archive/3.4-rc1/eigen-3.4-rc1.tar.gz", bar = None)
@@ -59,8 +59,10 @@ setup(
 		name = "Maniverse",
 		version = __version__,
 		author = "FreemanTheMaverick",
-		description = "Function optimization on manifolds",
-		ext_modules = ext_modules,
+		description = "Numerical optimization on manifolds",
+		long_description = open("README.md").read(),
+		long_description_content_type = "text/markdown",
 		url = "https://github.com/FreemanTheMaverick/Maniverse.git",
+		ext_modules = ext_modules,
 		classifiers = ["Programming Language :: Python :: 3"]
 )

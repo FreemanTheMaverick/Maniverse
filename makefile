@@ -12,11 +12,11 @@ export OBJ = __CPP__
 # In the "lib/" directory, "libmaniverse.a" and "libmaniverse.so" are for CPP and "Maniverse.so" is for Python.
 
 # If $(OBJ) is "__PYTHON__", you need to set $(PYTHON3) and $(PYBIND11).
-export PYTHON3 = /home/freeman/anaconda3/include/python3.11/
+export PYTHON3 = __PYTHON3__
 # The path where you can find "Python.h".
-export PYBIND11 = /home/freeman/anaconda3/lib/python3.11/site-packages/pybind11/include/pybind11
+export PYBIND11 = __PYBIND11__
 # The path where you can find "pybind11/attr.h", "pybind11/stl/", etc.
-export EIGEN3 = /home/freeman/eigen-3.4.0/
+export EIGEN3 = __EIGEN3__
 # The path where you can find "Eigen/", "signature_of_eigen3_matrix_library" and "unsupported/".
 
 
