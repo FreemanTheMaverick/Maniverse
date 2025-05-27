@@ -29,7 +29,8 @@ jobs:
       - name: Build release distributions
         run: |
           # NOTE: put your own distribution build steps here.
-          pip install -e .
+          pip install setuptools pybind11 wget 
+          python setup.py sdist bdist_wheel
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
