@@ -30,7 +30,7 @@ jobs:
         run: |
           # NOTE: put your own distribution build steps here.
           python -m pip install build
-          python -m build --inplace
+          python -m build .
 
       - name: Upload distributions
         uses: actions/upload-artifact@v4
