@@ -8,7 +8,7 @@ from setuptools.command.build import build
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 pwd = os.path.dirname(__file__)
 
 # Checking dependencies
@@ -35,11 +35,12 @@ ParallelCompile(
 ).install()
 
 MV_CPP = sorted(glob("src/*.cpp") + glob("src/*/*.cpp"))
+MV_HEADER = sorted(glob("src/*.h") + glob("src/*/*.h"))
 ext_modules = [ Pybind11Extension(
 	"Maniverse",
 	MV_CPP,
 	undef_macros = ["DEBUG"],
-	include_dirs = [EIGEN3],
+	include_dirs = [EIGEN3, MV_HEADER],
 	extra_compile_args = ["-O3", "-D__PYTHON__", "-DEIGEN_INITIALIZE_MATRICES_BY_ZERO"],
 	cxx_std = 17,
 	language = "c++"
