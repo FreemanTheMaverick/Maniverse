@@ -29,7 +29,8 @@ jobs:
       - name: Build release distributions
         run: |
           # Set the environment variable for Python.h
-          sudo apt install mlocate coreutils
+          sudo apt-get update
+          sudo apt-get install mlocate coreutils
           path=`locate Python.h`
           export PYTHON3=`dirname $path`
           # NOTE: put your own distribution build steps here.
