@@ -32,6 +32,7 @@ jobs:
           sudo apt-get install plocate
           path=`locate Python.h | head -1`
           export PYTHON3=`dirname $path`
+          ls -R
           # NOTE: put your own distribution build steps here.
           python -m pip install build
           python -m build
