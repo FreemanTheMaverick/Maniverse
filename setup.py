@@ -36,12 +36,12 @@ ParallelCompile(
 ).install()
 
 MV_CPP = sorted(glob("src/*.cpp") + glob("src/*/*.cpp"))
-MV_HEADER = sorted(glob("src/*.h") + glob("src/*/*.h"))
+MV_HEADER = [os.path.join(BASE_DIR, "src"), os.path.join(BASE_DIR, "src", "Manifold"), os.path.join(BASE_DIR, "src", "Optimizer")]
 ext_modules = [ Pybind11Extension(
 	"Maniverse",
 	MV_CPP,
 	undef_macros = ["DEBUG"],
-	include_dirs = [EIGEN3, MV_HEADER],
+	include_dirs = [EIGEN3] + MV_HEADER,
 	extra_compile_args = ["-O3", "-D__PYTHON__", "-DEIGEN_INITIALIZE_MATRICES_BY_ZERO"],
 	cxx_std = 17,
 	language = "c++"
