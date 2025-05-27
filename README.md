@@ -1,5 +1,5 @@
 # Maniverse
-> Function optimization on manifolds
+> Numerical optimization on manifolds
 
 ## Overview
 Maniverse is a library for optimization on manifolds (OOM).
