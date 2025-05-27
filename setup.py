@@ -8,7 +8,7 @@ from setuptools.command.build import build
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
 pwd = os.path.dirname(__file__)
 
 # Checking dependencies
@@ -27,12 +27,12 @@ else:
 	EIGEN3 = pwd + "/eigen-3.4-rc1/"
 	print("EIGEN3 is %s." % EIGEN3)
 
-pwd = os.path.abspath(pwd)
-
 ParallelCompile(
 	"NPY_NUM_BUILD_JOBS",
 	needs_recompile = naive_recompile
 ).install()
+
+os.chdir(pwd)
 
 MV_CPP = sorted(glob("src/*.cpp") + glob("src/*/*.cpp"))
 MV_HEADER = sorted(glob("src/*.h") + glob("src/*/*.h"))
