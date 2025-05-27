@@ -28,6 +28,9 @@ jobs:
 
       - name: Build release distributions
         run: |
+          # Set the environment variable for Python.h
+          dir = dirname `locate Python.h`
+          export PYTHON3=$dir
           # NOTE: put your own distribution build steps here.
           python -m pip install build
           python -m build
