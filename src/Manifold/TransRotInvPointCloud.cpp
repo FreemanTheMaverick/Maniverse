@@ -120,7 +120,8 @@ EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, Manifold& N)
 
 void TransRotInvPointCloud::Update(EigenMatrix p, bool purify){
 	const int rank = getRank(p);
-	assert( rank == p.cols() && "The matrix is column-rank-deficient!" );
+	if ( rank == p.cols() )
+		throw std::runtime_error("The matrix is column-rank-deficient!");
 	this->P = p;
 	if (purify) this->P = this->TangentPurification(p);
 }
