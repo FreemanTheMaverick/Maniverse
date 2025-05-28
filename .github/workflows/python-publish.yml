@@ -29,7 +29,7 @@ jobs:
       - name: Build release distributions
         run: |
           # NOTE: put your own distribution build steps here.
-          python -m pip install build setuptools pybind11 wget auditwheel
+          python -m pip install build auditwheel
           python -m build
           python -m auditwheel repair -w dist dist/*linux_x86_64.whl
           rm dist/*linux_x86_64.whl
