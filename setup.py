@@ -8,7 +8,7 @@ from setuptools.command.build import build
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-__version__ = "0.3.3"
+__version__ = "0.3.2"
 pwd = os.path.dirname(__file__)
 
 # Checking dependencies
