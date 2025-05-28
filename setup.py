@@ -1,38 +1,32 @@
 import os
-import wget
+import urllib.request
 import tarfile
-import subprocess
 from glob import glob
 from setuptools import setup, find_packages
-from setuptools.command.build import build
+from setuptools.command.build_py import build_py
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-__version__ = "0.3.2"
-pwd = os.path.dirname(__file__)
+__version__ = "0.3.3"
 
-# Checking dependencies
-EIGEN3 = os.getenv("EIGEN3", default = '')
-if len(EIGEN3) > 0:
-	print("Looking for Eigen3 at %s ..." % EIGEN3, end='')
-	if os.path.exists(EIGEN3 + "/Eigen/") and os.path.exists(EIGEN3 + "/unsupported/") and os.path.isfile(EIGEN3 + "/signature_of_eigen3_matrix_library"):
-		print("Found!")
-	else:
-		raise RuntimeError("Eigen3 does not exist!")
-else:
-	print("The environment variable $EIGEN3 is not set. -> Downloading ...")
-	filename = wget.download("https://gitlab.com/libeigen/eigen/-/archive/3.4-rc1/eigen-3.4-rc1.tar.gz", bar = None)
-	with tarfile.open(filename) as tar:
-		tar.extractall(path = pwd) # Directory: eigen-3.4-rc1
-	EIGEN3 = pwd + "/eigen-3.4-rc1/"
-	print("EIGEN3 is %s." % EIGEN3)
+# Downloading Eigen3
+pwd = os.path.dirname(__file__)
+EIGEN3 = pwd + "/eigen-3.4-rc1/"
+class CustomBuild(build_py):
+	def run(self):
+		url = "https://gitlab.com/libeigen/eigen/-/archive/3.4-rc1/eigen-3.4-rc1.tar.gz"
+		dest = pwd + "/eigen-3.4-rc1.tar.gz"
+		print("Downloading Eigen3 from %s to %s ..." % (url, dest))
+		urllib.request.urlretrieve(url, dest)
+		print("Extracting %s to %s ..." % (dest, EIGEN3))
+		with tarfile.open(dest) as tar:
+			tar.extractall(path = pwd) # Directory: eigen-3.4-rc1
+		super().run()
 
 ParallelCompile(
 	"NPY_NUM_BUILD_JOBS",
 	needs_recompile = naive_recompile
 ).install()
-
-os.chdir(pwd)
 
 MV_CPP = sorted(glob("src/*.cpp") + glob("src/*/*.cpp"))
 ext_modules = [ Pybind11Extension(
@@ -53,7 +47,13 @@ setup(
 		long_description = open("README.md").read(),
 		long_description_content_type = "text/markdown",
 		url = "https://github.com/FreemanTheMaverick/Maniverse.git",
+		cmdclass = {"build_py": CustomBuild},
 		ext_modules = ext_modules,
-		package_data={"": ["*.h"]},
+		packages = ["src", "src/Manifold", "src/Optimizer"],
+		package_data = {
+			"src": ["*.h"],
+			"src/Manifold": ["*.h"],
+			"src/Optimizer": ["*.h"],
+		},
 		classifiers = ["Programming Language :: Python :: 3"]
 )

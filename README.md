@@ -61,12 +61,7 @@ $ git clone https://github.com/FreemanTheMaverick/Maniverse.git
     $ python
     >>> import Maniverse as mv
     ```
-### Pip (for Python use only)
-* Setting environment variables
-```
-$ export PYTHON3=[The path where you can find "Python.h".] # You may check this by the command "locate Python.h".
-$ export EIGEN3=[The path where you can find "Eigen/", "signature_of_eigen3_matrix_library" and "unsupported/".] # This is optional. If this is not set, the Eigen3 library will be downloaded automatically.
-```
+### Pip (for Python only)
 * Installation with `pip`
 ```
 pip install Maniverse
