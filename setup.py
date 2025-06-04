@@ -2,7 +2,7 @@ import os
 import urllib.request
 import tarfile
 from glob import glob
-from setuptools import setup, find_packages
+from setuptools import setup
 from setuptools.command.build import build
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
@@ -30,15 +30,15 @@ ParallelCompile(
 
 MV_CPP = sorted(glob("src/*.cpp") + glob("src/*/*.cpp"))
 MV_HEADER = sorted(glob("src/*.h") + glob("src/*/*.h"))
-ext_modules = [ Pybind11Extension(
+ext_module = Pybind11Extension(
 	"Maniverse",
 	MV_CPP,
 	include_dirs = [EIGEN3],
 	depends = MV_HEADER,
 	extra_compile_args = ["-O3", "-D__PYTHON__", "-DEIGEN_INITIALIZE_MATRICES_BY_ZERO"],
-	cxx_std = 17,
-	language = "c++"
-)]
+	language = "c++",
+	cxx_std = 17
+)
 
 setup(
 		name = "Maniverse",
@@ -49,6 +49,6 @@ setup(
 		long_description_content_type = "text/markdown",
 		url = "https://github.com/FreemanTheMaverick/Maniverse.git",
 		cmdclass = {"build": CustomBuild},
-		ext_modules = ext_modules,
+		ext_modules = [ext_module],
 		classifiers = ["Programming Language :: Python :: 3"]
 )
