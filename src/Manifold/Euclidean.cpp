@@ -15,10 +15,6 @@
 #include "Euclidean.h"
 
 
-static double Distance(EigenMatrix p, EigenMatrix q){
-	return 2 * std::acos( p.cwiseProduct(q).cwiseSqrt().sum() );
-}
-
 Euclidean::Euclidean(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Euclidean";
 }
