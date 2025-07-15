@@ -16,8 +16,30 @@
 
 #include "Grassmann.h"
 
-#include <iostream>
-
+EigenMatrix RealSkewExpm(EigenMatrix A){
+	Eigen::RealSchur<EigenMatrix> schur(A);
+	const EigenMatrix Q = schur.matrixU();
+	const EigenMatrix T = schur.matrixT();
+	const int n = T.cols();
+	EigenMatrix expT = EigenZero(n, n);
+	int i = 0;
+	while ( i < n ){
+		const double a = ( i == n - 1 ) ? 0 : T(i, i + 1);
+		if ( i == n - 1 || std::abs(a) < 1e-12 ){
+			expT(i, i) = 1;
+			i += 1;
+		}else{
+			const double sina = std::sin(a);
+			const double cosa = std::cos(a);
+			expT(i, i) = expT(i + 1, i + 1) = cosa;
+			expT(i, i + 1) = sina;
+			expT(i + 1, i) = - sina;
+			i += 2;
+		}
+	}
+	const EigenMatrix expA = Q * expT * Q.transpose();
+	return expA;
+}
 
 Grassmann::Grassmann(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
 	this->Name = "Grassmann";
@@ -48,8 +70,8 @@ double Grassmann::Inner(EigenMatrix X, EigenMatrix Y) const{
 EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
 	const EigenMatrix Xp = X * this->P - this->P * X;
 	const EigenMatrix pX = - Xp;
-	const EigenMatrix expXp = Xp.exp();
-	const EigenMatrix exppX = pX.exp();
+	const EigenMatrix expXp = RealSkewExpm(Xp);
+	const EigenMatrix exppX = RealSkewExpm(pX);
 	return expXp * this->P * exppX;
 }
 
@@ -94,8 +116,8 @@ EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
 		if ( Y.isApprox(cached_Y) ) return cached_expdp * X * cached_exppd;
 	const EigenMatrix dp = Y * this->P - this->P * Y;
 	const EigenMatrix pd = - dp;
-	const EigenMatrix expdp = dp.exp();
-	const EigenMatrix exppd = pd.exp();
+	const EigenMatrix expdp = RealSkewExpm(dp);
+	const EigenMatrix exppd = RealSkewExpm(pd);
 	this->TransportTangentCache.push_back(std::make_tuple(Y, expdp, exppd));
 	return expdp * X * exppd;
 }
@@ -127,11 +149,12 @@ void Grassmann::getGradient(){
 void Grassmann::getHessian(){
 	// https://arxiv.org/abs/0709.2205
 	this->Hr = [P = this->P, Ge = this->Ge, He = this->He](EigenMatrix v){
-		const EigenMatrix he = He(v);
-		const EigenMatrix partA = P * he - he * P;
-		const EigenMatrix partB = Ge * v - v * Ge;
+		const EigenMatrix Phe = P * He(v);
+		const EigenMatrix partA = Phe - Phe.transpose();
+		const EigenMatrix Gev = Ge * v;
+		const EigenMatrix partB = Gev - Gev.transpose();
 		const EigenMatrix sum = partA - partB;
-		return (EigenMatrix)(P * sum - sum * P);
+		return (EigenMatrix)(2 * P * sum);
 	};
 }
 
