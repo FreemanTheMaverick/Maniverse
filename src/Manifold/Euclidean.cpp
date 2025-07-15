@@ -28,11 +28,11 @@ double Euclidean::Inner(EigenMatrix X, EigenMatrix Y) const{
 }
 
 EigenMatrix Euclidean::Exponential(EigenMatrix X) const{
-	return X;
+	return this->P + X;
 }
 
 EigenMatrix Euclidean::Logarithm(Manifold& N) const{
-	return N.P;
+	return N.P - this->P;
 }
 
 EigenMatrix Euclidean::TangentProjection(EigenMatrix A) const{
