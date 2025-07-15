@@ -120,7 +120,7 @@ bool TrustRegion(
 			std::printf("| Target    change: % E / %E / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
 			std::printf("| Gradient    norm: % E / %E / %s\n", Gnorm, tol1, __True_False__(Gnorm < tol1));
 			std::printf("| Step length norm: % E / %E / %s\n", Snorm, tol2, __True_False__(Snorm < tol2));
-			if ( std::abs(actual_delta_L) < tol0 && Gnorm < tol1 && Snorm < tol2 ) std::printf("| Converged!\n");
+			if ( ( std::abs(actual_delta_L) < tol0 || iiter == 0 ) && Gnorm < tol1 && Snorm < tol2 ) std::printf("| Converged!\n");
 			else std::printf("| Not converged yet!\n");
 		}
 		if ( Gnorm < tol1 ){
