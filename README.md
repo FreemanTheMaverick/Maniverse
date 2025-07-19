@@ -40,9 +40,9 @@ The good thing is that the current codes do work as they are expected, at least 
 
 ## Installation
 ### Manual build
-* Cloning the repository
+* Downloading the latest stable release
 ```
-$ git clone https://github.com/FreemanTheMaverick/Maniverse.git
+$ wget https://github.com/FreemanTheMaverick/Maniverse/archive/refs/tags/v0.3.5.tar.gz
 ```
 * Edit the first few lines of `/Maniverse/makefile` for your own computer configuration, including
   * the commands that call the C++ compiler, the GNU make and `ar`
