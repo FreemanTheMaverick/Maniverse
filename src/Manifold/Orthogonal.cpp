@@ -7,7 +7,6 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <functional>
-#include <cassert>
 #include <typeinfo>
 #include <memory>
 
@@ -49,8 +48,7 @@ static EigenMatrix OrthPolarInvRetr(EigenMatrix p, EigenMatrix q){
 	return q * S - p;
 }
 
-
-Orthogonal::Orthogonal(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
+Orthogonal::Orthogonal(EigenMatrix p): Manifold(p){
 	this->Name = "Orthogonal";
 	if ( p.rows() != p.cols() )
 		throw std::runtime_error("An orthogonal matrix must be square!");
@@ -112,7 +110,7 @@ EigenMatrix Orthogonal::TransportManifold(EigenMatrix X, Manifold& N) const{
 	return this->TransportTangent(X, Z);
 }
 
-void Orthogonal::Update(EigenMatrix p, bool purify){
+void Orthogonal::setPoint(EigenMatrix p, bool purify){
 	this->P = p;
 	if (purify){
 		Eigen::BDCSVD<EigenMatrix> svd(this->P, Eigen::ComputeFullU | Eigen::ComputeFullV);
@@ -124,13 +122,19 @@ void Orthogonal::getGradient(){
 	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
 }
 
-void Orthogonal::getHessian(){
+std::function<EigenMatrix (EigenMatrix)> Orthogonal::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
 	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
 	const EigenMatrix P = this->P;
 	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
-	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [P, tmp, He](EigenMatrix v){
+	if ( weingarten ) return [P, tmp, He](EigenMatrix v){
 		const EigenMatrix A = He(v) - 0.5 * v * tmp;
+		const EigenMatrix PtA = P.transpose() * A;
+		const EigenMatrix symPtA = ( PtA + PtA.transpose() ) / 2;
+		const EigenMatrix projA = A - P * symPtA;
+		return (EigenMatrix)(projA);
+	};
+	else return [P, He](EigenMatrix v){
+		const EigenMatrix A = He(v);
 		const EigenMatrix PtA = P.transpose() * A;
 		const EigenMatrix symPtA = ( PtA + PtA.transpose() ) / 2;
 		const EigenMatrix projA = A - P * symPtA;
@@ -144,7 +148,7 @@ std::unique_ptr<Manifold> Orthogonal::Clone() const{
 
 #ifdef __PYTHON__
 void Init_Orthogonal(pybind11::module_& m){
-	pybind11::class_<Orthogonal, Manifold>(m, "Orthogonal")
-		.def(pybind11::init<EigenMatrix, bool>());
+	pybind11::classh<Orthogonal, Manifold>(m, "Orthogonal")
+		.def(pybind11::init<EigenMatrix>());
 }
 #endif

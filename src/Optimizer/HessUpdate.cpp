@@ -28,21 +28,20 @@ HessUpdate::HessUpdate(int n){
 	this->Caches.reserve(n);
 }
 
-void HessUpdate::Append(Manifold& M, EigenMatrix Step){
+void HessUpdate::Append(Iterate& M, EigenMatrix Step){
 	if ( (int)this->Ms.size() >= this->Size || (int)this->Caches.size() >= this->Size ){
 		throw std::runtime_error("The number of previous steps exceeds the prescribed size!");
 	}
 	this->AdmittedAppend(M, Step);
 }
 
-void HessUpdate::AdmittedAppend(Manifold& M, EigenMatrix Step){
+void HessUpdate::AdmittedAppend(Iterate& M, EigenMatrix /*Step*/){
 	__Not_Implemented__
-	M.P += Step - Step;
-	this->Ms.push_back(M.Clone());
+	this->Ms.push_back(Iterate(M));
 }
 
 EigenMatrix HessUpdate::Hessian(EigenMatrix v){
-	if (this->Ms[0]->MatrixFree) return this->HessianMatrixFree(v);
+	if (this->Ms[0].MatrixFree) return this->HessianMatrixFree(v);
 	else{
 		EigenMatrix Hv = EigenZero(v.rows(), v.cols());
 		for ( auto& [eigenvalue, eigenvector] : this->EigenPairs ){
@@ -63,16 +62,16 @@ void HessUpdate::Clear(){
 	this->EigenPairs.clear();
 }
 
-void BroydenFletcherGoldfarbShanno::AdmittedAppend(Manifold& M, EigenMatrix step){
+void BroydenFletcherGoldfarbShanno::AdmittedAppend(Iterate& M, EigenMatrix step){
 	if (M.MatrixFree){
 		std::map<std::string, EigenMatrix> cache;
 		if ( ! this->Ms.empty() ){
-			const EigenMatrix S = cache["S"] = this->Ms.back()->TransportManifold(step, M);
-			const EigenMatrix Y = cache["Y"] = M.Gr - this->Ms.back()->TransportManifold(this->Ms.back()->Gr, M);
+			const EigenMatrix S = cache["S"] = this->Ms.back().TransportManifold(step, M);
+			const EigenMatrix Y = cache["Y"] = M.Gradient - this->Ms.back().TransportManifold(this->Ms.back().Gradient, M);
 			const double YS = M.Inner(Y, S);
 			if ( this->Verbose ){
 				const double score = YS / M.Inner(S, S);
-				const double threshold = this->CautiousThreshold(std::sqrt(this->Ms.back()->Inner(this->Ms.back()->Gr, this->Ms.back()->Gr)));
+				const double threshold = this->CautiousThreshold(std::sqrt(this->Ms.back().Inner(this->Ms.back().Gradient, this->Ms.back().Gradient)));
 				const bool update = score > threshold;
 				std::printf("Score of hessian update:\n");
 				std::printf("| Score ( <Y, S> / <S, S> ): %E\n", score);
@@ -80,18 +79,18 @@ void BroydenFletcherGoldfarbShanno::AdmittedAppend(Manifold& M, EigenMatrix step
 				std::printf("| Update: %s\n", __True_False__(update));
 			}
 			cache["YoverYS"] = Y / YS;
-			const EigenMatrix HS = this->Ms.back()->TransportManifold(this->Hessian(step), M);
+			const EigenMatrix HS = this->Ms.back().TransportManifold(this->Hessian(step), M);
 			cache["HSoverSHS"] = HS / M.Inner(S, HS);
 		}
 		this->Caches.push_back(cache);
 	}else{
 		if ( ! this->Ms.empty() ){
-			const EigenMatrix S = this->Ms.back()->TransportManifold(step, M);
-			const EigenMatrix Y = M.Gr - this->Ms.back()->TransportManifold(this->Ms.back()->Gr, M);
-			EigenMatrix TildeH = EigenZero(M.P.size(), M.P.size());
-			EigenMatrix C = EigenZero(M.P.size(), M.getDimension());
+			const EigenMatrix S = this->Ms.back().TransportManifold(step, M);
+			const EigenMatrix Y = M.Gradient - this->Ms.back().TransportManifold(this->Ms.back().Gradient, M);
+			EigenMatrix TildeH = EigenZero(M.Point.size(), M.Point.size());
+			EigenMatrix C = EigenZero(M.Point.size(), M.getDimension());
 			for ( int i = 0; i < M.getDimension(); i++ ){
-				const EigenMatrix new_vec = this->Ms.back()->TransportManifold(std::get<1>(this->EigenPairs[i]), M).reshaped<Eigen::RowMajor>();
+				const EigenMatrix new_vec = this->Ms.back().TransportManifold(std::get<1>(this->EigenPairs[i]), M).reshaped<Eigen::RowMajor>();
 				TildeH += std::get<0>(this->EigenPairs[i]) * new_vec * new_vec.transpose();
 				C.col(i) = M.BasisSet[i].reshaped<Eigen::RowMajor>();
 			}
@@ -99,24 +98,24 @@ void BroydenFletcherGoldfarbShanno::AdmittedAppend(Manifold& M, EigenMatrix step
 			const EigenMatrix Scol = S.reshaped<Eigen::RowMajor>();
 			const EigenMatrix Ycol = Y.reshaped<Eigen::RowMajor>();
 			const EigenMatrix TildeHS = TildeH * Cinv.transpose() * Cinv * Scol;
-			const EigenMatrix term2 = TildeHS * Scol.transpose() * Cinv.transpose() * Cinv * TildeH / M.Inner(S, TildeHS.reshaped<Eigen::RowMajor>(M.P.rows(), M.P.cols()));
+			const EigenMatrix term2 = TildeHS * Scol.transpose() * Cinv.transpose() * Cinv * TildeH / M.Inner(S, TildeHS.reshaped<Eigen::RowMajor>(M.Point.rows(), M.Point.cols()));
 			const EigenMatrix term3 = Ycol * Ycol.transpose() / M.Inner(Y, S);
 			EigenMatrix H = Cinv * ( TildeH - term2 + term3 ) * Cinv.transpose();
 			this->EigenPairs = Diagonalize(H, M.BasisSet);
-		}else this->EigenPairs = M.Hrm;
+		}else this->EigenPairs = M.HessianMatrix;
 	}
-	this->Ms.push_back(M.Clone());
+	this->Ms.push_back(Iterate(M));
 }
 
 static EigenMatrix Recursive_BFGS_Hess(
-		std::unique_ptr<Manifold>* Ms,
+		Iterate* Ms,
 		std::map<std::string, EigenMatrix>* Caches,
 		int length,
 		std::function<double (double)>& CautiousThreshold,
 		EigenMatrix v){
 	if ( length > 1 ){
-		Manifold& M2 = *(Ms[length - 1]);
-		Manifold& M1 = *(Ms[length - 2]);
+		Iterate& M2 = Ms[length - 1];
+		Iterate& M1 = Ms[length - 2];
 
 		const EigenMatrix& S = Caches[length - 1]["S"];
 		const EigenMatrix& Y = Caches[length - 1]["Y"];
@@ -128,7 +127,7 @@ static EigenMatrix Recursive_BFGS_Hess(
 		const EigenMatrix Part1 = M1.TransportManifold(HTV, M2);
 
 		const double score = M2.Inner(Y, S) / M2.Inner(S, S);
-		const double threshold = CautiousThreshold(std::sqrt(M1.Inner(M1.Gr, M1.Gr)));
+		const double threshold = CautiousThreshold(std::sqrt(M1.Inner(M1.Gradient, M1.Gradient)));
 		const bool update = score > threshold;
 		if ( ! update ) return Part1;
 
@@ -136,7 +135,7 @@ static EigenMatrix Recursive_BFGS_Hess(
 		const EigenMatrix Part3 = M2.Inner(S, Part1) * HSoverSHS;
 		const EigenMatrix Total = Part1 + Part2 - Part3;
 		return Total;
-	}else return (*Ms)->Hr(v);
+	}else return Ms->Hessian(v);
 }
 
 EigenMatrix BroydenFletcherGoldfarbShanno::HessianMatrixFree(EigenMatrix v){

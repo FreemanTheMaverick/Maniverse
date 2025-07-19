@@ -8,7 +8,6 @@
 #include <cmath>
 #include <functional>
 #include <string>
-#include <cassert>
 #include <memory>
 
 #include "../Macro.h"
@@ -61,9 +60,9 @@ static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
 	return Y - p * Omega;
 }
 
-TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
+TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p): Manifold(p){
 	const int rank = getRank(p);
-	assert( rank == p.cols() && "The matrix is column-rank-deficient!" );
+	if ( rank != p.cols() ) throw std::runtime_error("The matrix is column-rank-deficient!");
 	this->Name = std::to_string(rank) + "-D translation-rotation-invariant point cloud";
 }
 
@@ -118,7 +117,7 @@ EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, Manifold& N)
 	return HorizontalLift(q, rotatedX);
 }
 
-void TransRotInvPointCloud::Update(EigenMatrix p, bool purify){
+void TransRotInvPointCloud::setPoint(EigenMatrix p, bool purify){
 	const int rank = getRank(p);
 	if ( rank == p.cols() )
 		throw std::runtime_error("The matrix is column-rank-deficient!");
@@ -130,12 +129,11 @@ void TransRotInvPointCloud::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-void TransRotInvPointCloud::getHessian(){
+std::function<EigenMatrix (EigenMatrix)> TransRotInvPointCloud::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
 	const EigenMatrix P = this->P;
 	const int nrows = P.rows();
 	const int ncols = P.cols();
-	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [P, nrows, ncols, He](EigenMatrix v){
+	return [P, nrows, ncols, He](EigenMatrix v){
 		EigenMatrix tmp = EigenZero(nrows, ncols);
 		for ( int i = 0; i < ncols; i++)
 			tmp.col(i) = ( v.col(i).array() - v.col(i).mean() ).matrix();
@@ -149,7 +147,7 @@ std::unique_ptr<Manifold> TransRotInvPointCloud::Clone() const{
 
 #ifdef __PYTHON__
 void Init_TransRotInvPointCloud(pybind11::module_& m){
-	pybind11::class_<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
-		.def(pybind11::init<EigenMatrix, bool>());
+	pybind11::classh<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
+		.def(pybind11::init<EigenMatrix>());
 }
 #endif

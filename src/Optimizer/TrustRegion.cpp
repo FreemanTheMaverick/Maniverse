@@ -37,22 +37,22 @@ bool TrustRegion(
 		std::function<
 			std::tuple<
 				double,
-				EigenMatrix,
-				std::function<EigenMatrix (EigenMatrix)>
-			> (EigenMatrix, int)
+				std::vector<EigenMatrix>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>
+			> (std::vector<EigenMatrix>, int)
 		>& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
 		int recalc_hess, int max_iter,
-		double& L, Manifold& M, int output){
+		double& L, Iterate& M, int output){
 
 	const double tol0 = std::get<0>(tol);
 	const double tol1 = std::get<1>(tol);
 	const double tol2 = std::get<2>(tol);
 	if (output > 0){
 		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
-		std::printf("Manifold: %s\n", M.Name.c_str());
+		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
@@ -75,11 +75,12 @@ bool TrustRegion(
 	BroydenFletcherGoldfarbShanno bfgs(recalc_hess);
 	std::function<EigenMatrix (EigenMatrix)> bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
 	TruncatedConjugateGradient tcg{&M, &bfgs_hess, output > 0, 1};
-	EigenMatrix S = EigenZero(M.P.rows(), M.P.cols());
+	EigenMatrix Pmat = M.Point;
+	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
 	double Snorm = 0;
-	EigenMatrix P = M.P;
-	EigenMatrix Ge = EigenZero(P.rows(), P.cols());
-	std::function<EigenMatrix (EigenMatrix)> He = [](EigenMatrix v){return v;};
+	std::vector<EigenMatrix> P = M.getPoint();
+	std::vector<EigenMatrix> Ge;
+	std::vector<std::function<EigenMatrix (EigenMatrix)>> He;
 	bool accepted = 1;
 	bool converged = 0;
 
@@ -97,9 +98,7 @@ bool TrustRegion(
 		const double rho = actual_delta_L / predicted_delta_L;
 		if ( ( accepted = ( rho > tr_setting.RhoThreshold || iiter == 0 ) ) ){
 			oldL = L;
-			M.Update(P, 1);
-			M.Ge = Ge;
-			M.He = He;
+			M.setPoint(P, 1);
 		}
 		if (output){
 			std::printf("Target = %.10f\n", L);
@@ -111,8 +110,8 @@ bool TrustRegion(
 		}
 
 		// Obtaining Riemannian gradient
-		M.getGradient();
-		const double Gnorm = std::sqrt(std::abs(M.Inner(M.Gr, M.Gr)));
+		if ( accepted ) M.setGradient(Ge);
+		const double Gnorm = std::sqrt(std::abs(M.Inner(M.Gradient, M.Gradient)));
 
 		// Checking convergence
 		if (output){
@@ -139,7 +138,7 @@ bool TrustRegion(
 			if (calc_hess) bfgs.Clear();
 			if ( ! M.MatrixFree ) M.getBasisSet();
 			if (calc_hess){
-				M.getHessian();
+				M.setHessian(He);
 				if ( ! M.MatrixFree ) M.getHessianMatrix();
 			}
 			bfgs.Append(M, S);
@@ -170,8 +169,9 @@ bool TrustRegion(
 		if ( ! converged ){
 			tcg.Radius = R;
 			std::tie(Snorm, S) = tcg.Find();
-			P = M.Exponential(S);
-			predicted_delta_L = M.Inner(M.Gr + 0.5 * bfgs_hess(S), S);
+			Pmat = M.Exponential(S);
+			DecoupleBlock(Pmat, P);
+			predicted_delta_L = M.Inner(M.Gradient + 0.5 * bfgs_hess(S), S);
 			if (output){
 				std::printf("Next step:\n");
 				std::printf("| Step length: %E\n", Snorm);

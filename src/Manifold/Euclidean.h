@@ -1,8 +1,7 @@
 #include "Manifold.h"
 
 class Euclidean: public Manifold{ public:
-	EigenMatrix Hem;
-	Euclidean(EigenMatrix p, bool hess_transport_matrix);
+	Euclidean(EigenMatrix p);
 
 	int getDimension() const override;
 	double Inner(EigenMatrix X, EigenMatrix Y) const override;
@@ -16,9 +15,9 @@ class Euclidean: public Manifold{ public:
 	//EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
 	//EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) override;
 
-	void Update(EigenMatrix p, bool purify) override;
+	void setPoint(EigenMatrix p, bool purify) override;
 	void getGradient() override;
-	void getHessian() override;
+	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> h, bool weingarten) const override;
 
 	std::unique_ptr<Manifold> Clone() const override;
 };

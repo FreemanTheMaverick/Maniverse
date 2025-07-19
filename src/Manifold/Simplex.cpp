@@ -7,7 +7,6 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
-#include <cassert>
 #include <memory>
 
 #include "../Macro.h"
@@ -19,9 +18,9 @@ static double Distance(EigenMatrix p, EigenMatrix q){
 	return 2 * std::acos( p.cwiseProduct(q).cwiseSqrt().sum() );
 }
 
-Simplex::Simplex(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
+Simplex::Simplex(EigenMatrix p): Manifold(p){
 	this->Name = "Simplex";
-	assert( p.cols() == 1 && "A point on the Simplex manifold should have only one column!" );
+	if ( p.cols() != 1 ) throw std::runtime_error("A point on the Simplex manifold should have only one column!");
 }
 
 int Simplex::getDimension() const{
@@ -54,18 +53,14 @@ EigenMatrix Simplex::Logarithm(Manifold& N) const{
 }
 
 EigenMatrix Simplex::TangentProjection(EigenMatrix A) const{
-	const int n = this->P.size();
-	const EigenMatrix ones = EigenZero(n, n).array() + 1;
-	EigenMatrix tmp = EigenZero(n, n);
-	for ( int i = 0; i < n; i++ ) tmp.col(i) = P;
-	return ( EigenOne(n, n) - tmp ) * A;
+	return A - this->P * A.sum();
 }
 
 EigenMatrix Simplex::TangentPurification(EigenMatrix A) const{
 	return A.array() - A.mean();
 }
 
-void Simplex::Update(EigenMatrix p, bool purify){
+void Simplex::setPoint(EigenMatrix p, bool purify){
 	this->P = p;
 	if (purify){
 		const EigenMatrix Pabs = this->P.cwiseAbs();
@@ -77,19 +72,29 @@ void Simplex::getGradient(){
 	this->Gr = this->TangentProjection(this->P.cwiseProduct(this->Ge));
 }
 
-void Simplex::getHessian(){
+static EigenMatrix Projection(EigenMatrix P, EigenMatrix A){
+	const int n = (int)P.size();
+	const EigenMatrix ones = EigenZero(n, n).array() + 1;
+	EigenMatrix tmp = EigenZero(n, n);
+	for ( int i = 0; i < n; i++ ) tmp.col(i) = P;
+	return ( EigenOne(n, n) - tmp ) * A;
+}
+
+std::function<EigenMatrix (EigenMatrix)> Simplex::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
 	const int n = this->P.size();
 	const EigenMatrix ones = EigenZero(n, n).array() + 1;
-	const EigenMatrix proj = this->TangentProjection(EigenOne(n, n));
+	const EigenMatrix proj = Projection(this->P, EigenOne(n, n));
 	const EigenMatrix M = proj * (EigenMatrix)this->P.asDiagonal();
 	const EigenMatrix N = proj * (EigenMatrix)(
 			this->Ge
 			- ones * this->Ge.cwiseProduct(this->P)
 			- 0.5 * this->Gr.cwiseProduct(this->P.cwiseInverse())
 	).asDiagonal();
-	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [He, M, N](EigenMatrix v){
+	if ( weingarten ) return [He, M, N](EigenMatrix v){
 		return (EigenMatrix)(M * He(v) + N * v); // The forced conversion "(EigenMatrix)" is necessary. Without it the result will be wrong. I do not know why. Then I forced convert every EigenMatrix return value in std::function for ensurance.
+	};
+	else return [He, M](EigenMatrix v){ // Not sure about this one.
+		return (EigenMatrix)(M * He(v));
 	};
 }
 
@@ -99,7 +104,7 @@ std::unique_ptr<Manifold> Simplex::Clone() const{
 
 #ifdef __PYTHON__
 void Init_Simplex(pybind11::module_& m){
-	pybind11::class_<Simplex, Manifold>(m, "Simplex")
-		.def(pybind11::init<EigenMatrix, bool>());
+	pybind11::classh<Simplex, Manifold>(m, "Simplex")
+		.def(pybind11::init<EigenMatrix>());
 }
 #endif

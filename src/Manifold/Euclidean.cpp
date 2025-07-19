@@ -7,15 +7,13 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
-#include <cassert>
 #include <memory>
 
 #include "../Macro.h"
 
 #include "Euclidean.h"
 
-
-Euclidean::Euclidean(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
+Euclidean::Euclidean(EigenMatrix p): Manifold(p){
 	this->Name = "Euclidean";
 }
 
@@ -43,7 +41,7 @@ EigenMatrix Euclidean::TangentPurification(EigenMatrix A) const{
 	return A;
 }
 
-void Euclidean::Update(EigenMatrix p, [[maybe_unused]] bool purify){
+void Euclidean::setPoint(EigenMatrix p, bool /*purify*/){
 	this->P = p;
 }
 
@@ -51,11 +49,11 @@ void Euclidean::getGradient(){
 	this->Gr = this->Ge;
 }
 
-void Euclidean::getHessian(){
-	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [He](EigenMatrix v){
+std::function<EigenMatrix (EigenMatrix)> Euclidean::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
+	std::function<EigenMatrix (EigenMatrix)> Hr = [He](EigenMatrix v){
 		return (EigenMatrix)(He(v));
 	};
+	return Hr;
 }
 
 std::unique_ptr<Manifold> Euclidean::Clone() const{
@@ -64,7 +62,7 @@ std::unique_ptr<Manifold> Euclidean::Clone() const{
 
 #ifdef __PYTHON__
 void Init_Euclidean(pybind11::module_& m){
-	pybind11::class_<Euclidean, Manifold>(m, "Euclidean")
-		.def(pybind11::init<EigenMatrix, bool>());
+	pybind11::classh<Euclidean, Manifold>(m, "Euclidean")
+		.def(pybind11::init<EigenMatrix>());
 }
 #endif
