@@ -5,11 +5,9 @@
 #include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
-#include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
 #include <functional>
 #include <tuple>
-#include <cassert>
 #include <memory>
 
 #include "../Macro.h"
@@ -41,7 +39,7 @@ EigenMatrix RealSkewExpm(EigenMatrix A){
 	return expA;
 }
 
-Grassmann::Grassmann(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
+Grassmann::Grassmann(EigenMatrix p): Manifold(p){
 	this->Name = "Grassmann";
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());
@@ -130,7 +128,7 @@ EigenMatrix Grassmann::TransportManifold(EigenMatrix X, Manifold& N) const{
 	return this->TransportTangent(X, Y);
 }
 
-void Grassmann::Update(EigenMatrix p, bool purify){
+void Grassmann::setPoint(EigenMatrix p, bool purify){
 	this->P = p;
 	Eigen::SelfAdjointEigenSolver<EigenMatrix> eigensolver;
 	eigensolver.compute(p);
@@ -146,15 +144,20 @@ void Grassmann::getGradient(){
 	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
 }
 
-void Grassmann::getHessian(){
+std::function<EigenMatrix (EigenMatrix)> Grassmann::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
 	// https://arxiv.org/abs/0709.2205
-	this->Hr = [P = this->P, Ge = this->Ge, He = this->He](EigenMatrix v){
+	if ( weingarten ) return [P = this->P, Ge = this->Ge, He](EigenMatrix v){
 		const EigenMatrix Phe = P * He(v);
 		const EigenMatrix partA = Phe - Phe.transpose();
 		const EigenMatrix Gev = Ge * v;
 		const EigenMatrix partB = Gev - Gev.transpose();
 		const EigenMatrix sum = partA - partB;
 		return (EigenMatrix)(2 * P * sum);
+	};
+	else return [P = this->P, He](EigenMatrix v){
+		const EigenMatrix Phe = P * He(v);
+		const EigenMatrix partA = Phe - Phe.transpose();
+		return (EigenMatrix)(2 * P * partA);
 	};
 }
 
@@ -164,7 +167,7 @@ std::unique_ptr<Manifold> Grassmann::Clone() const{
 
 #ifdef __PYTHON__
 void Init_Grassmann(pybind11::module_& m){
-	pybind11::class_<Grassmann, Manifold>(m, "Grassmann")
-		.def(pybind11::init<EigenMatrix, bool>());
+	pybind11::classh<Grassmann, Manifold>(m, "Grassmann")
+		.def(pybind11::init<EigenMatrix>());
 }
 #endif

@@ -1,5 +1,5 @@
 class TruncatedConjugateGradient{ public:
-	Manifold* M;
+	Iterate* M;
 	std::function<EigenMatrix (EigenMatrix)>* Func;
 	bool Verbose;
 	bool ShowTarget;
@@ -8,7 +8,7 @@ class TruncatedConjugateGradient{ public:
 	std::vector<std::tuple<double, EigenMatrix, EigenMatrix>> Sequence; // Step size, S, P.
 	TruncatedConjugateGradient(){};
 	TruncatedConjugateGradient(
-			Manifold* m, std::function<EigenMatrix (EigenMatrix)>* func,
+			Iterate* m, std::function<EigenMatrix (EigenMatrix)>* func,
 			bool verbose, bool showtarget
 	): M(m), Func(func), Verbose(verbose), ShowTarget(showtarget){};
 	void Run();

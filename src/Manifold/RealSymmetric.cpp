@@ -7,7 +7,6 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <functional>
-#include <cassert>
 #include <memory>
 
 #include "../Macro.h"
@@ -18,7 +17,7 @@ inline EigenMatrix Symmetrize(EigenMatrix X){
 	return ( X + X.transpose() ) / 2;
 }
 
-RealSymmetric::RealSymmetric(EigenMatrix p, bool matrix_free): Manifold(p, matrix_free){
+RealSymmetric::RealSymmetric(EigenMatrix p): Manifold(p){
 	this->Name = "RealSymmetric";
 }
 
@@ -46,7 +45,7 @@ EigenMatrix RealSymmetric::TangentPurification(EigenMatrix A) const{
 	return Symmetrize(A);
 }
 
-void RealSymmetric::Update(EigenMatrix p, [[maybe_unused]] bool purify){
+void RealSymmetric::setPoint(EigenMatrix p, bool /*purify*/){
 	this->P = Symmetrize(p);
 }
 
@@ -54,9 +53,8 @@ void RealSymmetric::getGradient(){
 	this->Gr = Symmetrize(this->Ge);
 }
 
-void RealSymmetric::getHessian(){
-	const std::function<EigenMatrix (EigenMatrix)> He = this->He;
-	this->Hr = [He](EigenMatrix v){
+std::function<EigenMatrix (EigenMatrix)> RealSymmetric::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
+	return [He](EigenMatrix v){
 		return Symmetrize(He(v));
 	};
 }
@@ -67,7 +65,7 @@ std::unique_ptr<Manifold> RealSymmetric::Clone() const{
 
 #ifdef __PYTHON__
 void Init_RealSymmetric(pybind11::module_& m){
-	pybind11::class_<RealSymmetric, Manifold>(m, "RealSymmetric")
-		.def(pybind11::init<EigenMatrix, bool>());
+	pybind11::classh<RealSymmetric, Manifold>(m, "RealSymmetric")
+		.def(pybind11::init<EigenMatrix>());
 }
 #endif

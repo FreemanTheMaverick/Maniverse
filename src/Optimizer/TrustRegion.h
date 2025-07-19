@@ -9,25 +9,12 @@ bool TrustRegion(
 		std::function<
 			std::tuple<
 				double,
-				EigenMatrix,
-				std::function<EigenMatrix (EigenMatrix)>
-			> (EigenMatrix, int)
+				std::vector<EigenMatrix>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>
+			> (std::vector<EigenMatrix>, int)
 		>& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
 		int recalc_hess, int max_iter,
-		double& L, Manifold& M, int output);
-
-bool TrustRegionRationalFunction(
-		std::function<
-			std::tuple<
-				double,
-				EigenMatrix,
-				std::function<EigenMatrix (EigenMatrix)>
-			> (EigenMatrix, int)
-		>& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		int recalc_hess, int max_iter,
-		double& L, Manifold& M, int output);
+		double& L, Iterate& M, int output);
