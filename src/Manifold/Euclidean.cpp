@@ -14,7 +14,7 @@
 #include "Euclidean.h"
 
 Euclidean::Euclidean(EigenMatrix p): Manifold(p){
-	this->Name = "Euclidean";
+	this->Name = "Euclidean(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
 }
 
 int Euclidean::getDimension() const{

@@ -1,0 +1,23 @@
+#include "Stiefel.h"
+
+class Flag: public Stiefel{ public:
+	std::vector<std::tuple<int, int>> BlockParameters;
+	void setBlockParameters(std::vector<int>);
+	EigenMatrix getBlock(int);
+
+	Flag(EigenMatrix p);
+
+	int getDimension() const override;
+
+	EigenMatrix TangentProjection(EigenMatrix A) const override;
+
+	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const override;
+
+	std::unique_ptr<Manifold> Clone() const override;
+};
+
+#define FlagGetBlock(big_mat, imat)\
+	big_mat( Eigen::all, Eigen::seqN(\
+			std::get<0>(BlockParameters[imat]),\
+			std::get<1>(BlockParameters[imat])\
+	) )
