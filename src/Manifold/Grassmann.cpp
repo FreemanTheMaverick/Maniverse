@@ -40,11 +40,6 @@ EigenMatrix RealSkewExpm(EigenMatrix A){
 }
 
 Grassmann::Grassmann(EigenMatrix p): Manifold(p){
-	this->Name = "Grassmann";
-	this->P.resize(p.rows(), p.cols());
-	this->Ge.resize(p.rows(), p.cols());
-	this->Gr.resize(p.rows(), p.cols());
-	this->P = p;
 	Eigen::SelfAdjointEigenSolver<EigenMatrix> eigensolver;
 	eigensolver.compute(p);
 	const EigenVector eigenvalues = eigensolver.eigenvalues();
@@ -54,6 +49,8 @@ Grassmann::Grassmann(EigenMatrix p): Manifold(p){
 		if ( eigenvalues(i) > 0.5 ) rank++;
 	this->Projector.resize(p.rows(), rank);
 	this->Projector = eigenvectors.rightCols(rank);
+	this->P = this->Projector * this->Projector.transpose();
+	this->Name = "Grassmann(" + std::to_string(p.rows()) + ", " + std::to_string(rank) + ")";
 }
 
 int Grassmann::getDimension() const{

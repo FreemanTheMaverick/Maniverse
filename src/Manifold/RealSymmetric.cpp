@@ -18,7 +18,7 @@ inline EigenMatrix Symmetrize(EigenMatrix X){
 }
 
 RealSymmetric::RealSymmetric(EigenMatrix p): Manifold(p){
-	this->Name = "RealSymmetric";
+	this->Name = "RealSymmetric(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
 }
 
 int RealSymmetric::getDimension() const{

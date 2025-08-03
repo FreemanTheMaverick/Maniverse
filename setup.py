@@ -41,14 +41,14 @@ ext_module = Pybind11Extension(
 )
 
 setup(
-		name = "Maniverse",
-		version = __version__,
-		author = "FreemanTheMaverick",
-		description = "Numerical optimization on manifolds",
-		long_description = open("README.md").read(),
-		long_description_content_type = "text/markdown",
-		url = "https://github.com/FreemanTheMaverick/Maniverse.git",
-		cmdclass = {"build": CustomBuild},
-		ext_modules = [ext_module],
-		classifiers = ["Programming Language :: Python :: 3"]
+	name = "Maniverse",
+	version = __version__,
+	author = "FreemanTheMaverick",
+	description = "Numerical optimization on manifolds",
+	long_description = open("README.md").read(),
+	long_description_content_type = "text/markdown",
+	url = "https://github.com/FreemanTheMaverick/Maniverse.git",
+	cmdclass = {"build": CustomBuild},
+	ext_modules = [ext_module],
+	classifiers = ["Programming Language :: Python :: 3"]
 )
