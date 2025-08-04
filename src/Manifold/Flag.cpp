@@ -45,10 +45,6 @@ int Flag::getDimension() const{
 	return ndim;
 }
 
-double Flag::Inner(EigenMatrix X, EigenMatrix Y) const{
-	return 0.5 * X.cwiseProduct(Y).sum();
-}
-
 inline static EigenMatrix TangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
 	EigenMatrix Y = X;
 	for ( int i = 0; i < (int)BlockParameters.size(); i++ ){
@@ -65,7 +61,16 @@ EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
 }
 
 std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
-	return [He](EigenMatrix v){return He(v);};
+	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
+	const EigenMatrix P = this->P;
+	const std::vector<std::tuple<int, int>> B = this->BlockParameters;
+	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
+	if ( weingarten ) return [P, B, tmp, He](EigenMatrix v){
+		return ::TangentProjection(P, B, He(v) - 0.5 * v * tmp);
+	};
+	else return [P, B, He](EigenMatrix v){
+		return ::TangentProjection(P, B, He(v));
+	};
 }
 
 std::unique_ptr<Manifold> Flag::Clone() const{

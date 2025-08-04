@@ -7,7 +7,6 @@ class Flag: public Stiefel{ public:
 	Flag(EigenMatrix p);
 
 	int getDimension() const override;
-	double Inner(EigenMatrix X, EigenMatrix Y) const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
 
