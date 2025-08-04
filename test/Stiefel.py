@@ -7,13 +7,13 @@ class Stiefel(ut.TestCase):
 	def testRayleighQuotient(self):
 		# Rayleigh quotient
 		# Finding the smallest eigenvalue of A
-		# Minimize L(C) = v.t A v
+		# Minimize L(C) = C.t A C
 		# A \in Sym(10)
-		# v \in Stiefel(10, 1)
+		# C \in Stiefel(10, 1)
 		A = np.fromfile("Sym10.dat")
 		A.shape = (10, 10)
-		_, evectors = np.linalg.eigh(A) # Truth vector is evectors[:, 0]
-		Copt = evectors[:, 0]
+		_, evectors = np.linalg.eigh(A)
+		Copt = evectors[:, 0] # Truth value
 		C0 = ( evectors[:, 0] + evectors[:, 1] ) / np.sqrt(2) # Initial guess
 		def Objective(Cs, _):
 			C = Cs[0]
@@ -29,7 +29,7 @@ class Stiefel(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 10, L, M, 0
+				0.001, 1, 100, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point.T, Copt)
