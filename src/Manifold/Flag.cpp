@@ -4,7 +4,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #endif
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
 #include <functional>
@@ -22,7 +22,7 @@ void Flag::setBlockParameters(std::vector<int> sizes){
 	int tot_size = 0;
 	for ( int size : sizes ){
 		if ( size <= 0 ) throw std::runtime_error("Invalid sizes of subspaces!");
-		this->BlockParameters.push_back(std::make_tuple(tot_size, tot_size + size));
+		this->BlockParameters.push_back(std::make_tuple(tot_size, size));
 		if ( tot_size > 0 ) this->Name += ", ";
 		tot_size += size;
 		this->Name += std::to_string(tot_size);
@@ -45,29 +45,27 @@ int Flag::getDimension() const{
 	return ndim;
 }
 
-static EigenMatrix HorizontalLift(
-		EigenMatrix P,
-		std::vector<std::tuple<int, int>> BlockParameters,
-		EigenMatrix X){
-	EigenMatrix Omega = P.transpose() * X;
-	for ( auto [first, length] : BlockParameters ){
-		Omega.block(first, first, length, length).setZero();
-	}
-	return P * Omega;
+double Flag::Inner(EigenMatrix X, EigenMatrix Y) const{
+	return 0.5 * X.cwiseProduct(Y).sum();
 }
 
-EigenMatrix Flag::TangentProjection(EigenMatrix A) const{
-	return HorizontalLift(this->P, this->BlockParameters, Stiefel::TangentProjection(A));
+inline static EigenMatrix TangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
+	EigenMatrix Y = X;
+	for ( int i = 0; i < (int)BlockParameters.size(); i++ ){
+		FlagGetBlock(Y, i) -= FlagGetBlock(P, i) * FlagGetBlock(P, i).transpose() * FlagGetBlock(X, i);
+		for ( int j = 0; j < (int)BlockParameters.size(); j++ ){
+			if ( i != j ) FlagGetBlock(Y, i) -= FlagGetBlock(P, j) * FlagGetBlock(X, j).transpose() * FlagGetBlock(P, i);
+		}
+	}
+	return Y;
+}
+
+EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
+	return ::TangentProjection(this->P, this->BlockParameters, X);
 }
 
 std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
-	return [
-		P = this->P,
-		B = this->BlockParameters,
-		Hr_St = Stiefel::getHessian(He, weingarten)
-	](EigenMatrix v){
-		return HorizontalLift(P, B, Hr_St(HorizontalLift(P, B, v)));
-	};
+	return [He](EigenMatrix v){return He(v);};
 }
 
 std::unique_ptr<Manifold> Flag::Clone() const{

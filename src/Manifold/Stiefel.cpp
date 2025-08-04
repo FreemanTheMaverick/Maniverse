@@ -42,34 +42,36 @@ EigenMatrix Stiefel::Exponential(EigenMatrix X) const{
 	B.topLeftCorner(X.cols(), X.cols()) = B.bottomRightCorner(X.cols(), X.cols()) = this->P.transpose() * X;
 	B.topRightCorner(X.cols(), X.cols()) = - X.transpose() * X;
 	B.bottomLeftCorner(X.cols(), X.cols()) = EigenOne(X.cols(), X.cols());
-	EigenMatrix C = EigenZero(X.cols(), 2 * X.cols());
+	EigenMatrix C = EigenZero(2 * X.cols(), X.cols());
 	C.topRows(X.cols()) = ( - this->P.transpose() * X ).exp();
 	return A * B.exp() * C;
 }
 
-EigenMatrix Stiefel::TangentProjection(EigenMatrix A) const{
+inline static EigenMatrix TangentProjection(EigenMatrix P, EigenMatrix A){
 	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	const EigenMatrix PtA = this->P.transpose() * A;
+	const EigenMatrix PtA = P.transpose() * A;
 	const EigenMatrix SymPtA = 0.5 * ( PtA + PtA.transpose() );
-	return A - this->P * SymPtA;
+	return A - P * SymPtA;
+}
+
+EigenMatrix Stiefel::TangentProjection(EigenMatrix A) const{
+	return ::TangentProjection(this->P, A);
 }
 
 EigenMatrix Stiefel::TangentPurification(EigenMatrix A) const{
-	const EigenMatrix Z = this->P.transpose() * A;
-	const EigenMatrix Zpurified = 0.5  * (Z - Z.transpose());
-	return this->P * Zpurified;
+	return A;
 }
 
 void Stiefel::setPoint(EigenMatrix p, bool purify){
-	this->P = p;
 	if (purify){
-		Eigen::BDCSVD<EigenMatrix> svd(this->P, Eigen::ComputeFullU | Eigen::ComputeFullV);
-		this->P = svd.matrixU() * svd.matrixV().transpose();
+		Eigen::BDCSVD<EigenMatrix> svd(p, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		p = svd.matrixU() * svd.matrixV().transpose();
 	}
+	this->P = p;
 }
 
 void Stiefel::getGradient(){
-	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
+	this->Gr = this->TangentProjection(this->Ge);
 }
 
 std::function<EigenMatrix (EigenMatrix)> Stiefel::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
@@ -77,18 +79,10 @@ std::function<EigenMatrix (EigenMatrix)> Stiefel::getHessian(std::function<Eigen
 	const EigenMatrix P = this->P;
 	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
 	if ( weingarten ) return [P, tmp, He](EigenMatrix v){
-		const EigenMatrix A = He(v) - 0.5 * v * tmp;
-		const EigenMatrix PtA = P.transpose() * A;
-		const EigenMatrix symPtA = ( PtA + PtA.transpose() ) / 2;
-		const EigenMatrix projA = A - P * symPtA;
-		return (EigenMatrix)(projA);
+		return ::TangentProjection(P, He(v) - 0.5 * v * tmp);
 	};
 	else return [P, He](EigenMatrix v){
-		const EigenMatrix A = He(v);
-		const EigenMatrix PtA = P.transpose() * A;
-		const EigenMatrix symPtA = ( PtA + PtA.transpose() ) / 2;
-		const EigenMatrix projA = A - P * symPtA;
-		return (EigenMatrix)(projA);
+		return ::TangentProjection(P, He(v));
 	};
 }
 
