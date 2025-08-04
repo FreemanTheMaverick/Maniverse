@@ -1,5 +1,5 @@
 import unittest as ut
 
-from Flag import *
+from Stiefel import *
 
 ut.main()

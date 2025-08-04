@@ -3,11 +3,11 @@
 class Flag: public Stiefel{ public:
 	std::vector<std::tuple<int, int>> BlockParameters;
 	void setBlockParameters(std::vector<int>);
-	EigenMatrix getBlock(int);
 
 	Flag(EigenMatrix p);
 
 	int getDimension() const override;
+	double Inner(EigenMatrix X, EigenMatrix Y) const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
 
@@ -17,7 +17,7 @@ class Flag: public Stiefel{ public:
 };
 
 #define FlagGetBlock(big_mat, imat)\
-	big_mat( Eigen::all, Eigen::seqN(\
+	big_mat( Eigen::placeholders::all, Eigen::seqN(\
 			std::get<0>(BlockParameters[imat]),\
 			std::get<1>(BlockParameters[imat])\
 	) )

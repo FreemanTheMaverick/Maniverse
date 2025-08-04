@@ -79,6 +79,12 @@ EigenMatrix Orthogonal::TransportTangent(EigenMatrix Y, EigenMatrix Z) const{
 	return RZ * Lambda + ( EigenOne(Z.cols(), Z.cols()) - RZ * RZ.transpose() ) * Y * Ainv;
 }
 
+EigenMatrix Orthogonal::TangentPurification(EigenMatrix A) const{
+	const EigenMatrix Z = this->P.transpose() * A;
+	const EigenMatrix Zpurified = 0.5  * (Z - Z.transpose());
+	return this->P * Zpurified;
+}
+
 EigenMatrix Orthogonal::TransportManifold(EigenMatrix X, Manifold& N) const{
 	__Check_Vec_Transport__
 	const EigenMatrix q = N.P;
