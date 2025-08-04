@@ -2,10 +2,6 @@ import unittest as ut
 import numpy as np
 import Maniverse as mv
 
-# L(C) = Tr[ C.t A C ]
-# A \in Sym(10)
-# C \in Flag(10, 6)
-
 class Flag(ut.TestCase):
 
 	def testPrincipalComponentAnalysis(self):
