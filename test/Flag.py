@@ -30,7 +30,7 @@ class Flag(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 100, L, M, 0
+				0.001, 1, 20, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point @ M.Point.T, Copt @ Copt.T)
