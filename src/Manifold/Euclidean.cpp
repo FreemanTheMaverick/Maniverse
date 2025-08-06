@@ -50,10 +50,7 @@ void Euclidean::getGradient(){
 }
 
 std::function<EigenMatrix (EigenMatrix)> Euclidean::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
-	std::function<EigenMatrix (EigenMatrix)> Hr = [He](EigenMatrix v){
-		return (EigenMatrix)(He(v));
-	};
-	return Hr;
+	return He;
 }
 
 std::unique_ptr<Manifold> Euclidean::Clone() const{
