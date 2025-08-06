@@ -29,7 +29,7 @@ class Stiefel(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 100, L, M, 0
+				0.001, 1, 8, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point.T, Copt)
@@ -59,7 +59,7 @@ class Stiefel(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 100, L, M, 0
+				0.001, 1, 15, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, Copt)
