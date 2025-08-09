@@ -18,26 +18,17 @@ class Orthogonal(ut.TestCase):
 		def Objective(Cs, _):
 			n = Cs[0][:, 0]
 			C = Cs[1]
-			a = C * n @ C.T
-			L = np.linalg.norm( a - A )**2
-			Ga = 2 * ( a - A )
-			Gn = np.diag( C.T @ Ga @ C )
-			GC = 2 * Ga @ C * n
+			L = np.linalg.norm( C * n @ C.T - A ) ** 2
+			Gn = 2 * ( n - np.diag( C.T @ A @ C ) )
+			GC = 4 * ( C * n ** 2 - A @ C * n )
 			def Hnn(delta_n):
 				return 2 * delta_n
 			def HnC(delta_C):
-				part1 = 4 * np.diag( C.T @ delta_C * n )
-				part2 = 2 * np.sum( delta_C.T @ Ga @ C, axis = 1 )
-				return part1 + part2
+				return - 4 * np.diag( C.T @ A @ delta_C )
 			def HCn(delta_n):
-				part1 = 4 *  C * delta_n[:, 0] * n
-				part2 = 2 * Ga @ C * delta_n[:, 0]
-				return part1 + part2
+				return 8 * C * n * delta_n[:, 0] - 4 * A @ C * delta_n[:, 0]
 			def HCC(delta_C):
-				part1 = 2 * delta_C * n
-				part2 = 2 * C * n @ delta_C.T @ C
-				part3 = Ga @ delta_C
-				return 2 * ( part1 + part2 + part3 ) * n
+				return 4 * ( delta_C * n ** 2 - A @ delta_C * n )
 			return L, [Gn, GC], [Hnn, HnC, HCn, HCC]
 		euclidean = mv.Euclidean(n0)
 		orthogonal = mv.Orthogonal(C0)
@@ -47,7 +38,7 @@ class Orthogonal(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 35, L, M, 0
+				0.001, 1, 35, L, M, 1
 		)
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, A)
