@@ -9,7 +9,7 @@ class Stiefel(ut.TestCase):
 		# Finding the smallest eigenvalue of A
 		# Minimize L(C) = C.t A C
 		# A \in Sym(10)
-		# C \in Stiefel(10, 1)
+		# C \in St(10, 1)
 		A = np.fromfile("Sym10.dat")
 		A.shape = (10, 10)
 		_, evectors = np.linalg.eigh(A)
