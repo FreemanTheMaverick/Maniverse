@@ -1,12 +1,10 @@
-#include "Manifold.h"
+#include "Euclidean.h"
 
-class TransRotInvPointCloud: public Manifold{ public:
+class TransRotInvPointCloud: public Euclidean{ public:
 	TransRotInvPointCloud(EigenMatrix p);
 
-	int getDimension() const override;
-	double Inner(EigenMatrix X, EigenMatrix Y) const override;
+	virtual int getDimension() const override;
 
-	EigenMatrix Exponential(EigenMatrix X) const override;
 	EigenMatrix Logarithm(Manifold& N) const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
