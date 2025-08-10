@@ -58,8 +58,8 @@ EigenMatrix Stiefel::TangentProjection(EigenMatrix A) const{
 	return ::TangentProjection(this->P, A);
 }
 
-EigenMatrix Stiefel::TangentPurification(EigenMatrix A) const{
-	return A;
+EigenMatrix Stiefel::TangentPurification(EigenMatrix X) const{
+	return X - this->P * ( this->P.transpose() * X ).diagonal().asDiagonal();
 }
 
 void Stiefel::setPoint(EigenMatrix p, bool purify){

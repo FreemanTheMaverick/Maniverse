@@ -9,6 +9,7 @@ class Flag: public Stiefel{ public:
 	int getDimension() const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
+	EigenMatrix TangentPurification(EigenMatrix A) const override;
 
 	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const override;
 

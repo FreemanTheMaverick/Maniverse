@@ -14,7 +14,6 @@
 #include "../Macro.h"
 
 #include "Flag.h"
-#include <iostream>
 
 void Flag::setBlockParameters(std::vector<int> sizes){
 	this->BlockParameters.clear();
@@ -58,6 +57,21 @@ inline static EigenMatrix TangentProjection(EigenMatrix P, std::vector<std::tupl
 
 EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
 	return ::TangentProjection(this->P, this->BlockParameters, X);
+}
+
+EigenMatrix Flag::TangentPurification(EigenMatrix X) const{
+	EigenMatrix Omega = this->P.transpose() * X;
+	for ( int i = 0; i < (int)this->BlockParameters.size(); i++ ){
+		const int ifirst = std::get<0>(this->BlockParameters[i]);
+		const int ilength = std::get<1>(this->BlockParameters[i]);
+		for ( int j = 0; j < i; j++ ){
+			const int jfirst = std::get<0>(this->BlockParameters[j]);
+			const int jlength = std::get<1>(this->BlockParameters[j]);
+			Omega.block(ifirst, jfirst, ilength, jlength).setZero();
+			Omega.block(jfirst, ifirst, jlength, ilength).setZero();
+		}
+	}
+	return X - this->P * Omega;
 }
 
 std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
