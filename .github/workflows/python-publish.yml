@@ -29,7 +29,6 @@ jobs:
       - name: Build release distributions
         env:
           CIBW_BUILD: "cp39-* cp310-* cp311-* cp312-*"
-          CIBW_SKIP: "*-musllinux*"
         run: |
           # NOTE: put your own distribution build steps here.
           python -m pip install build cibuildwheel
