@@ -22,7 +22,36 @@ static int getRank(EigenMatrix p){
 	return lu.rank();
 }
 
-static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
+TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p): Euclidean(p){
+	const int rank = getRank(p);
+	if ( rank != p.cols() ) throw std::runtime_error("The matrix is column-rank-deficient!");
+	this->Name = "Translation-rotation-invariant-point-cloud(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
+}
+
+int TransRotInvPointCloud::getDimension() const{
+	const int nrows = P.rows();
+	const int ncols = P.cols();
+	//     Total         Trans   Rot
+	return nrows * ncols - ncols - ncols * ( ncols - 1 ) / 2;
+}
+
+static EigenMatrix Procrustes(EigenMatrix P, EigenMatrix Q, EigenMatrix X){
+	Eigen::JacobiSVD<EigenMatrix> svd;
+	const EigenMatrix Qinv = Q.completeOrthogonalDecomposition().pseudoInverse();
+	svd.compute(Qinv * P, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	const EigenMatrix Rotation = svd.matrixU() * svd.matrixV().transpose();
+	return X * Rotation;
+}
+
+static EigenMatrix Centering(EigenMatrix Y){
+	for ( int i = 0; i < Y.cols(); i++)
+		Y.col(i) = ( Y.col(i).array() - Y.col(i).mean() ).matrix();
+	return Y;
+}
+
+static EigenMatrix TangentProjection(EigenMatrix p, EigenMatrix Y){
+
+	Y = Centering(Y);
 
 	// Y = P Omega
 	const int rank = p.cols();
@@ -60,61 +89,25 @@ static EigenMatrix HorizontalLift(EigenMatrix p, EigenMatrix Y){
 	return Y - p * Omega;
 }
 
-TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p): Manifold(p){
-	const int rank = getRank(p);
-	if ( rank != p.cols() ) throw std::runtime_error("The matrix is column-rank-deficient!");
-	this->Name = std::to_string(rank) + "-D translation-rotation-invariant point cloud";
-}
-
-int TransRotInvPointCloud::getDimension() const{
-	const int nrows = P.rows();
-	const int ncols = P.cols();
-	//     Total         Trans   Rot
-	return nrows * ncols - ncols - ncols * ( ncols - 1 ) / 2;
-}
-
-double TransRotInvPointCloud::Inner(EigenMatrix X, EigenMatrix Y) const{
-	return (X.cwiseProduct(Y)).sum(); // On the horizontal space
-}
-
-static EigenMatrix Procrustes(EigenMatrix P, EigenMatrix Q, EigenMatrix X){
-	Eigen::JacobiSVD<EigenMatrix> svd;
-	const EigenMatrix Qinv = Q.completeOrthogonalDecomposition().pseudoInverse();
-	svd.compute(Qinv * P, Eigen::ComputeFullU | Eigen::ComputeFullV);
-	const EigenMatrix Rotation = svd.matrixU() * svd.matrixV().transpose();
-	return X * Rotation;
-}
-
-EigenMatrix TransRotInvPointCloud::Exponential(EigenMatrix X) const{
-	const EigenMatrix Q = this->P + X;
-	return Procrustes(this->P, Q, Q);
-}
 
 EigenMatrix TransRotInvPointCloud::Logarithm(Manifold& N) const{
 	__Check_Log_Map__
-	const EigenMatrix q = N.P;
-	return HorizontalLift(this->P, q);
+	return ::TangentProjection(this->P, N.P);
 }
 
 EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A) const{
-	EigenMatrix tmp = EigenZero(A.rows(), A.cols());
-	for ( int i = 0; i < this->P.cols(); i++)
-		tmp.col(i) = ( A.col(i).array() - A.col(i).mean() ).matrix();
-	return HorizontalLift(this->P, tmp);
+	return ::TangentProjection(this->P, A);
 }
 
 EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A) const{
-	EigenMatrix tmp = EigenZero(A.rows(), A.cols());
-	for ( int i = 0; i < this->P.cols(); i++)
-		tmp.col(i) = ( A.col(i).array() - A.col(i).mean() ).matrix();
-	return tmp;
+	return Centering(A);
 }
 
 EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, Manifold& N) const{
 	__Check_Vec_Transport__
 	const EigenMatrix q = N.P;
 	const EigenMatrix rotatedX = Procrustes(q, this->P, X);
-	return HorizontalLift(q, rotatedX);
+	return ::TangentProjection(q, rotatedX);
 }
 
 void TransRotInvPointCloud::setPoint(EigenMatrix p, bool purify){
@@ -130,14 +123,8 @@ void TransRotInvPointCloud::getGradient(){
 }
 
 std::function<EigenMatrix (EigenMatrix)> TransRotInvPointCloud::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
-	const EigenMatrix P = this->P;
-	const int nrows = P.rows();
-	const int ncols = P.cols();
-	return [P, nrows, ncols, He](EigenMatrix v){
-		EigenMatrix tmp = EigenZero(nrows, ncols);
-		for ( int i = 0; i < ncols; i++)
-			tmp.col(i) = ( v.col(i).array() - v.col(i).mean() ).matrix();
-		return (EigenMatrix)HorizontalLift(P, He( HorizontalLift(P, tmp) ));
+	return [P = this->P, He](EigenMatrix v){
+		return ::TangentProjection(P, He(v));
 	};
 }
 
