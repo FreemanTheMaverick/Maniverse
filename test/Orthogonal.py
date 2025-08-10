@@ -10,7 +10,7 @@ class Orthogonal(ut.TestCase):
 		# Minimize L(n, C) = || C diag(n) C.t - A ||^2
 		# A \in Sym(10)
 		# n \in R(10)
-		# C \in Orthogonal(10)
+		# C \in O(10)
 		A = np.fromfile("Sym10.dat")
 		A.shape = (10, 10) # Truth value
 		n0 = np.zeros(10) # Initial guess
@@ -38,7 +38,7 @@ class Orthogonal(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 35, L, M, 1
+				0.001, 1, 35, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, A)
