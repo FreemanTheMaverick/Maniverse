@@ -79,8 +79,55 @@ std::unique_ptr<Manifold> Manifold::Clone() const{
 }
 
 #ifdef __PYTHON__
+class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ public:
+	using Manifold::Manifold;
+
+	int getDimension() const override{
+		PYBIND11_OVERRIDE(int, Manifold, getDimension,);
+	}
+	double Inner(EigenMatrix X, EigenMatrix Y) const override{
+		PYBIND11_OVERRIDE(double, Manifold, Inner, X, Y);
+	}
+
+	EigenMatrix Exponential(EigenMatrix X) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, Exponential, X);
+	}
+	EigenMatrix Logarithm(Manifold& N) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, Logarithm, N);
+	}
+
+	EigenMatrix TangentProjection(EigenMatrix A) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TangentProjection, A);
+	}
+	EigenMatrix TangentPurification(EigenMatrix A) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TangentPurification, A);
+	}
+
+	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TransportTangent, X, Y);
+	}
+	EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TransportManifold, X, N);
+	}
+
+	void setPoint(EigenMatrix p, bool purify) override{
+		PYBIND11_OVERRIDE(void, Manifold, setPoint, p, purify);
+	}
+
+	void getGradient() override{
+		PYBIND11_OVERRIDE(void, Manifold, getGradient,);
+	}
+	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const override{
+		PYBIND11_OVERRIDE(std::function<EigenMatrix (EigenMatrix)>, Manifold, getHessian, He, weingarten);
+	}
+
+	std::unique_ptr<Manifold> Clone() const override{
+		PYBIND11_OVERRIDE(std::unique_ptr<Manifold>, Manifold, Clone,);
+	}
+};
+
 void Init_Manifold(pybind11::module_& m){
-	pybind11::classh<Manifold>(m, "Manifold")
+	pybind11::classh<Manifold, PyManifold>(m, "Manifold")
 		.def_readwrite("Name", &Manifold::Name)
 		.def_readwrite("P", &Manifold::P)
 		.def_readwrite("Ge", &Manifold::Ge)
