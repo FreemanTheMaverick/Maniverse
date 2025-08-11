@@ -44,15 +44,20 @@ int Flag::getDimension() const{
 	return ndim;
 }
 
-inline static EigenMatrix TangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
-	EigenMatrix Y = X;
+static EigenMatrix symf(std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix A){
+	// https://doi.org/10.1007/s10957-023-02242-z
 	for ( int i = 0; i < (int)BlockParameters.size(); i++ ){
-		FlagGetBlock(Y, i) -= FlagGetBlock(P, i) * FlagGetBlock(P, i).transpose() * FlagGetBlock(X, i);
-		for ( int j = 0; j < (int)BlockParameters.size(); j++ ){
-			if ( i != j ) FlagGetBlock(Y, i) -= FlagGetBlock(P, j) * FlagGetBlock(X, j).transpose() * FlagGetBlock(P, i);
+		for ( int j = 0; j < i; j++ ){
+			FlagGetBlock(A, i, j) = ( FlagGetBlock(A, i, j) + FlagGetBlock(A, j, i).transpose() ) / 2;
+			FlagGetBlock(A, j, i) = FlagGetBlock(A, i, j).transpose();
 		}
 	}
-	return Y;
+	return A;
+}
+
+static EigenMatrix TangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
+	// https://doi.org/10.1007/s10957-023-02242-z
+	return X - P * symf(BlockParameters, P.transpose() * X);
 }
 
 EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
@@ -60,27 +65,16 @@ EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
 }
 
 EigenMatrix Flag::TangentPurification(EigenMatrix X) const{
-	EigenMatrix Omega = this->P.transpose() * X;
-	for ( int i = 0; i < (int)this->BlockParameters.size(); i++ ){
-		const int ifirst = std::get<0>(this->BlockParameters[i]);
-		const int ilength = std::get<1>(this->BlockParameters[i]);
-		for ( int j = 0; j < i; j++ ){
-			const int jfirst = std::get<0>(this->BlockParameters[j]);
-			const int jlength = std::get<1>(this->BlockParameters[j]);
-			Omega.block(ifirst, jfirst, ilength, jlength).setZero();
-			Omega.block(jfirst, ifirst, jlength, ilength).setZero();
-		}
-	}
-	return X - this->P * Omega;
+	return ::TangentProjection(this->P, this->BlockParameters, X);
 }
 
 std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
-	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
+	// https://doi.org/10.1007/s10957-023-02242-z
 	const EigenMatrix P = this->P;
 	const std::vector<std::tuple<int, int>> B = this->BlockParameters;
-	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
+	const EigenMatrix tmp = symf(B, this->P.transpose() * this->Ge);
 	if ( weingarten ) return [P, B, tmp, He](EigenMatrix v){
-		return ::TangentProjection(P, B, He(v) - 0.5 * v * tmp);
+		return ::TangentProjection(P, B, He(v) - v * tmp);
 	};
 	else return [P, B, He](EigenMatrix v){
 		return ::TangentProjection(P, B, He(v));

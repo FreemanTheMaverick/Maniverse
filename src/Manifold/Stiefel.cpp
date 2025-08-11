@@ -54,12 +54,12 @@ inline static EigenMatrix TangentProjection(EigenMatrix P, EigenMatrix A){
 	return A - P * SymPtA;
 }
 
-EigenMatrix Stiefel::TangentProjection(EigenMatrix A) const{
-	return ::TangentProjection(this->P, A);
+EigenMatrix Stiefel::TangentProjection(EigenMatrix X) const{
+	return ::TangentProjection(this->P, X);
 }
 
 EigenMatrix Stiefel::TangentPurification(EigenMatrix X) const{
-	return X - this->P * ( this->P.transpose() * X ).diagonal().asDiagonal();
+	return ::TangentProjection(this->P, X);
 }
 
 void Stiefel::setPoint(EigenMatrix p, bool purify){
