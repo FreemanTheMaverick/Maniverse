@@ -8,28 +8,40 @@
 	if ( typeid(N) != typeid(*this) )\
 		throw std::runtime_error("The destination of vector transport is not in " + std::string(typeid(*this).name()) + "but in " + std::string(typeid(N).name()) + "!");
 
+[[maybe_unused]] static bool CompareString(std::string given, std::vector<std::string> strings){
+	for ( std::string string : strings ) if ( string == given ) return 1;
+	return 0;
+}
+
+#define __Check_Geodesic__(...)\
+	if ( ! CompareString(this->Geodesic, {__VA_ARGS__}) ) throw std::runtime_error("Unimplemented geodesic type for " + std::string(typeid(*this).name()) + "!");
+
+#define __Check_Geodesic_Func__\
+	throw std::runtime_error("Currently " + this->Geodesic + " " + std::string(__func__) + " on " + std::string(typeid(*this).name()) + " is not supported!");
+
 class Manifold{ public:
 	std::string Name;
+	std::string Geodesic;
+
 	EigenMatrix P;
 	EigenMatrix Ge;
 	EigenMatrix Gr;
 
 	std::vector<EigenMatrix> BasisSet;
 
-	Manifold(EigenMatrix p);
+	Manifold(EigenMatrix p, std::string geodesic);
 	virtual int getDimension() const;
 	virtual double Inner(EigenMatrix X, EigenMatrix Y) const;
 	void getBasisSet();
 	void getHessianMatrix();
 
-	virtual EigenMatrix Exponential(EigenMatrix X) const;
-	virtual EigenMatrix Logarithm(Manifold& N) const;
+	virtual EigenMatrix Retract(EigenMatrix X) const;
+	virtual EigenMatrix InverseRetract(Manifold& N) const;
+	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
+	virtual EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const;
 
 	virtual EigenMatrix TangentProjection(EigenMatrix A) const;
 	virtual EigenMatrix TangentPurification(EigenMatrix A) const;
-
-	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
-	virtual EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const;
 
 	virtual void setPoint(EigenMatrix p, bool purify);
 
@@ -62,7 +74,7 @@ class Iterate{ public:
 	int getDimension() const;
 	double Inner(EigenMatrix X, EigenMatrix Y) const;
 
-	EigenMatrix Exponential(EigenMatrix X) const;
+	EigenMatrix Retract(EigenMatrix X) const;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const;
 	EigenMatrix TangentPurification(EigenMatrix A) const;

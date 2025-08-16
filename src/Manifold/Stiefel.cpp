@@ -15,7 +15,8 @@
 
 #include "Stiefel.h"
 
-Stiefel::Stiefel(EigenMatrix p): Manifold(p){
+Stiefel::Stiefel(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
+	__Check_Geodesic__("EXACT", "POLAR")
 	this->Name = "Stiefel("
 		+ std::to_string(p.rows())
 		+ ", "
@@ -35,16 +36,82 @@ double Stiefel::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return X.cwiseProduct(Y).sum();
 }
 
-EigenMatrix Stiefel::Exponential(EigenMatrix X) const{
-	EigenMatrix A = EigenZero(X.rows(), 2 * X.cols());
-	A << this->P, X;
-	EigenMatrix B = EigenZero(2 * X.cols(), 2 * X.cols());
-	B.topLeftCorner(X.cols(), X.cols()) = B.bottomRightCorner(X.cols(), X.cols()) = this->P.transpose() * X;
-	B.topRightCorner(X.cols(), X.cols()) = - X.transpose() * X;
-	B.bottomLeftCorner(X.cols(), X.cols()) = EigenOne(X.cols(), X.cols());
-	EigenMatrix C = EigenZero(2 * X.cols(), X.cols());
-	C.topRows(X.cols()) = ( - this->P.transpose() * X ).exp();
-	return A * B.exp() * C;
+EigenMatrix Stiefel::Retract(EigenMatrix X) const{
+	if ( this->Geodesic == "EXACT" ){
+		EigenMatrix A = EigenZero(X.rows(), 2 * X.cols());
+		A << this->P, X;
+		EigenMatrix B = EigenZero(2 * X.cols(), 2 * X.cols());
+		B.topLeftCorner(X.cols(), X.cols()) = B.bottomRightCorner(X.cols(), X.cols()) = this->P.transpose() * X;
+		B.topRightCorner(X.cols(), X.cols()) = - X.transpose() * X;
+		B.bottomLeftCorner(X.cols(), X.cols()) = EigenOne(X.cols(), X.cols());
+		EigenMatrix C = EigenZero(2 * X.cols(), X.cols());
+		C.topRows(X.cols()) = ( - this->P.transpose() * X ).exp();
+		return A * B.exp() * C;
+	}else if ( this->Geodesic == "POLAR" ){
+		Eigen::BDCSVD<EigenMatrix> svd;
+		svd.compute(this->P + X, Eigen::ComputeThinU | Eigen::ComputeFullV);
+		return svd.matrixU() * svd.matrixV().transpose();
+	}
+	__Check_Geodesic_Func__
+	return X;
+}
+
+inline static EigenMatrix Sylvester(EigenMatrix A, EigenMatrix Q){
+	// https://discourse.mc-stan.org/t/solve-a-lyapunov-sylvester-equation-include-custom-c-function-using-eigen-library-possible/12688
+
+	const EigenMatrix B = A.transpose();
+
+	Eigen::ComplexSchur<EigenMatrix> SchurA(A);
+	const Eigen::MatrixXcd R = SchurA.matrixT();
+	const Eigen::MatrixXcd U = SchurA.matrixU();
+
+	Eigen::ComplexSchur<EigenMatrix> SchurB(B);
+	const Eigen::MatrixXcd S = SchurB.matrixT();
+	const Eigen::MatrixXcd V = SchurB.matrixU();
+
+	const Eigen::MatrixXcd F = U.adjoint() * Q * V;
+	const Eigen::MatrixXcd Y = Eigen::internal::matrix_function_solve_triangular_sylvester(R, S, F);
+	const Eigen::MatrixXcd X = U * Y * V.adjoint();
+
+	return X.real();
+}
+
+EigenMatrix Stiefel::InverseRetract(Manifold& N) const{
+	// https://doi.org/10.1109/TSP.2012.2226167
+	__Check_Log_Map__
+	const EigenMatrix p = this->P;
+	const EigenMatrix q = N.P;
+	if ( this->Geodesic == "POLAR" ){ // Algorithm 2
+		const EigenMatrix M = p.transpose() * q;
+		const EigenMatrix S = Sylvester(M, 2 * EigenOne(p.cols(), p.cols()));
+		return q * S - p;
+	}
+	__Check_Geodesic_Func__
+	return q;
+}
+
+EigenMatrix Stiefel::TransportTangent(EigenMatrix Y, EigenMatrix Z) const{
+	// Transport Y along Z
+	// Section 3.5, https://doi.org/10.1007/s10589-016-9883-4
+	if ( this->Geodesic == "POLAR" ){
+		const EigenMatrix IplusZtZ = EigenOne(Z.cols(), Z.cols()) + Z.transpose() * Z;
+		Eigen::SelfAdjointEigenSolver<EigenMatrix> es(IplusZtZ);
+		const EigenMatrix A = es.operatorSqrt();
+		const EigenMatrix Ainv = es.operatorInverseSqrt();
+		const EigenMatrix RZ = this->Retract(Z);
+		const EigenMatrix RZtY = RZ.transpose() * Y;
+		const EigenMatrix Q = RZtY - RZtY.transpose();
+		const EigenMatrix Lambda = Sylvester(A, Q);
+		return RZ * Lambda + ( EigenOne(Z.cols(), Z.cols()) - RZ * RZ.transpose() ) * Y * Ainv;
+	}
+	__Check_Geodesic_Func__
+	return Y;
+}
+
+EigenMatrix Stiefel::TransportManifold(EigenMatrix X, Manifold& N) const{
+	__Check_Vec_Transport__
+	const EigenMatrix Z = this->InverseRetract(N);
+	return this->TransportTangent(X, Z);
 }
 
 inline static EigenMatrix TangentProjection(EigenMatrix P, EigenMatrix A){
@@ -93,6 +160,6 @@ std::unique_ptr<Manifold> Stiefel::Clone() const{
 #ifdef __PYTHON__
 void Init_Stiefel(pybind11::module_& m){
 	pybind11::classh<Stiefel, Manifold>(m, "Stiefel")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR");
 }
 #endif

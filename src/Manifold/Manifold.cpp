@@ -12,11 +12,13 @@
 
 #include "Manifold.h"
 
-Manifold::Manifold(EigenMatrix p){
+Manifold::Manifold(EigenMatrix p, std::string geodesic){
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());
 	this->Gr.resize(p.rows(), p.cols());
 	this->P = p;
+	for ( char& geodesic_char : geodesic ) geodesic_char = (char)std::toupper(geodesic_char);\
+	this->Geodesic = geodesic;
 }
 
 int Manifold::getDimension() const{
@@ -29,12 +31,12 @@ double Manifold::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return X.rows() * Y.cols() * 0; // Avoiding the unused-variable warning
 }
 
-EigenMatrix Manifold::Exponential(EigenMatrix /*X*/) const{
+EigenMatrix Manifold::Retract(EigenMatrix /*X*/) const{
 	__Not_Implemented__
 	return EigenZero(0, 0);
 }
 
-EigenMatrix Manifold::Logarithm(Manifold& /*N*/) const{
+EigenMatrix Manifold::InverseRetract(Manifold& /*N*/) const{
 	__Not_Implemented__
 	return EigenZero(0, 0);
 }
@@ -89,11 +91,11 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 		PYBIND11_OVERRIDE(double, Manifold, Inner, X, Y);
 	}
 
-	EigenMatrix Exponential(EigenMatrix X) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, Exponential, X);
+	EigenMatrix Retract(EigenMatrix X) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, Retract, X);
 	}
-	EigenMatrix Logarithm(Manifold& N) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, Logarithm, N);
+	EigenMatrix InverseRetract(Manifold& N) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, InverseRetract, N);
 	}
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override{
@@ -129,14 +131,15 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 void Init_Manifold(pybind11::module_& m){
 	pybind11::classh<Manifold, PyManifold>(m, "Manifold")
 		.def_readwrite("Name", &Manifold::Name)
+		.def_readwrite("Geodesic", &Manifold::Geodesic)
 		.def_readwrite("P", &Manifold::P)
 		.def_readwrite("Ge", &Manifold::Ge)
 		.def_readwrite("Gr", &Manifold::Gr)
-		.def(pybind11::init<EigenMatrix>())
+		.def(pybind11::init<EigenMatrix, std::string>())
 		.def("getDimension", &Manifold::getDimension)
 		.def("Inner", &Manifold::Inner)
-		.def("Exponential", &Manifold::Exponential)
-		.def("Logarithm", &Manifold::Logarithm)
+		.def("Retract", &Manifold::Retract)
+		.def("InverseRetract", &Manifold::InverseRetract)
 		.def("TangentProjection", &Manifold::TangentProjection)
 		.def("TangentPurification", &Manifold::TangentPurification)
 		.def("TransportTangent", &Manifold::TransportTangent)

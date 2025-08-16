@@ -30,7 +30,7 @@ void Flag::setBlockParameters(std::vector<int> sizes){
 	this->Name += "; " + std::to_string(this->P.rows()) + ")";
 }
 
-Flag::Flag(EigenMatrix p): Stiefel(p){} // Be sure to Flag::setBlockParameters after construction.
+Flag::Flag(EigenMatrix p, std::string geodesic): Stiefel(p, geodesic){} // Be sure to Flag::setBlockParameters after construction.
 
 int Flag::getDimension() const{
 	const int N = this->P.rows();
@@ -88,7 +88,7 @@ std::unique_ptr<Manifold> Flag::Clone() const{
 #ifdef __PYTHON__
 void Init_Flag(pybind11::module_& m){
 	pybind11::classh<Flag, Stiefel>(m, "Flag")
-		.def(pybind11::init<EigenMatrix>())
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR")
 		.def("setBlockParameters", &Flag::setBlockParameters);
 }
 #endif

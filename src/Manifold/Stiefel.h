@@ -1,12 +1,15 @@
 #include "Manifold.h"
 
 class Stiefel: public Manifold{ public:
-	Stiefel(EigenMatrix p);
+	Stiefel(EigenMatrix p, std::string geodesic = "POLAR");
 
 	virtual int getDimension() const override;
 	double Inner(EigenMatrix X, EigenMatrix Y) const override;
 
-	virtual EigenMatrix Exponential(EigenMatrix X) const override;
+	virtual EigenMatrix Retract(EigenMatrix X) const override;
+	virtual EigenMatrix InverseRetract(Manifold& N) const override;
+	virtual EigenMatrix TransportTangent(EigenMatrix Y, EigenMatrix Z) const override;
+	virtual EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const override;
 
 	virtual EigenMatrix TangentProjection(EigenMatrix X) const override;
 	virtual EigenMatrix TangentPurification(EigenMatrix X) const override;
