@@ -13,7 +13,8 @@
 
 #include "Euclidean.h"
 
-Euclidean::Euclidean(EigenMatrix p): Manifold(p){
+Euclidean::Euclidean(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
+	__Check_Geodesic__("EXACT")
 	this->Name = "Euclidean(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
 }
 
@@ -25,12 +26,22 @@ double Euclidean::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return (X.cwiseProduct(Y)).sum();
 }
 
-EigenMatrix Euclidean::Exponential(EigenMatrix X) const{
+EigenMatrix Euclidean::Retract(EigenMatrix X) const{
 	return this->P + X;
 }
 
-EigenMatrix Euclidean::Logarithm(Manifold& N) const{
+EigenMatrix Euclidean::InverseRetract(Manifold& N) const{
+	__Check_Log_Map__
 	return N.P - this->P;
+}
+
+EigenMatrix Euclidean::TransportTangent(EigenMatrix X, EigenMatrix /*Y*/) const{
+	return X;
+}
+
+EigenMatrix Euclidean::TransportManifold(EigenMatrix X, Manifold& N) const{
+	__Check_Log_Map__
+	return X;
 }
 
 EigenMatrix Euclidean::TangentProjection(EigenMatrix A) const{
@@ -60,6 +71,6 @@ std::unique_ptr<Manifold> Euclidean::Clone() const{
 #ifdef __PYTHON__
 void Init_Euclidean(pybind11::module_& m){
 	pybind11::classh<Euclidean, Manifold>(m, "Euclidean")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif

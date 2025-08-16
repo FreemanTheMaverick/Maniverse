@@ -169,7 +169,7 @@ bool TrustRegion(
 		if ( ! converged ){
 			tcg.Radius = R;
 			std::tie(Snorm, S) = tcg.Find();
-			Pmat = M.Exponential(S);
+			Pmat = M.Retract(S);
 			DecoupleBlock(Pmat, P);
 			predicted_delta_L = M.Inner(M.Gradient + 0.5 * bfgs_hess(S), S);
 			if (output){

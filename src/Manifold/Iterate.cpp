@@ -75,10 +75,10 @@ double Iterate::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return inner;
 }
 
-EigenMatrix Iterate::Exponential(EigenMatrix X) const{
+EigenMatrix Iterate::Retract(EigenMatrix X) const{
 	EigenMatrix Exp = EigenZero(X.rows(), X.cols());
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(Exp, iM) = this->Ms[iM]->Exponential(GetBlock(X, iM));
+		GetBlock(Exp, iM) = this->Ms[iM]->Retract(GetBlock(X, iM));
 	}
 	return Exp;
 }
@@ -270,7 +270,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def("getName", &Iterate::getName)
 		.def("getDimension", &Iterate::getDimension)
 		.def("Inner", &Iterate::Inner)
-		.def("Exponential", &Iterate::Exponential)
+		.def("Retract", &Iterate::Retract)
 		.def("TangentProjection", &Iterate::TangentProjection)
 		.def("TangentPurification", &Iterate::TangentPurification)
 		.def("TransportManifold", &Iterate::TransportManifold)

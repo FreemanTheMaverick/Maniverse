@@ -13,28 +13,16 @@
 
 #include "RealSymmetric.h"
 
-inline EigenMatrix Symmetrize(EigenMatrix X){
+inline static EigenMatrix Symmetrize(EigenMatrix X){
 	return ( X + X.transpose() ) / 2;
 }
 
-RealSymmetric::RealSymmetric(EigenMatrix p): Manifold(p){
+RealSymmetric::RealSymmetric(EigenMatrix p, std::string geodesic): Euclidean(p, geodesic){
 	this->Name = "RealSymmetric(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
 }
 
 int RealSymmetric::getDimension() const{
-	return this->P.size();
-}
-
-double RealSymmetric::Inner(EigenMatrix X, EigenMatrix Y) const{
-	return (X.cwiseProduct(Y)).sum();
-}
-
-EigenMatrix RealSymmetric::Exponential(EigenMatrix X) const{
-	return this->P + X;
-}
-
-EigenMatrix RealSymmetric::Logarithm(Manifold& N) const{
-	return N.P - this->P;
+	return ( 1 + this->P.rows() ) * this->P.rows() / 2;
 }
 
 EigenMatrix RealSymmetric::TangentProjection(EigenMatrix A) const{
@@ -65,7 +53,7 @@ std::unique_ptr<Manifold> RealSymmetric::Clone() const{
 
 #ifdef __PYTHON__
 void Init_RealSymmetric(pybind11::module_& m){
-	pybind11::classh<RealSymmetric, Manifold>(m, "RealSymmetric")
-		.def(pybind11::init<EigenMatrix>());
+	pybind11::classh<RealSymmetric, Euclidean>(m, "RealSymmetric")
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif

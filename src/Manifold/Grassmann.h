@@ -5,13 +5,13 @@ class Grassmann: public Manifold{ public:
 	mutable std::vector<std::tuple<EigenMatrix, EigenMatrix>> LogCache;
 	mutable std::vector<std::tuple<EigenMatrix, EigenMatrix, EigenMatrix>> TransportTangentCache;
 
-	Grassmann(EigenMatrix p);
+	Grassmann(EigenMatrix p, std::string geodesic = "EXACT");
 
 	int getDimension() const override;
 	double Inner(EigenMatrix X, EigenMatrix Y) const override;
 
-	EigenMatrix Exponential(EigenMatrix X) const override;
-	EigenMatrix Logarithm(Manifold& N) const override;
+	EigenMatrix Retract(EigenMatrix X) const override;
+	EigenMatrix InverseRetract(Manifold& N) const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
 	EigenMatrix TangentPurification(EigenMatrix A) const override;

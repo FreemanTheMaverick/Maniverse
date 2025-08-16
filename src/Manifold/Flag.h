@@ -4,7 +4,7 @@ class Flag: public Stiefel{ public:
 	std::vector<std::tuple<int, int>> BlockParameters;
 	void setBlockParameters(std::vector<int>);
 
-	Flag(EigenMatrix p);
+	Flag(EigenMatrix p, std::string geodesic = "POLAR");
 
 	int getDimension() const override;
 

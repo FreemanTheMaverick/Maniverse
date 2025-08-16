@@ -1,5 +1,5 @@
 class TruncatedConjugateGradient{ public:
-	Iterate* M;
+	Iterate* M; // For inner product and tangent projection.
 	std::function<EigenMatrix (EigenMatrix)>* Func;
 	bool Verbose;
 	bool ShowTarget;

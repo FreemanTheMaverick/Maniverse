@@ -1,19 +1,12 @@
-#include "Manifold.h"
+#include "Euclidean.h"
 
-class RealSymmetric: public Manifold{ public:
-	RealSymmetric(EigenMatrix p);
+class RealSymmetric: public Euclidean{ public:
+	RealSymmetric(EigenMatrix p, std::string geodesic = "EXACT");
 
 	int getDimension() const override;
-	double Inner(EigenMatrix X, EigenMatrix Y) const override;
-
-	EigenMatrix Exponential(EigenMatrix X) const override;
-	EigenMatrix Logarithm(Manifold& N) const override;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
 	EigenMatrix TangentPurification(EigenMatrix A) const override;
-
-	//EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) override;
-	//EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) override;
 
 	void setPoint(EigenMatrix p, bool purify) override;
 

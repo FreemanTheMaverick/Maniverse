@@ -39,7 +39,8 @@ EigenMatrix RealSkewExpm(EigenMatrix A){
 	return expA;
 }
 
-Grassmann::Grassmann(EigenMatrix p): Manifold(p){
+Grassmann::Grassmann(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
+	__Check_Geodesic__("EXACT")
 	Eigen::SelfAdjointEigenSolver<EigenMatrix> eigensolver;
 	eigensolver.compute(p);
 	const EigenVector eigenvalues = eigensolver.eigenvalues();
@@ -62,7 +63,7 @@ double Grassmann::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return Dot(X, Y);
 }
 
-EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
+EigenMatrix Grassmann::Retract(EigenMatrix X) const{
 	const EigenMatrix Xp = X * this->P - this->P * X;
 	const EigenMatrix pX = - Xp;
 	const EigenMatrix expXp = RealSkewExpm(Xp);
@@ -70,7 +71,7 @@ EigenMatrix Grassmann::Exponential(EigenMatrix X) const{
 	return expXp * this->P * exppX;
 }
 
-EigenMatrix Grassmann::Logarithm(Manifold& N) const{
+EigenMatrix Grassmann::InverseRetract(Manifold& N) const{
 	for ( auto& [cached_NP, cached_Log] : this->LogCache )
 		if ( N.P.isApprox(cached_NP) ) return cached_Log;
 	__Check_Log_Map__
@@ -121,7 +122,7 @@ EigenMatrix Grassmann::TransportManifold(EigenMatrix X, Manifold& N) const{
 	// X - Vector to transport from P
 	__Check_Vec_Transport__
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
-	const EigenMatrix Y = this->Logarithm(N_);
+	const EigenMatrix Y = this->InverseRetract(N_);
 	return this->TransportTangent(X, Y);
 }
 
@@ -165,6 +166,6 @@ std::unique_ptr<Manifold> Grassmann::Clone() const{
 #ifdef __PYTHON__
 void Init_Grassmann(pybind11::module_& m){
 	pybind11::classh<Grassmann, Manifold>(m, "Grassmann")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif

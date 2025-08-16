@@ -18,7 +18,8 @@ static double Distance(EigenMatrix p, EigenMatrix q){
 	return 2 * std::acos( p.cwiseProduct(q).cwiseSqrt().sum() );
 }
 
-Simplex::Simplex(EigenMatrix p): Manifold(p){
+Simplex::Simplex(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
+	__Check_Geodesic__("EXACT")
 	this->Name = "Simplex";
 	if ( p.cols() != 1 ) throw std::runtime_error("A point on the Simplex manifold should have only one column!");
 }
@@ -31,7 +32,7 @@ double Simplex::Inner(EigenMatrix X, EigenMatrix Y) const{
 	return this->P.cwiseInverse().cwiseProduct(X.cwiseProduct(Y)).sum();
 }
 
-EigenMatrix Simplex::Exponential(EigenMatrix X) const{
+EigenMatrix Simplex::Retract(EigenMatrix X) const{
 	const EigenMatrix Xp = X.cwiseProduct(this->P.array().rsqrt().matrix());
 	const double norm = Xp.norm();
 	const EigenMatrix Xpn = Xp / norm;
@@ -41,7 +42,7 @@ EigenMatrix Simplex::Exponential(EigenMatrix X) const{
 	return tmp1 + tmp2 + tmp3;
 }
 
-EigenMatrix Simplex::Logarithm(Manifold& N) const{
+EigenMatrix Simplex::InverseRetract(Manifold& N) const{
 	__Check_Log_Map__
 	const EigenMatrix q = N.P;
 	const double dot = Dot( this->P.cwiseSqrt(), q.cwiseSqrt() );
@@ -105,6 +106,6 @@ std::unique_ptr<Manifold> Simplex::Clone() const{
 #ifdef __PYTHON__
 void Init_Simplex(pybind11::module_& m){
 	pybind11::classh<Simplex, Manifold>(m, "Simplex")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif

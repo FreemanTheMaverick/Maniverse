@@ -22,7 +22,7 @@ static int getRank(EigenMatrix p){
 	return lu.rank();
 }
 
-TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p): Euclidean(p){
+TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p, std::string geodesic): Euclidean(p, geodesic){
 	const int rank = getRank(p);
 	if ( rank != p.cols() ) throw std::runtime_error("The matrix is column-rank-deficient!");
 	this->Name = "Translation-rotation-invariant-point-cloud(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
@@ -90,7 +90,7 @@ static EigenMatrix TangentProjection(EigenMatrix p, EigenMatrix Y){
 }
 
 
-EigenMatrix TransRotInvPointCloud::Logarithm(Manifold& N) const{
+EigenMatrix TransRotInvPointCloud::InverseRetract(Manifold& N) const{
 	__Check_Log_Map__
 	return ::TangentProjection(this->P, N.P);
 }
@@ -135,6 +135,6 @@ std::unique_ptr<Manifold> TransRotInvPointCloud::Clone() const{
 #ifdef __PYTHON__
 void Init_TransRotInvPointCloud(pybind11::module_& m){
 	pybind11::classh<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
-		.def(pybind11::init<EigenMatrix>());
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
