@@ -37,10 +37,7 @@ all: $(OBJECTS) | $(INCDIR) $(LIBDIR)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -shared -o $(LIBDIR)/libmaniverse.so $^
 	@echo "The lib files libmaniverse.a and libmaniverse.so are put in $(LIBDIR)/."
 	mkdir -p $(INCDIR)/Maniverse/
-	mkdir -p $(INCDIR)/Maniverse/Manifold/
-	mkdir -p $(INCDIR)/Maniverse/Optimizer/
-	find $(SRCDIR)/Manifold/ -type f -name "*h" ! -name "Py*" -exec cp {} $(INCDIR)/Maniverse/Manifold/ \;
-	find $(SRCDIR)/Optimizer/ -type f -name "*h" ! -name "Py*" -exec cp {} $(INCDIR)/Maniverse/Optimizer/ \;
+	cd $(SRCDIR) && find . -name "*h" ! -name "Py*" ! -name "Macro.h" -exec cp --parents {} ../$(INCDIR)/Maniverse/ \;
 	sed -i "s/EigenMatrix/Eigen::MatrixXd/g" $(INCDIR)/Maniverse/*/*.h
 	@echo "The headers are put in $(INCDIR)/."
 
