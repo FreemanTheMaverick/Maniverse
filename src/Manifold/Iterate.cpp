@@ -83,6 +83,22 @@ EigenMatrix Iterate::Retract(EigenMatrix X) const{
 	return Exp;
 }
 
+EigenMatrix Iterate::TransportTangent(EigenMatrix A, EigenMatrix Y) const{
+	EigenMatrix B = EigenZero(A.rows(), A.cols());
+	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
+		GetBlock(B, iM) = this->Ms[iM]->TransportTangent(GetBlock(A, iM), GetBlock(Y, iM));
+	}
+	return B;
+}
+
+EigenMatrix Iterate::TransportManifold(EigenMatrix A, Iterate& N) const{
+	EigenMatrix B = EigenZero(A.rows(), A.cols());
+	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
+		GetBlock(B, iM) = this->Ms[iM]->TransportManifold(GetBlock(A, iM), *(N.Ms[iM]));
+	}
+	return B;
+}
+
 EigenMatrix Iterate::TangentProjection(EigenMatrix A) const{
 	EigenMatrix X = EigenZero(A.rows(), A.cols());
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
@@ -97,14 +113,6 @@ EigenMatrix Iterate::TangentPurification(EigenMatrix A) const{
 		GetBlock(X, iM) = this->Ms[iM]->TangentPurification(GetBlock(A, iM));
 	}
 	return X;
-}
-
-EigenMatrix Iterate::TransportManifold(EigenMatrix A, Iterate& N) const{
-	EigenMatrix B = EigenZero(A.rows(), A.cols());
-	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(B, iM) = this->Ms[iM]->TransportManifold(GetBlock(A, iM), *(N.Ms[iM]));
-	}
-	return B;
 }
 
 void Iterate::setPoint(std::vector<EigenMatrix> ps, bool purify){

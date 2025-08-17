@@ -75,12 +75,12 @@ class Iterate{ public:
 	double Inner(EigenMatrix X, EigenMatrix Y) const;
 
 	EigenMatrix Retract(EigenMatrix X) const;
+	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
+	EigenMatrix TransportManifold(EigenMatrix A, Iterate& N) const;
 
 	EigenMatrix TangentProjection(EigenMatrix A) const;
 	EigenMatrix TangentPurification(EigenMatrix A) const;
  
-	EigenMatrix TransportManifold(EigenMatrix A, Iterate& N) const;
-
 	void setPoint(std::vector<EigenMatrix> ps, bool purify);
 
 	void setGradient(std::vector<EigenMatrix> gs);

@@ -102,7 +102,7 @@ EigenMatrix Stiefel::TransportTangent(EigenMatrix Y, EigenMatrix Z) const{
 		const EigenMatrix RZtY = RZ.transpose() * Y;
 		const EigenMatrix Q = RZtY - RZtY.transpose();
 		const EigenMatrix Lambda = Sylvester(A, Q);
-		return RZ * Lambda + ( EigenOne(Z.cols(), Z.cols()) - RZ * RZ.transpose() ) * Y * Ainv;
+		return RZ * Lambda + ( EigenOne(Z.rows(), Z.rows()) - RZ * RZ.transpose() ) * Y * Ainv;
 	}
 	__Check_Geodesic_Func__
 	return Y;
