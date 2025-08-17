@@ -20,9 +20,6 @@
 #include "SubSolver.h"
 #include "HessUpdate.h"
 
-#include <iostream>
-
-
 TrustRegionSetting::TrustRegionSetting(){
 	this->R0 = 1;
 	this->RhoThreshold = 0.1;
