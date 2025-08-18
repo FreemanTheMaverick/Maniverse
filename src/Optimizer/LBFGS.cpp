@@ -37,6 +37,7 @@ bool LBFGS(
 	if (output > 0){
 		std::printf("*************** Limited-Memory Broyden–Fletcher–Goldfarb–Shanno ***************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
+		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("Maximum memory of previous iterations: %d\n", max_mem);
 		std::printf("Convergence threshold:\n");
@@ -117,13 +118,15 @@ bool LBFGS(
 		// Obtaining the next step via L-BFGS
 		if ( ! converged ){
 			EigenMatrix Q = M.Gradient;
-			std::vector<double> Ksis(Ss.size());
-			for ( int i = (int)Ss.size() - 1; i >= 0; i-- ){
+			const int mem = (int)Ss.size();
+			std::printf("Current memory size: %d\n", mem);
+			std::vector<double> Ksis(mem);
+			for ( int i = (int)mem - 1; i >= 0; i-- ){
 				Ksis[i] = Rhos[i] * M.Inner(Ss[i], Q);
 				Q -= Ksis[i] * Ys[i];
 			}
 			EigenMatrix R = gamma * Q;
-			for ( int i = 0; i < (int)Ss.size(); i++ ){
+			for ( int i = 0; i < mem; i++ ){
 				const double omega = Rhos[i] * M.Inner(Ys[i], R);
 				R += Ss[i] * ( Ksis[i] - omega );
 			}

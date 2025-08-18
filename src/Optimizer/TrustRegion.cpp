@@ -50,6 +50,7 @@ bool TrustRegion(
 	if (output > 0){
 		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
+		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
