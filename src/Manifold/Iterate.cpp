@@ -45,6 +45,9 @@ Iterate::Iterate(const Iterate& another_iterate){
 	this->Point = another_iterate.Point;
 	this->Gradient = another_iterate.Gradient;
 	this->Hessian = another_iterate.Hessian;
+	this->Precon_for_S = another_iterate.Precon_for_S;
+	this->InvPrecon_for_S = another_iterate.InvPrecon_for_S;
+	this->Precon_for_G = another_iterate.Precon_for_G;
 	this->MatrixFree = another_iterate.MatrixFree;
 	this->BasisSet = another_iterate.BasisSet;
 	this->HessianMatrix = another_iterate.HessianMatrix;
@@ -81,6 +84,14 @@ EigenMatrix Iterate::Retract(EigenMatrix X) const{
 		GetBlock(Exp, iM) = this->Ms[iM]->Retract(GetBlock(X, iM));
 	}
 	return Exp;
+}
+
+EigenMatrix Iterate::InverseRetract(Iterate& N) const{
+	EigenMatrix Log = EigenZero(this->Point.rows(), this->Point.cols());
+	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
+		GetBlock(Log, iM) = this->Ms[iM]->InverseRetract(*(N.Ms[iM]));
+	}
+	return Log;
 }
 
 EigenMatrix Iterate::TransportTangent(EigenMatrix A, EigenMatrix Y) const{
@@ -160,6 +171,40 @@ void Iterate::setHessian(std::vector<std::function<EigenMatrix (EigenMatrix)>> h
 			GetBlock(HX, iM) += hs[khess](GetBlock(X, jM));
 		}
 		return HX;
+	};
+}
+
+void Iterate::setPreconditioner(std::vector<std::tuple<std::function<EigenMatrix (EigenMatrix)>, std::function<EigenMatrix (EigenMatrix)>, std::function<EigenMatrix (EigenMatrix)>>> precons){
+	const int nMs = (int)this->Ms.size();
+	if ( (int)precons.size() != nMs ) throw std::runtime_error("Wrong number of preconditioners!");
+	std::vector<std::function<EigenMatrix (EigenMatrix)>> precons_for_S(nMs);
+	std::vector<std::function<EigenMatrix (EigenMatrix)>> invprecons_for_S(nMs);
+	std::vector<std::function<EigenMatrix (EigenMatrix)>> precons_for_G(nMs);
+	for ( int iM = 0; iM < nMs; iM++ ){
+		precons_for_S[iM] = std::get<0>(precons[iM]);
+		invprecons_for_S[iM] = std::get<1>(precons[iM]);
+		precons_for_G[iM] = std::get<2>(precons[iM]);
+	}
+	this->Precon_for_S = [nMs, precons_for_S, BlockParameters = this->BlockParameters](EigenMatrix S){
+		EigenMatrix PS = EigenZero(S.rows(), S.cols());
+		for ( int iM = 0; iM < nMs; iM++ ){
+			GetBlock(PS, iM) = precons_for_S[iM](GetBlock(S, iM));
+		}
+		return PS;
+	};
+	this->InvPrecon_for_S = [nMs, invprecons_for_S, BlockParameters = this->BlockParameters](EigenMatrix PS){
+		EigenMatrix S = EigenZero(PS.rows(), PS.cols());
+		for ( int iM = 0; iM < nMs; iM++ ){
+			GetBlock(S, iM) = invprecons_for_S[iM](GetBlock(PS, iM));
+		}
+		return S;
+	};
+	this->Precon_for_G = [nMs, precons_for_G, BlockParameters = this->BlockParameters](EigenMatrix G){
+		EigenMatrix PG = EigenZero(G.rows(), G.cols());
+		for ( int iM = 0; iM < nMs; iM++ ){
+			GetBlock(PG, iM) = precons_for_G[iM](GetBlock(G, iM));
+		}
+		return PG;
 	};
 }
 
@@ -279,12 +324,14 @@ void Init_Iterate(pybind11::module_& m){
 		.def("getDimension", &Iterate::getDimension)
 		.def("Inner", &Iterate::Inner)
 		.def("Retract", &Iterate::Retract)
+		.def("InverseRetract", &Iterate::InverseRetract)
 		.def("TangentProjection", &Iterate::TangentProjection)
 		.def("TangentPurification", &Iterate::TangentPurification)
 		.def("TransportManifold", &Iterate::TransportManifold)
 		.def("setPoint", &Iterate::setPoint)
 		.def("setGradient", &Iterate::setGradient)
 		.def("setHessian", &Iterate::setHessian)
+		.def("setPreconditioner", &Iterate::setPreconditioner)
 		.def("getBasisSet", &Iterate::getBasisSet)
 		.def("getHessianMatrix", &Iterate::getHessianMatrix);
 	m.def("Diagonalize", &Diagonalize);
