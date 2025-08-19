@@ -17,16 +17,11 @@
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+#include "LBFGS.h"
 
-#include <iostream>
-
+template <typename FuncType>
 bool LBFGS(
-		std::function<
-			std::tuple<
-				double,
-				std::vector<EigenMatrix>
-			> (std::vector<EigenMatrix>, int)
-		>& func,
+		FuncType& func,
 		std::tuple<double, double, double> tol,
 		int max_mem, int max_iter,
 		double& L, Iterate& M, int output){
@@ -38,6 +33,11 @@ bool LBFGS(
 		std::printf("*************** Limited-Memory Broyden–Fletcher–Goldfarb–Shanno ***************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
+		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			std::printf("Preconditioner: False\n");
+		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			std::printf("Preconditioner: True\n");
+		}
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("Maximum memory of previous iterations: %d\n", max_mem);
 		std::printf("Convergence threshold:\n");
@@ -56,9 +56,14 @@ bool LBFGS(
 	double Snorm = 0;
 	std::vector<EigenMatrix> P = M.getPoint();
 	std::vector<EigenMatrix> Ge;
+	[[maybe_unused]] std::vector<std::tuple<
+		std::function<EigenMatrix (EigenMatrix)>,
+		std::function<EigenMatrix (EigenMatrix)>,
+		std::function<EigenMatrix (EigenMatrix)>
+	>> Precon; // This variable may or may not be used, depending on whether UnpreconFuncType or PreconFuncType is specified.
 
 	std::deque<EigenMatrix> Ss;
-	std::deque<EigenMatrix> Ys;
+	std::deque<EigenMatrix> Gs;
 	std::deque<double> Rhos;
 	double gamma = 1;
 
@@ -68,7 +73,11 @@ bool LBFGS(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		std::tie(L, Ge) = func(P, 1);
+		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			std::tie(L, Ge) = func(P, 1);
+		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			std::tie(L, Ge, Precon) = func(P, 1);
+		}
 		actual_delta_L = L - oldL;
 		oldL = L;
 		if (output) std::printf("Target = %.10f\n", L);
@@ -76,30 +85,22 @@ bool LBFGS(
 		// Transporting previous vectors I
 		if ( (int)Rhos.size() == max_mem ){
 			Ss.pop_front();
-			Ys.pop_front();
+			Gs.pop_front();
 			Rhos.pop_front();
 		}
 		for ( int i = 0 ; i < (int)Rhos.size(); i++ ){
 			Ss[i] = M.TransportTangent(Ss[i], S);
-			Ys[i] = M.TransportTangent(Ys[i], S);
+			Gs[i] = M.TransportTangent(Gs[i], S);
 		}
-		EigenMatrix Gradient_old = EigenZero(Pmat.rows(), Pmat.cols());
 		if ( iiter > 0 ){
 			Ss.push_back(M.TransportTangent(S, S));
-			Gradient_old = M.TransportTangent(M.Gradient, S);
+			Gs.push_back(M.TransportTangent(M.Gradient, S));
 		}
 
 		// Obtaining Riemannian gradient
 		M.setPoint(P, 1);
 		M.setGradient(Ge);
 		const double Gnorm = std::sqrt(std::abs(M.Inner(M.Gradient, M.Gradient)));
-
-		// Transporting previous vectors II
-		if ( iiter > 0 ){
-			Ys.push_back(M.Gradient - Gradient_old);
-			Rhos.push_back( 1. / M.Inner(Ss.back(), Ys.back())) ;
-			gamma = 1. / Rhos.back() / M.Inner(Ys.back(), Ys.back());
-		}
 
 		// Checking convergence
 		if (output){
@@ -115,6 +116,34 @@ bool LBFGS(
 			else if ( std::abs(actual_delta_L) < tol0 && Snorm < tol2 ) converged = 1;
 		}
 
+		// Transporting previous vectors II
+		std::vector<EigenMatrix> preconSs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
+		std::vector<EigenMatrix> preconYs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
+		if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			M.setPreconditioner(Precon);
+		}
+		if ( iiter > 0 ){
+			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+				for ( int i = 0; i < (int)Ss.size(); i++ ){
+					preconSs[i] = Ss[i];
+					if ( i < (int)Ss.size() - 1 )
+						preconYs[i] = Gs[i + 1] - Gs[i];
+					else
+						preconYs[i] = M.Gradient - Gs[i];
+				}
+			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+				for ( int i = 0; i < (int)Ss.size(); i++ ){
+					preconSs[i] = M.Precon_for_S(Ss[i]);
+					if ( i < (int)Ss.size() - 1 )
+						preconYs[i] = M.Precon_for_G(Gs[i + 1]) - M.Precon_for_G(Gs[i]);
+					else
+						preconYs[i] = M.Precon_for_G(M.Gradient) - M.Precon_for_G(Gs[i]);
+				}
+			}
+			Rhos.push_back( 1. / M.Inner(preconSs.back(), preconYs.back())) ;
+			gamma = 1. / Rhos.back() / M.Inner(preconYs.back(), preconYs.back());
+		}
+
 		// Obtaining the next step via L-BFGS
 		if ( ! converged ){
 			EigenMatrix Q = M.Gradient;
@@ -122,15 +151,20 @@ bool LBFGS(
 			std::printf("Current memory size: %d\n", mem);
 			std::vector<double> Ksis(mem);
 			for ( int i = (int)mem - 1; i >= 0; i-- ){
-				Ksis[i] = Rhos[i] * M.Inner(Ss[i], Q);
-				Q -= Ksis[i] * Ys[i];
+				Ksis[i] = Rhos[i] * M.Inner(preconSs[i], Q);
+				Q -= Ksis[i] * preconYs[i];
 			}
 			EigenMatrix R = gamma * Q;
 			for ( int i = 0; i < mem; i++ ){
-				const double omega = Rhos[i] * M.Inner(Ys[i], R);
-				R += Ss[i] * ( Ksis[i] - omega );
+				const double omega = Rhos[i] * M.Inner(preconYs[i], R);
+				R += preconSs[i] * ( Ksis[i] - omega );
 			}
-			const EigenMatrix Eta = - R;
+			EigenMatrix Eta;
+			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+				Eta = - R;
+			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+				Eta = - M.InvPrecon_for_S(R);
+			}
 			// TODO: Line search
 			S = Eta;
 			Snorm = std::sqrt(M.Inner(S, S));
@@ -145,9 +179,9 @@ bool LBFGS(
 	return converged;
 }
 
-
 #ifdef __PYTHON__
 void Init_LBFGS(pybind11::module_& m){
-	m.def("LBFGS", &LBFGS);
+	m.def("LBFGS", &LBFGS<UnpreconFuncType>);
+	m.def("PreconLBFGS", &LBFGS<PreconFuncType>);
 }
 #endif
