@@ -146,7 +146,12 @@ bool LBFGS(
 
 		// Obtaining the next step via L-BFGS
 		if ( ! converged ){
-			EigenMatrix Q = M.Gradient;
+			EigenMatrix Q = EigenZero(Pmat.rows(), Pmat.cols());
+			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+				Q = M.Gradient;
+			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+				Q = M.Precon_for_G(M.Gradient);
+			}
 			const int mem = (int)Ss.size();
 			std::printf("Current memory size: %d\n", mem);
 			std::vector<double> Ksis(mem);
