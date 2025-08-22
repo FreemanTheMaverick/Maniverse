@@ -26,9 +26,7 @@ bool LBFGS(
 		int max_mem, int max_iter,
 		double& L, Iterate& M, int output){
 
-	const double tol0 = std::get<0>(tol);
-	const double tol1 = std::get<1>(tol);
-	const double tol2 = std::get<2>(tol);
+	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
 		std::printf("*************** Limited-Memory Broyden–Fletcher–Goldfarb–Shanno ***************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());

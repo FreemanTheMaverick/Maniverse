@@ -19,35 +19,32 @@
 #include "../Manifold/Manifold.h"
 #include "SubSolver.h"
 
-#include <iostream>
-
-
-void TruncatedConjugateGradient::Run(){
+void TruncatedConjugateGradient::Run(EigenMatrix G){
 	if (this->Verbose){
 		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->getName().c_str());
 		std::printf("| Itn. |       Target        |   T. C.  |  Grad.  |  V. U.  |  Time  |\n");
 	}
 
 	this->Sequence.clear(); this->Sequence.reserve(20);
-	const double b2 = this->M->Inner(this->M->Gradient, this->M->Gradient);
-	EigenMatrix v = EigenZero(this->M->Gradient.rows(), this->M->Gradient.cols());
-	EigenMatrix r = - this->M->Gradient;
-	EigenMatrix p = - this->M->Gradient;
+	const double b2 = this->M->Inner(G, G);
+	EigenMatrix v = EigenZero(G.rows(), G.cols());
+	EigenMatrix r = - G;
+	EigenMatrix p = - G;
 	double vnorm = 0;
 	double vplusnorm = 0;
 	double r2 = b2;
 	double L = 0;
 	const auto start = __now__;
 
-	EigenMatrix Hp = EigenZero(this->M->Gradient.rows(), this->M->Gradient.cols());
-	EigenMatrix vplus = EigenZero(this->M->Gradient.rows(), this->M->Gradient.cols());
+	EigenMatrix Hp = EigenZero(G.rows(), G.cols());
+	EigenMatrix vplus = EigenZero(G.rows(), G.cols());
 
 	for ( int iiter = 0; iiter < this->M->getDimension(); iiter++ ){
 		if (this->Verbose) std::printf("| %4d |", iiter);
 		Hp = this->M->TangentPurification((*(this->Func))(p));
 		const double pHp = this->M->Inner(p, Hp);
 		const double Llast = L;
-		if (this->ShowTarget) L = 0.5 * this->M->Inner((*(this->Func))(v), v) + this->M->Inner(this->M->Gradient, v);
+		if (this->ShowTarget) L = 0.5 * this->M->Inner((*(this->Func))(v), v) + this->M->Inner(G, v);
 		else L = std::nan("");
 		const double deltaL = L - Llast;
 		if (this->Verbose) std::printf("  %17.10f  | % 5.1E | %5.1E |", L, deltaL, std::sqrt(r2));

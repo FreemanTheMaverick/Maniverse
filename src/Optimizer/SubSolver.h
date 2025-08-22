@@ -11,6 +11,6 @@ class TruncatedConjugateGradient{ public:
 			Iterate* m, std::function<EigenMatrix (EigenMatrix)>* func,
 			bool verbose, bool showtarget
 	): M(m), Func(func), Verbose(verbose), ShowTarget(showtarget){};
-	void Run();
+	void Run(EigenMatrix G);
 	std::tuple<double, EigenMatrix> Find(); // Step size, S.
 };
