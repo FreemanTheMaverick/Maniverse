@@ -30,30 +30,28 @@ TrustRegionSetting::TrustRegionSetting(){
 	};
 }
 
+template <typename FuncType>
 bool TrustRegion(
-		std::function<
-			std::tuple<
-				double,
-				std::vector<EigenMatrix>,
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>
-			> (std::vector<EigenMatrix>, int)
-		>& func,
+		FuncType& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
 		int recalc_hess, int max_iter,
 		double& L, Iterate& M, int output){
 
-	const double tol0 = std::get<0>(tol);
-	const double tol1 = std::get<1>(tol);
-	const double tol2 = std::get<2>(tol);
+	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
 		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
-		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
+		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			std::printf("Preconditioner: False\n");
+		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			std::printf("Preconditioner: True\n");
+		}
+		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("Trust region settings:\n");
 		std::printf("| Initial radius: %f\n", tr_setting.R0);
 		std::printf("| Rho threshold: %f\n", tr_setting.RhoThreshold);
@@ -71,7 +69,19 @@ bool TrustRegion(
 	double predicted_delta_L = 0;
 
 	BroydenFletcherGoldfarbShanno bfgs(recalc_hess);
-	std::function<EigenMatrix (EigenMatrix)> bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
+	std::function<EigenMatrix (EigenMatrix)> bfgs_hess;
+	if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+		bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
+	}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+		bfgs_hess = [&bfgs,
+			&PS = M.Precon_for_S,
+			&PG = M.Precon_for_G
+		](EigenMatrix v){
+			EigenMatrix Pv = PS(v);
+			return (EigenMatrix)PG(bfgs.Hessian(Pv));
+		};
+	}
+
 	TruncatedConjugateGradient tcg{&M, &bfgs_hess, output > 0, 1};
 	EigenMatrix Pmat = M.Point;
 	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
@@ -79,6 +89,12 @@ bool TrustRegion(
 	std::vector<EigenMatrix> P = M.getPoint();
 	std::vector<EigenMatrix> Ge;
 	std::vector<std::function<EigenMatrix (EigenMatrix)>> He;
+	[[maybe_unused]] std::vector<std::tuple<
+		std::function<EigenMatrix (EigenMatrix)>,
+		std::function<EigenMatrix (EigenMatrix)>,
+		std::function<EigenMatrix (EigenMatrix)>
+	>> Precon; // This variable may or may not be used, depending on whether UnpreconFuncType or PreconFuncType is specified.
+
 	bool accepted = 1;
 	bool converged = 0;
 
@@ -89,7 +105,11 @@ bool TrustRegion(
 		const bool calc_hess = iiter == 0 || (int)bfgs.Ms.size() == recalc_hess;
 		if (output) std::printf("Calculate true hessian: %s\n", __True_False__(calc_hess));
 
-		std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
+		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
+		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			std::tie(L, Ge, He, Precon) = func(P, calc_hess ? 2 : 1);
+		}
 
 		// Rating the new step
 		actual_delta_L = L - oldL;
@@ -139,6 +159,9 @@ bool TrustRegion(
 				M.setHessian(He);
 				if ( ! M.MatrixFree ) M.getHessianMatrix();
 			}
+			if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+				M.setPreconditioner(Precon);
+			}
 			bfgs.Append(M, S);
 			if ( ! M.MatrixFree ){
 				int negative = 0;
@@ -160,13 +183,20 @@ bool TrustRegion(
 				return std::abs(deltaL / L) < tcg_tol;
 			};
 			tcg.Radius = R;
-			tcg.Run();
+			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+				tcg.Run(M.Gradient);
+			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+				tcg.Run( M.Precon_for_G( M.Gradient ) );
+			}
 		}
 
 		// Obtaining the next step within the trust region
 		if ( ! converged ){
 			tcg.Radius = R;
 			std::tie(Snorm, S) = tcg.Find();
+			if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+				S = M.InvPrecon_for_S(S);
+			}
 			Pmat = M.Retract(S);
 			DecoupleBlock(Pmat, P);
 			predicted_delta_L = M.Inner(M.Gradient + 0.5 * bfgs_hess(S), S);
@@ -192,6 +222,7 @@ void Init_TrustRegion(pybind11::module_& m){
 		.def_readwrite("RhoThreshold", &TrustRegionSetting::RhoThreshold)
 		.def_readwrite("Update", &TrustRegionSetting::Update)
 		.def(pybind11::init<>());
-	m.def("TrustRegion", &TrustRegion);
+	m.def("TrustRegion", &TrustRegion<UnpreconFuncType>);
+	m.def("PreconTrustRegion", &TrustRegion<PreconFuncType>);
 }
 #endif

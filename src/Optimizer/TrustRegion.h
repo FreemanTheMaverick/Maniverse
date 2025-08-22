@@ -5,14 +5,39 @@ class TrustRegionSetting{ public:
 	TrustRegionSetting();
 };
 
+#define UnpreconFuncType\
+		std::function<\
+			std::tuple<\
+				double,\
+				std::vector<EigenMatrix>,\
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>\
+			> (std::vector<EigenMatrix>, int)\
+		>
+
+#define PreconFuncType\
+		std::function<\
+			std::tuple<\
+				double,\
+				std::vector<EigenMatrix>,\
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>,\
+				std::vector<std::tuple<\
+					std::function<EigenMatrix (EigenMatrix)>,\
+					std::function<EigenMatrix (EigenMatrix)>,\
+					std::function<EigenMatrix (EigenMatrix)>\
+				>>\
+			> (std::vector<EigenMatrix>, int)\
+		>
+
 bool TrustRegion(
-		std::function<
-			std::tuple<
-				double,
-				std::vector<EigenMatrix>,
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>
-			> (std::vector<EigenMatrix>, int)
-		>& func,
+		UnpreconFuncType& func,
+		TrustRegionSetting& tr_setting,
+		std::tuple<double, double, double> tol,
+		double tcg_tol,
+		int recalc_hess, int max_iter,
+		double& L, Iterate& M, int output);
+
+bool TrustRegion(
+		PreconFuncType& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,

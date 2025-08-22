@@ -19,9 +19,6 @@
 #include "../Manifold/Manifold.h"
 #include "HessUpdate.h"
 
-#include <iostream>
-
-
 HessUpdate::HessUpdate(int n){
 	this->Size = n;
 	this->Ms.reserve(n);
