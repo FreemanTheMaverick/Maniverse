@@ -184,6 +184,18 @@ bool LBFGS(
 	return converged;
 }
 
+template bool LBFGS(
+		UnpreconFirstFunc& func,
+		std::tuple<double, double, double> tol,
+		int max_iter, int max_mem,
+		double& L, Iterate& M, int output);
+
+template bool LBFGS(
+		PreconFirstFunc& func,
+		std::tuple<double, double, double> tol,
+		int max_iter, int max_mem,
+		double& L, Iterate& M, int output);
+
 #ifdef __PYTHON__
 void Init_LBFGS(pybind11::module_& m){
 	m.def("LBFGS", &LBFGS<UnpreconFirstFunc>);

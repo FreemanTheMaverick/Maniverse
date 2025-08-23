@@ -216,6 +216,22 @@ bool TrustRegion(
 	return converged;
 }
 
+template bool TrustRegion(
+		UnpreconSecondFunc& func,
+		TrustRegionSetting& tr_setting,
+		std::tuple<double, double, double> tol,
+		double tcg_tol,
+		int recalc_hess, int max_iter,
+		double& L, Iterate& M, int output);
+
+template bool TrustRegion(
+		PreconSecondFunc& func,
+		TrustRegionSetting& tr_setting,
+		std::tuple<double, double, double> tol,
+		double tcg_tol,
+		int recalc_hess, int max_iter,
+		double& L, Iterate& M, int output);
+
 #ifdef __PYTHON__
 void Init_TrustRegion(pybind11::module_& m){
 	pybind11::class_<TrustRegionSetting>(m, "TrustRegionSetting")
