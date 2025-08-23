@@ -1,4 +1,6 @@
-#define UnpreconFuncType\
+namespace Maniverse{
+
+#define UnpreconFirstFunc\
 		std::function<\
 			std::tuple<\
 				double,\
@@ -6,7 +8,7 @@
 			> (std::vector<EigenMatrix>, int)\
 		>
 
-#define PreconFuncType\
+#define PreconFirstFunc\
 		std::function<\
 			std::tuple<\
 				double,\
@@ -23,13 +25,15 @@
 		// Preconditioner of G
 
 bool LBFGS(
-		UnpreconFuncType& func,
+		UnpreconFirstFunc& func,
 		std::tuple<double, double, double> tol,
 		int max_iter, int max_mem,
 		double& L, Iterate& M, int output);
 
 bool LBFGS(
-		PreconFuncType& func,
+		PreconFirstFunc& func,
 		std::tuple<double, double, double> tol,
 		int max_iter, int max_mem,
 		double& L, Iterate& M, int output);
+
+}

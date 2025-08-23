@@ -13,6 +13,8 @@
 
 #include "Euclidean.h"
 
+namespace Maniverse{
+
 Euclidean::Euclidean(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
 	__Check_Geodesic__("EXACT")
 	this->Name = "Euclidean(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
@@ -74,3 +76,5 @@ void Init_Euclidean(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
+
+}

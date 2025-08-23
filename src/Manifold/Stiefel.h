@@ -1,5 +1,7 @@
 #include "Manifold.h"
 
+namespace Maniverse{
+
 class Stiefel: public Manifold{ public:
 	Stiefel(EigenMatrix p, std::string geodesic = "POLAR");
 
@@ -20,3 +22,5 @@ class Stiefel: public Manifold{ public:
 	virtual std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> h, bool weingarten) const override;
 	std::unique_ptr<Manifold> Clone() const override;
 };
+
+}

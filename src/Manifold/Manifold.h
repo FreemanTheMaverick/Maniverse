@@ -1,5 +1,7 @@
 #pragma once
 
+namespace Maniverse{
+
 #define __Check_Log_Map__\
 	if ( typeid(N) != typeid(*this) )\
 		throw std::runtime_error("The point to logarithm map is not in " + std::string(typeid(*this).name()) + "but in " + std::string(typeid(N).name()) + "!");
@@ -135,4 +137,6 @@ class Iterate{ public:
 		_nrows_ += mat.rows();\
 		_ncols_ += mat.cols();\
 	}\
+}
+
 }

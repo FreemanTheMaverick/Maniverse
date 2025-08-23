@@ -1,5 +1,7 @@
 #include "Manifold.h"
 
+namespace Maniverse{
+
 class Euclidean: public Manifold{ public:
 	Euclidean(EigenMatrix p, std::string geodesic = "EXACT");
 
@@ -21,3 +23,5 @@ class Euclidean: public Manifold{ public:
 
 	virtual std::unique_ptr<Manifold> Clone() const override;
 };
+
+}

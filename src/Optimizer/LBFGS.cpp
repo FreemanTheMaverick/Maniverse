@@ -19,6 +19,8 @@
 #include "../Manifold/Manifold.h"
 #include "LBFGS.h"
 
+namespace Maniverse{
+
 template <typename FuncType>
 bool LBFGS(
 		FuncType& func,
@@ -31,9 +33,9 @@ bool LBFGS(
 		std::printf("*************** Limited-Memory Broyden–Fletcher–Goldfarb–Shanno ***************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
-		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+		if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 			std::printf("Preconditioner: False\n");
-		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+		}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 			std::printf("Preconditioner: True\n");
 		}
 		std::printf("Maximum number of iterations: %d\n", max_iter);
@@ -58,7 +60,7 @@ bool LBFGS(
 		std::function<EigenMatrix (EigenMatrix)>,
 		std::function<EigenMatrix (EigenMatrix)>,
 		std::function<EigenMatrix (EigenMatrix)>
-	>> Precon; // This variable may or may not be used, depending on whether UnpreconFuncType or PreconFuncType is specified.
+	>> Precon; // This variable may or may not be used, depending on whether UnpreconFirstFunc or PreconFirstFunc is specified.
 
 	std::deque<EigenMatrix> Ss;
 	std::deque<EigenMatrix> Gs;
@@ -71,9 +73,9 @@ bool LBFGS(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+		if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 			std::tie(L, Ge) = func(P, 1);
-		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+		}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 			std::tie(L, Ge, Precon) = func(P, 1);
 		}
 		actual_delta_L = L - oldL;
@@ -117,11 +119,11 @@ bool LBFGS(
 		// Transporting previous vectors II
 		std::vector<EigenMatrix> preconSs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
 		std::vector<EigenMatrix> preconYs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
-		if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+		if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 			M.setPreconditioner(Precon);
 		}
 		if ( iiter > 0 ){
-			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				for ( int i = 0; i < (int)Ss.size(); i++ ){
 					preconSs[i] = Ss[i];
 					if ( i < (int)Ss.size() - 1 )
@@ -129,7 +131,7 @@ bool LBFGS(
 					else
 						preconYs[i] = M.Gradient - Gs[i];
 				}
-			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 				for ( int i = 0; i < (int)Ss.size(); i++ ){
 					preconSs[i] = M.Precon_for_S(Ss[i]);
 					if ( i < (int)Ss.size() - 1 )
@@ -145,9 +147,9 @@ bool LBFGS(
 		// Obtaining the next step via L-BFGS
 		if ( ! converged ){
 			EigenMatrix Q = EigenZero(Pmat.rows(), Pmat.cols());
-			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				Q = M.Gradient;
-			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 				Q = M.Precon_for_G(M.Gradient);
 			}
 			const int mem = (int)Ss.size();
@@ -163,9 +165,9 @@ bool LBFGS(
 				R += preconSs[i] * ( Ksis[i] - omega );
 			}
 			EigenMatrix Eta;
-			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				Eta = - R;
-			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 				Eta = - M.InvPrecon_for_S(R);
 			}
 			// TODO: Line search
@@ -184,7 +186,9 @@ bool LBFGS(
 
 #ifdef __PYTHON__
 void Init_LBFGS(pybind11::module_& m){
-	m.def("LBFGS", &LBFGS<UnpreconFuncType>);
-	m.def("PreconLBFGS", &LBFGS<PreconFuncType>);
+	m.def("LBFGS", &LBFGS<UnpreconFirstFunc>);
+	m.def("PreconLBFGS", &LBFGS<PreconFirstFunc>);
 }
 #endif
+
+}

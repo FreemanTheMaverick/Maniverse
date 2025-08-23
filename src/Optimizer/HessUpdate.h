@@ -1,3 +1,5 @@
+namespace Maniverse{
+
 class HessUpdate{ public:
 	int Size = 0;
 	bool Verbose = 1;
@@ -19,3 +21,5 @@ class BroydenFletcherGoldfarbShanno: public HessUpdate{ public:
 	void AdmittedAppend(Iterate& M, EigenMatrix Step) override;
 	EigenMatrix HessianMatrixFree(EigenMatrix v) override;
 };
+
+}

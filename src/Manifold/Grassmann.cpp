@@ -14,6 +14,8 @@
 
 #include "Grassmann.h"
 
+namespace Maniverse{
+
 EigenMatrix RealSkewExpm(EigenMatrix A){
 	Eigen::RealSchur<EigenMatrix> schur(A);
 	const EigenMatrix Q = schur.matrixU();
@@ -169,3 +171,5 @@ void Init_Grassmann(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
+
+}

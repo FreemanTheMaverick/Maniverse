@@ -14,8 +14,7 @@
 
 #include "TransRotInvPointCloud.h"
 
-#include <iostream>
-
+namespace Maniverse{
 
 static int getRank(EigenMatrix p){
 	Eigen::FullPivLU<EigenMatrix> lu(p);
@@ -49,7 +48,7 @@ static EigenMatrix Centering(EigenMatrix Y){
 	return Y;
 }
 
-static EigenMatrix TangentProjection(EigenMatrix p, EigenMatrix Y){
+static EigenMatrix CloudTangentProjection(EigenMatrix p, EigenMatrix Y){
 
 	Y = Centering(Y);
 
@@ -92,11 +91,11 @@ static EigenMatrix TangentProjection(EigenMatrix p, EigenMatrix Y){
 
 EigenMatrix TransRotInvPointCloud::InverseRetract(Manifold& N) const{
 	__Check_Log_Map__
-	return ::TangentProjection(this->P, N.P);
+	return CloudTangentProjection(this->P, N.P);
 }
 
 EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A) const{
-	return ::TangentProjection(this->P, A);
+	return CloudTangentProjection(this->P, A);
 }
 
 EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A) const{
@@ -107,7 +106,7 @@ EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, Manifold& N)
 	__Check_Vec_Transport__
 	const EigenMatrix q = N.P;
 	const EigenMatrix rotatedX = Procrustes(q, this->P, X);
-	return ::TangentProjection(q, rotatedX);
+	return CloudTangentProjection(q, rotatedX);
 }
 
 void TransRotInvPointCloud::setPoint(EigenMatrix p, bool purify){
@@ -124,7 +123,7 @@ void TransRotInvPointCloud::getGradient(){
 
 std::function<EigenMatrix (EigenMatrix)> TransRotInvPointCloud::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
 	return [P = this->P, He](EigenMatrix v){
-		return ::TangentProjection(P, He(v));
+		return CloudTangentProjection(P, He(v));
 	};
 }
 
@@ -138,3 +137,5 @@ void Init_TransRotInvPointCloud(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
+
+}

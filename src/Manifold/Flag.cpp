@@ -15,6 +15,8 @@
 
 #include "Flag.h"
 
+namespace Maniverse{
+
 void Flag::setBlockParameters(std::vector<int> sizes){
 	this->BlockParameters.clear();
 	this->Name = "Flag(";
@@ -55,17 +57,17 @@ static EigenMatrix symf(std::vector<std::tuple<int, int>> BlockParameters, Eigen
 	return A;
 }
 
-static EigenMatrix TangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
+static EigenMatrix FlagTangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
 	// https://doi.org/10.1007/s10957-023-02242-z
 	return X - P * symf(BlockParameters, P.transpose() * X);
 }
 
 EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
-	return ::TangentProjection(this->P, this->BlockParameters, X);
+	return FlagTangentProjection(this->P, this->BlockParameters, X);
 }
 
 EigenMatrix Flag::TangentPurification(EigenMatrix X) const{
-	return ::TangentProjection(this->P, this->BlockParameters, X);
+	return FlagTangentProjection(this->P, this->BlockParameters, X);
 }
 
 std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
@@ -74,10 +76,10 @@ std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMat
 	const std::vector<std::tuple<int, int>> B = this->BlockParameters;
 	const EigenMatrix tmp = symf(B, this->P.transpose() * this->Ge);
 	if ( weingarten ) return [P, B, tmp, He](EigenMatrix v){
-		return ::TangentProjection(P, B, He(v) - v * tmp);
+		return FlagTangentProjection(P, B, He(v) - v * tmp);
 	};
 	else return [P, B, He](EigenMatrix v){
-		return ::TangentProjection(P, B, He(v));
+		return FlagTangentProjection(P, B, He(v));
 	};
 }
 
@@ -92,3 +94,5 @@ void Init_Flag(pybind11::module_& m){
 		.def("setBlockParameters", &Flag::setBlockParameters);
 }
 #endif
+
+}

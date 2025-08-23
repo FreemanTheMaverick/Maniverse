@@ -13,6 +13,7 @@
 
 #include "Simplex.h"
 
+namespace Maniverse{
 
 static double Distance(EigenMatrix p, EigenMatrix q){
 	return 2 * std::acos( p.cwiseProduct(q).cwiseSqrt().sum() );
@@ -109,3 +110,5 @@ void Init_Simplex(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
+
+}

@@ -11,7 +11,8 @@
 #include "../Macro.h"
 
 #include "Manifold.h"
-#include <iostream>
+
+namespace Maniverse{
 
 Iterate::Iterate(std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free){
 	const int nMs = (int)Ms.size();
@@ -337,3 +338,5 @@ void Init_Iterate(pybind11::module_& m){
 	m.def("Diagonalize", &Diagonalize);
 }
 #endif
+
+}

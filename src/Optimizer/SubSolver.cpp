@@ -19,6 +19,8 @@
 #include "../Manifold/Manifold.h"
 #include "SubSolver.h"
 
+namespace Maniverse{
+
 void TruncatedConjugateGradient::Run(EigenMatrix G){
 	if (this->Verbose){
 		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->getName().c_str());
@@ -116,3 +118,5 @@ void Init_SubSolver(pybind11::module_& m){
 		.def("Find", &TruncatedConjugateGradient::Find);
 }
 #endif
+
+}

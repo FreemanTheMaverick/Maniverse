@@ -20,6 +20,8 @@
 #include "SubSolver.h"
 #include "HessUpdate.h"
 
+namespace Maniverse{
+
 TrustRegionSetting::TrustRegionSetting(){
 	this->R0 = 1;
 	this->RhoThreshold = 0.1;
@@ -46,9 +48,9 @@ bool TrustRegion(
 		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
 		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
-		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 			std::printf("Preconditioner: False\n");
-		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+		}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
 			std::printf("Preconditioner: True\n");
 		}
 		std::printf("Maximum number of iterations: %d\n", max_iter);
@@ -70,9 +72,9 @@ bool TrustRegion(
 
 	BroydenFletcherGoldfarbShanno bfgs(recalc_hess);
 	std::function<EigenMatrix (EigenMatrix)> bfgs_hess;
-	if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+	if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 		bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
-	}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+	}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
 		bfgs_hess = [&bfgs,
 			&PS = M.Precon_for_S,
 			&PG = M.Precon_for_G
@@ -93,7 +95,7 @@ bool TrustRegion(
 		std::function<EigenMatrix (EigenMatrix)>,
 		std::function<EigenMatrix (EigenMatrix)>,
 		std::function<EigenMatrix (EigenMatrix)>
-	>> Precon; // This variable may or may not be used, depending on whether UnpreconFuncType or PreconFuncType is specified.
+	>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconSecondFunc is specified.
 
 	bool accepted = 1;
 	bool converged = 0;
@@ -105,9 +107,9 @@ bool TrustRegion(
 		const bool calc_hess = iiter == 0 || (int)bfgs.Ms.size() == recalc_hess;
 		if (output) std::printf("Calculate true hessian: %s\n", __True_False__(calc_hess));
 
-		if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 			std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
-		}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+		}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
 			std::tie(L, Ge, He, Precon) = func(P, calc_hess ? 2 : 1);
 		}
 
@@ -159,7 +161,7 @@ bool TrustRegion(
 				M.setHessian(He);
 				if ( ! M.MatrixFree ) M.getHessianMatrix();
 			}
-			if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
 				M.setPreconditioner(Precon);
 			}
 			bfgs.Append(M, S);
@@ -183,9 +185,9 @@ bool TrustRegion(
 				return std::abs(deltaL / L) < tcg_tol;
 			};
 			tcg.Radius = R;
-			if constexpr (std::is_same_v<FuncType, UnpreconFuncType>){
+			if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 				tcg.Run(M.Gradient);
-			}else if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
 				tcg.Run( M.Precon_for_G( M.Gradient ) );
 			}
 		}
@@ -194,7 +196,7 @@ bool TrustRegion(
 		if ( ! converged ){
 			tcg.Radius = R;
 			std::tie(Snorm, S) = tcg.Find();
-			if constexpr (std::is_same_v<FuncType, PreconFuncType>){
+			if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
 				S = M.InvPrecon_for_S(S);
 			}
 			Pmat = M.Retract(S);
@@ -214,7 +216,6 @@ bool TrustRegion(
 	return converged;
 }
 
-
 #ifdef __PYTHON__
 void Init_TrustRegion(pybind11::module_& m){
 	pybind11::class_<TrustRegionSetting>(m, "TrustRegionSetting")
@@ -222,7 +223,9 @@ void Init_TrustRegion(pybind11::module_& m){
 		.def_readwrite("RhoThreshold", &TrustRegionSetting::RhoThreshold)
 		.def_readwrite("Update", &TrustRegionSetting::Update)
 		.def(pybind11::init<>());
-	m.def("TrustRegion", &TrustRegion<UnpreconFuncType>);
-	m.def("PreconTrustRegion", &TrustRegion<PreconFuncType>);
+	m.def("TrustRegion", &TrustRegion<UnpreconSecondFunc>);
+	m.def("PreconTrustRegion", &TrustRegion<PreconSecondFunc>);
 }
 #endif
+
+}

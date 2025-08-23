@@ -1,5 +1,7 @@
 #include "Stiefel.h"
 
+namespace Maniverse{
+
 class Orthogonal: public Stiefel{ public:
 	Orthogonal(EigenMatrix p, std::string geodesic = "POLAR");
 
@@ -8,3 +10,5 @@ class Orthogonal: public Stiefel{ public:
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
+
+}
