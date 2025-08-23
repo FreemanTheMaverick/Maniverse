@@ -16,6 +16,6 @@ PYBIND11_MODULE(Maniverse, m){
 }
 #undef PyManiverseIn
 
-#endif
-
 }
+
+#endif
