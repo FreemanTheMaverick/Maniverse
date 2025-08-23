@@ -1,3 +1,5 @@
+namespace Maniverse{
+
 class TruncatedConjugateGradient{ public:
 	Iterate* M; // For inner product and tangent projection.
 	std::function<EigenMatrix (EigenMatrix)>* Func;
@@ -14,3 +16,5 @@ class TruncatedConjugateGradient{ public:
 	void Run(EigenMatrix G);
 	std::tuple<double, EigenMatrix> Find(); // Step size, S.
 };
+
+}

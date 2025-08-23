@@ -14,6 +14,7 @@
 
 #include "Orthogonal.h"
 
+namespace Maniverse{
 
 Orthogonal::Orthogonal(EigenMatrix p, std::string geodesic): Stiefel(p, geodesic){
 	this->Name = "Orthogonal(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
@@ -48,3 +49,5 @@ void Init_Orthogonal(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR");
 }
 #endif
+
+}

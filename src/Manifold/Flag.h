@@ -1,5 +1,7 @@
 #include "Stiefel.h"
 
+namespace Maniverse{
+
 class Flag: public Stiefel{ public:
 	std::vector<std::tuple<int, int>> BlockParameters;
 	void setBlockParameters(std::vector<int>);
@@ -29,3 +31,5 @@ class Flag: public Stiefel{ public:
 			std::get<1>(BlockParameters[imat]),\
 			std::get<1>(BlockParameters[jmat])\
 	)
+
+}

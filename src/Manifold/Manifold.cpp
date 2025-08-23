@@ -12,6 +12,8 @@
 
 #include "Manifold.h"
 
+namespace Maniverse{
+
 Manifold::Manifold(EigenMatrix p, std::string geodesic){
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());
@@ -150,3 +152,5 @@ void Init_Manifold(pybind11::module_& m){
 		.def("Clone", &Manifold::Clone);
 }
 #endif
+
+}

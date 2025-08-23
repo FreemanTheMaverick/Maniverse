@@ -19,6 +19,8 @@
 #include "../Manifold/Manifold.h"
 #include "HessUpdate.h"
 
+namespace Maniverse{
+
 HessUpdate::HessUpdate(int n){
 	this->Size = n;
 	this->Ms.reserve(n);
@@ -202,3 +204,5 @@ void Init_HessUpdate(pybind11::module_& m){
 		.def(pybind11::init<int>());
 }
 #endif
+
+}

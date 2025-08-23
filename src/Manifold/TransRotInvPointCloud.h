@@ -1,5 +1,7 @@
 #include "Euclidean.h"
 
+namespace Maniverse{
+
 class TransRotInvPointCloud: public Euclidean{ public:
 	TransRotInvPointCloud(EigenMatrix p, std::string geodesic = "EXACT");
 
@@ -18,3 +20,5 @@ class TransRotInvPointCloud: public Euclidean{ public:
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
+
+}

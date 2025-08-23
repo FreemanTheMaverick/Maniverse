@@ -1,3 +1,5 @@
+namespace Maniverse{
+
 class TrustRegionSetting{ public:
 	double R0;
 	double RhoThreshold;
@@ -5,7 +7,7 @@ class TrustRegionSetting{ public:
 	TrustRegionSetting();
 };
 
-#define UnpreconFuncType\
+#define UnpreconSecondFunc\
 		std::function<\
 			std::tuple<\
 				double,\
@@ -14,7 +16,7 @@ class TrustRegionSetting{ public:
 			> (std::vector<EigenMatrix>, int)\
 		>
 
-#define PreconFuncType\
+#define PreconSecondFunc\
 		std::function<\
 			std::tuple<\
 				double,\
@@ -29,7 +31,7 @@ class TrustRegionSetting{ public:
 		>
 
 bool TrustRegion(
-		UnpreconFuncType& func,
+		UnpreconSecondFunc& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
@@ -37,9 +39,11 @@ bool TrustRegion(
 		double& L, Iterate& M, int output);
 
 bool TrustRegion(
-		PreconFuncType& func,
+		PreconSecondFunc& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
 		int recalc_hess, int max_iter,
 		double& L, Iterate& M, int output);
+
+}

@@ -1,5 +1,7 @@
 #include "Manifold.h"
 
+namespace Maniverse{
+
 class Simplex: public Manifold{ public:
 	Simplex(EigenMatrix p, std::string geodesic = "EXACT");
 
@@ -20,3 +22,5 @@ class Simplex: public Manifold{ public:
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
+
+}

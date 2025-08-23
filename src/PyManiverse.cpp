@@ -2,6 +2,8 @@
 
 #include <pybind11/pybind11.h>
 
+namespace Maniverse{
+
 #define PyManiverseOut
 #include "Manifold/PyManifold.h"
 #include "Optimizer/PyOptimizer.h"
@@ -15,3 +17,5 @@ PYBIND11_MODULE(Maniverse, m){
 #undef PyManiverseIn
 
 #endif
+
+}

@@ -13,6 +13,8 @@
 
 #include "RealSymmetric.h"
 
+namespace Maniverse{
+
 inline static EigenMatrix Symmetrize(EigenMatrix X){
 	return ( X + X.transpose() ) / 2;
 }
@@ -57,3 +59,5 @@ void Init_RealSymmetric(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
+
+}

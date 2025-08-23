@@ -1,5 +1,7 @@
 #include "Manifold.h"
 
+namespace Maniverse{
+
 class Grassmann: public Manifold{ public:
 	EigenMatrix Projector;
 	mutable std::vector<std::tuple<EigenMatrix, EigenMatrix>> LogCache;
@@ -26,3 +28,5 @@ class Grassmann: public Manifold{ public:
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
+
+}

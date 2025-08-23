@@ -1,5 +1,7 @@
 #include "Euclidean.h"
 
+namespace Maniverse{
+
 class RealSymmetric: public Euclidean{ public:
 	RealSymmetric(EigenMatrix p, std::string geodesic = "EXACT");
 
@@ -15,3 +17,5 @@ class RealSymmetric: public Euclidean{ public:
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
+
+}

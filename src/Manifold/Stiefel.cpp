@@ -15,6 +15,8 @@
 
 #include "Stiefel.h"
 
+namespace Maniverse{
+
 Stiefel::Stiefel(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
 	__Check_Geodesic__("EXACT", "POLAR")
 	this->Name = "Stiefel("
@@ -114,7 +116,7 @@ EigenMatrix Stiefel::TransportManifold(EigenMatrix X, Manifold& N) const{
 	return this->TransportTangent(X, Z);
 }
 
-inline static EigenMatrix TangentProjection(EigenMatrix P, EigenMatrix A){
+inline static EigenMatrix StiefelTangentProjection(EigenMatrix P, EigenMatrix A){
 	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
 	const EigenMatrix PtA = P.transpose() * A;
 	const EigenMatrix SymPtA = 0.5 * ( PtA + PtA.transpose() );
@@ -122,11 +124,11 @@ inline static EigenMatrix TangentProjection(EigenMatrix P, EigenMatrix A){
 }
 
 EigenMatrix Stiefel::TangentProjection(EigenMatrix X) const{
-	return ::TangentProjection(this->P, X);
+	return StiefelTangentProjection(this->P, X);
 }
 
 EigenMatrix Stiefel::TangentPurification(EigenMatrix X) const{
-	return ::TangentProjection(this->P, X);
+	return StiefelTangentProjection(this->P, X);
 }
 
 void Stiefel::setPoint(EigenMatrix p, bool purify){
@@ -146,10 +148,10 @@ std::function<EigenMatrix (EigenMatrix)> Stiefel::getHessian(std::function<Eigen
 	const EigenMatrix P = this->P;
 	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
 	if ( weingarten ) return [P, tmp, He](EigenMatrix v){
-		return ::TangentProjection(P, He(v) - 0.5 * v * tmp);
+		return StiefelTangentProjection(P, He(v) - 0.5 * v * tmp);
 	};
 	else return [P, He](EigenMatrix v){
-		return ::TangentProjection(P, He(v));
+		return StiefelTangentProjection(P, He(v));
 	};
 }
 
@@ -163,3 +165,5 @@ void Init_Stiefel(pybind11::module_& m){
 		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR");
 }
 #endif
+
+}
