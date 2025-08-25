@@ -72,30 +72,22 @@ bool TrustRegion(
 
 	BroydenFletcherGoldfarbShanno bfgs(recalc_hess);
 	std::function<EigenMatrix (EigenMatrix)> bfgs_hess;
+	bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
+
+	TruncatedConjugateGradient tcg{&M, &bfgs_hess, 1, output > 0, 1};
 	if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-		bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
+		tcg.Preconditioned = 0;
 	}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
-		bfgs_hess = [&bfgs,
-			&PS = M.Precon_for_S,
-			&PG = M.Precon_for_G
-		](EigenMatrix v){
-			EigenMatrix Pv = PS(v);
-			return (EigenMatrix)PG(bfgs.Hessian(Pv));
-		};
+		tcg.Preconditioned = 1;
 	}
 
-	TruncatedConjugateGradient tcg{&M, &bfgs_hess, output > 0, 1};
 	EigenMatrix Pmat = M.Point;
 	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
 	double Snorm = 0;
 	std::vector<EigenMatrix> P = M.getPoint();
 	std::vector<EigenMatrix> Ge;
 	std::vector<std::function<EigenMatrix (EigenMatrix)>> He;
-	[[maybe_unused]] std::vector<std::tuple<
-		std::function<EigenMatrix (EigenMatrix)>,
-		std::function<EigenMatrix (EigenMatrix)>,
-		std::function<EigenMatrix (EigenMatrix)>
-	>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconSecondFunc is specified.
+	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconSecondFunc is specified.
 
 	bool accepted = 1;
 	bool converged = 0;
@@ -185,20 +177,13 @@ bool TrustRegion(
 				return std::abs(deltaL / L) < tcg_tol;
 			};
 			tcg.Radius = R;
-			if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-				tcg.Run(M.Gradient);
-			}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
-				tcg.Run( M.Precon_for_G( M.Gradient ) );
-			}
+			tcg.Run();
 		}
 
 		// Obtaining the next step within the trust region
 		if ( ! converged ){
 			tcg.Radius = R;
 			std::tie(Snorm, S) = tcg.Find();
-			if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
-				S = M.InvPrecon_for_S(S);
-			}
 			Pmat = M.Retract(S);
 			DecoupleBlock(Pmat, P);
 			predicted_delta_L = M.Inner(M.Gradient + 0.5 * bfgs_hess(S), S);

@@ -3,6 +3,7 @@ namespace Maniverse{
 class TruncatedConjugateGradient{ public:
 	Iterate* M; // For inner product and tangent projection.
 	std::function<EigenMatrix (EigenMatrix)>* Func;
+	bool Preconditioned;
 	bool Verbose;
 	bool ShowTarget;
 	double Radius;
@@ -11,9 +12,9 @@ class TruncatedConjugateGradient{ public:
 	TruncatedConjugateGradient(){};
 	TruncatedConjugateGradient(
 			Iterate* m, std::function<EigenMatrix (EigenMatrix)>* func,
-			bool verbose, bool showtarget
-	): M(m), Func(func), Verbose(verbose), ShowTarget(showtarget){};
-	void Run(EigenMatrix G);
+			bool preconditioned, bool verbose, bool showtarget
+	): M(m), Func(func), Preconditioned(preconditioned), Verbose(verbose), ShowTarget(showtarget){};
+	void Run();
 	std::tuple<double, EigenMatrix> Find(); // Step size, S.
 };
 
