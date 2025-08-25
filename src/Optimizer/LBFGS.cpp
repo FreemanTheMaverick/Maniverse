@@ -151,7 +151,7 @@ bool LBFGS(
 				Q = M.Preconditioner(M.Gradient);
 			}
 			const int mem = (int)Ss.size();
-			if ( output > 0 )std::printf("Current memory size: %d\n", mem);
+			if ( output > 0 ) std::printf("Current memory size: %d\n", mem);
 			std::vector<double> Ksis(mem);
 			for ( int i = (int)mem - 1; i >= 0; i-- ){
 				Ksis[i] = Rhos[i] * M.Inner(preconSs[i], Q);
