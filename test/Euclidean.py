@@ -11,7 +11,7 @@ class Euclidean(ut.TestCase):
 		# A \in SPD(10), nearly diagonal
 		# x \in R(10)
 		A = np.fromfile("Sym10.dat").reshape([10, 10])
-		A = A @ A + np.eye(10) * 0.01
+		A = A @ A + np.eye(10) * 0.01 # Constructing a SPD matrix
 		for i in range(10):
 			for j in range(10):
 				if i != j:
@@ -41,12 +41,12 @@ class Euclidean(ut.TestCase):
 		# A \in SPD(10), nearly diagonal
 		# x \in R(10)
 		A = np.fromfile("Sym10.dat").reshape([10, 10])
-		A = A @ A + np.eye(10) * 0.01
+		A = A @ A + np.eye(10) * 0.01 # Constructing a SPD matrix
+
 		for i in range(10):
 			for j in range(10):
 				if i != j:
 					A[i, j] *= 0.01
-		Asqrt = np.eye(10)
 		Asqrt = np.diag( np.sqrt( np.abs( np.diag( A ) ) ) )
 		Ainvsqrt = np.linalg.inv(Asqrt)
 
