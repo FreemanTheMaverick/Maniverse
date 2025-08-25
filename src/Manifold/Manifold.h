@@ -62,9 +62,8 @@ class Iterate{ public:
 	EigenMatrix Point;
 	EigenMatrix Gradient;
 	std::function<EigenMatrix (EigenMatrix)> Hessian;
-	std::function<EigenMatrix (EigenMatrix)> Precon_for_S;
-	std::function<EigenMatrix (EigenMatrix)> InvPrecon_for_S;
-	std::function<EigenMatrix (EigenMatrix)> Precon_for_G;
+	std::function<EigenMatrix (EigenMatrix)> Preconditioner;
+	std::function<EigenMatrix (EigenMatrix)> InversePreconditioner;
 
 	bool MatrixFree;
 	std::vector<EigenMatrix> BasisSet;
@@ -91,12 +90,8 @@ class Iterate{ public:
 
 	void setGradient(std::vector<EigenMatrix> gs);
 	void setHessian(std::vector<std::function<EigenMatrix (EigenMatrix)>> hs);
-	void setPreconditioner(
-			std::vector<std::tuple<
-				std::function<EigenMatrix (EigenMatrix)>,
-				std::function<EigenMatrix (EigenMatrix)>,
-				std::function<EigenMatrix (EigenMatrix)>
-			>> precons);
+	void setPreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> precons);
+	void setInversePreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> inv_precons);
 	
 	std::vector<EigenMatrix> getPoint() const;
 	std::vector<EigenMatrix> getGradient() const;

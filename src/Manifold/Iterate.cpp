@@ -46,9 +46,8 @@ Iterate::Iterate(const Iterate& another_iterate){
 	this->Point = another_iterate.Point;
 	this->Gradient = another_iterate.Gradient;
 	this->Hessian = another_iterate.Hessian;
-	this->Precon_for_S = another_iterate.Precon_for_S;
-	this->InvPrecon_for_S = another_iterate.InvPrecon_for_S;
-	this->Precon_for_G = another_iterate.Precon_for_G;
+	this->Preconditioner = another_iterate.Preconditioner;
+	this->InversePreconditioner = another_iterate.InversePreconditioner;
 	this->MatrixFree = another_iterate.MatrixFree;
 	this->BasisSet = another_iterate.BasisSet;
 	this->HessianMatrix = another_iterate.HessianMatrix;
@@ -175,37 +174,27 @@ void Iterate::setHessian(std::vector<std::function<EigenMatrix (EigenMatrix)>> h
 	};
 }
 
-void Iterate::setPreconditioner(std::vector<std::tuple<std::function<EigenMatrix (EigenMatrix)>, std::function<EigenMatrix (EigenMatrix)>, std::function<EigenMatrix (EigenMatrix)>>> precons){
+void Iterate::setPreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> precons){
 	const int nMs = (int)this->Ms.size();
 	if ( (int)precons.size() != nMs ) throw std::runtime_error("Wrong number of preconditioners!");
-	std::vector<std::function<EigenMatrix (EigenMatrix)>> precons_for_S(nMs);
-	std::vector<std::function<EigenMatrix (EigenMatrix)>> invprecons_for_S(nMs);
-	std::vector<std::function<EigenMatrix (EigenMatrix)>> precons_for_G(nMs);
-	for ( int iM = 0; iM < nMs; iM++ ){
-		precons_for_S[iM] = std::get<0>(precons[iM]);
-		invprecons_for_S[iM] = std::get<1>(precons[iM]);
-		precons_for_G[iM] = std::get<2>(precons[iM]);
-	}
-	this->Precon_for_S = [nMs, precons_for_S, BlockParameters = this->BlockParameters](EigenMatrix S){
-		EigenMatrix PS = EigenZero(S.rows(), S.cols());
+	this->Preconditioner = [nMs, precons, BlockParameters = this->BlockParameters](EigenMatrix X){
+		EigenMatrix PX = EigenZero(X.rows(), X.cols());
 		for ( int iM = 0; iM < nMs; iM++ ){
-			GetBlock(PS, iM) = precons_for_S[iM](GetBlock(S, iM));
+			GetBlock(PX, iM) = precons[iM](GetBlock(X, iM));
 		}
-		return PS;
+		return PX;
 	};
-	this->InvPrecon_for_S = [nMs, invprecons_for_S, BlockParameters = this->BlockParameters](EigenMatrix PS){
-		EigenMatrix S = EigenZero(PS.rows(), PS.cols());
+}
+
+void Iterate::setInversePreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> inv_precons){
+	const int nMs = (int)this->Ms.size();
+	if ( (int)inv_precons.size() != nMs ) throw std::runtime_error("Wrong number of inverse preconditioners!");
+	this->InversePreconditioner = [nMs, inv_precons, BlockParameters = this->BlockParameters](EigenMatrix PX){
+		EigenMatrix X = EigenZero(PX.rows(), PX.cols());
 		for ( int iM = 0; iM < nMs; iM++ ){
-			GetBlock(S, iM) = invprecons_for_S[iM](GetBlock(PS, iM));
+			GetBlock(X, iM) = inv_precons[iM](GetBlock(PX, iM));
 		}
-		return S;
-	};
-	this->Precon_for_G = [nMs, precons_for_G, BlockParameters = this->BlockParameters](EigenMatrix G){
-		EigenMatrix PG = EigenZero(G.rows(), G.cols());
-		for ( int iM = 0; iM < nMs; iM++ ){
-			GetBlock(PG, iM) = precons_for_G[iM](GetBlock(G, iM));
-		}
-		return PG;
+		return X;
 	};
 }
 
@@ -315,6 +304,8 @@ void Init_Iterate(pybind11::module_& m){
 		.def_readwrite("Point", &Iterate::Point)
 		.def_readwrite("Gradient", &Iterate::Gradient)
 		.def_readwrite("Hessian", &Iterate::Hessian)
+		.def_readwrite("Preconditioner", &Iterate::Preconditioner)
+		.def_readwrite("InversePreconditioner", &Iterate::InversePreconditioner)
 		.def_readwrite("MatrixFree", &Iterate::MatrixFree)
 		.def_readwrite("BasisSet", &Iterate::BasisSet)
 		.def_readwrite("HessianMatrix", &Iterate::HessianMatrix)
@@ -333,6 +324,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def("setGradient", &Iterate::setGradient)
 		.def("setHessian", &Iterate::setHessian)
 		.def("setPreconditioner", &Iterate::setPreconditioner)
+		.def("setInversePreconditioner", &Iterate::setPreconditioner)
 		.def("getBasisSet", &Iterate::getBasisSet)
 		.def("getHessianMatrix", &Iterate::getHessianMatrix);
 	m.def("Diagonalize", &Diagonalize);

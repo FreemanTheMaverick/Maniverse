@@ -19,22 +19,24 @@
 #include "../Manifold/Manifold.h"
 #include "SubSolver.h"
 
+#define G M->Gradient
+
 namespace Maniverse{
 
-void TruncatedConjugateGradient::Run(EigenMatrix G){
+void TruncatedConjugateGradient::Run(){
 	if (this->Verbose){
 		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->getName().c_str());
 		std::printf("| Itn. |       Target        |   T. C.  |  Grad.  |  V. U.  |  Time  |\n");
 	}
 
 	this->Sequence.clear(); this->Sequence.reserve(20);
-	const double b2 = this->M->Inner(G, G);
 	EigenMatrix v = EigenZero(G.rows(), G.cols());
 	EigenMatrix r = - G;
+	EigenMatrix z = this->Preconditioned ? this->M->Preconditioner(r) : r;
 	EigenMatrix p = - G;
 	double vnorm = 0;
 	double vplusnorm = 0;
-	double r2 = b2;
+	double r2 = this->M->Inner(r, z);
 	double L = 0;
 	const auto start = __now__;
 
@@ -78,9 +80,10 @@ void TruncatedConjugateGradient::Run(EigenMatrix G){
 		this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 		const double r2old = r2;
 		r = this->M->TangentPurification(r - alpha * Hp);
-		r2 = this->M->Inner(r, r);
+		const EigenMatrix z = this->Preconditioned ? this->M->TangentPurification(this->M->Preconditioner(r)) : r;
+		r2 = this->M->Inner(r, z);
 		const double beta = r2 / r2old;
-		p = this->M->TangentPurification(r + beta * p);
+		p = this->M->TangentPurification(z + beta * p);
 	}
 	if (this->Verbose) std::printf("Dimension completed!\n");
 }
@@ -107,13 +110,14 @@ void Init_SubSolver(pybind11::module_& m){
 	pybind11::class_<TruncatedConjugateGradient>(m, "TruncatedConjugateGradient")
 		.def_readwrite("M", &TruncatedConjugateGradient::M)
 		.def_readwrite("Func", &TruncatedConjugateGradient::Func)
+		.def_readwrite("Preconditioned", &TruncatedConjugateGradient::Preconditioned)
 		.def_readwrite("Verbose", &TruncatedConjugateGradient::Verbose)
 		.def_readwrite("ShowTarget", &TruncatedConjugateGradient::ShowTarget)
 		.def_readwrite("Radius", &TruncatedConjugateGradient::Radius)
 		.def_readwrite("Tolerance", &TruncatedConjugateGradient::Tolerance)
 		.def_readwrite("Sequence", &TruncatedConjugateGradient::Sequence)
 		.def(pybind11::init<>())
-		.def(pybind11::init<Iterate*, std::function<EigenMatrix (EigenMatrix)>*, bool, bool>())
+		.def(pybind11::init<Iterate*, std::function<EigenMatrix (EigenMatrix)>*, bool, bool, bool>())
 		.def("Run", &TruncatedConjugateGradient::Run)
 		.def("Find", &TruncatedConjugateGradient::Find);
 }

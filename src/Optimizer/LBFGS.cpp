@@ -56,11 +56,8 @@ bool LBFGS(
 	double Snorm = 0;
 	std::vector<EigenMatrix> P = M.getPoint();
 	std::vector<EigenMatrix> Ge;
-	[[maybe_unused]] std::vector<std::tuple<
-		std::function<EigenMatrix (EigenMatrix)>,
-		std::function<EigenMatrix (EigenMatrix)>,
-		std::function<EigenMatrix (EigenMatrix)>
-	>> Precon; // This variable may or may not be used, depending on whether UnpreconFirstFunc or PreconFirstFunc is specified.
+	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon;
+	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> InvPrecon; // These variables may or may not be used, depending on whether UnpreconFirstFunc or PreconFirstFunc is specified.
 
 	std::deque<EigenMatrix> Ss;
 	std::deque<EigenMatrix> Gs;
@@ -76,7 +73,7 @@ bool LBFGS(
 		if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 			std::tie(L, Ge) = func(P, 1);
 		}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
-			std::tie(L, Ge, Precon) = func(P, 1);
+			std::tie(L, Ge, Precon, InvPrecon) = func(P, 1);
 		}
 		actual_delta_L = L - oldL;
 		oldL = L;
@@ -121,6 +118,7 @@ bool LBFGS(
 		std::vector<EigenMatrix> preconYs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
 		if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 			M.setPreconditioner(Precon);
+			M.setInversePreconditioner(InvPrecon);
 		}
 		if ( iiter > 0 ){
 			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
@@ -133,11 +131,11 @@ bool LBFGS(
 				}
 			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
 				for ( int i = 0; i < (int)Ss.size(); i++ ){
-					preconSs[i] = M.Precon_for_S(Ss[i]);
+					preconSs[i] = M.InversePreconditioner(Ss[i]);
 					if ( i < (int)Ss.size() - 1 )
-						preconYs[i] = M.Precon_for_G(Gs[i + 1]) - M.Precon_for_G(Gs[i]);
+						preconYs[i] = M.Preconditioner(Gs[i + 1]) - M.Preconditioner(Gs[i]);
 					else
-						preconYs[i] = M.Precon_for_G(M.Gradient) - M.Precon_for_G(Gs[i]);
+						preconYs[i] = M.Preconditioner(M.Gradient) - M.Preconditioner(Gs[i]);
 				}
 			}
 			Rhos.push_back( 1. / M.Inner(preconSs.back(), preconYs.back())) ;
@@ -150,7 +148,7 @@ bool LBFGS(
 			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				Q = M.Gradient;
 			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
-				Q = M.Precon_for_G(M.Gradient);
+				Q = M.Preconditioner(M.Gradient);
 			}
 			const int mem = (int)Ss.size();
 			std::printf("Current memory size: %d\n", mem);
@@ -168,7 +166,7 @@ bool LBFGS(
 			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				Eta = - R;
 			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
-				Eta = - M.InvPrecon_for_S(R);
+				Eta = - M.Preconditioner(R);
 			}
 			// TODO: Line search
 			S = Eta;

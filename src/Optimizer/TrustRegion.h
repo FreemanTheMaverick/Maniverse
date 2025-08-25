@@ -22,11 +22,7 @@ class TrustRegionSetting{ public:
 				double,\
 				std::vector<EigenMatrix>,\
 				std::vector<std::function<EigenMatrix (EigenMatrix)>>,\
-				std::vector<std::tuple<\
-					std::function<EigenMatrix (EigenMatrix)>,\
-					std::function<EigenMatrix (EigenMatrix)>,\
-					std::function<EigenMatrix (EigenMatrix)>\
-				>>\
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>\
 			> (std::vector<EigenMatrix>, int)\
 		>
 
