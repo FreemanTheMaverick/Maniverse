@@ -1,22 +1,20 @@
 namespace Maniverse{
 
-#define UnpreconFirstFunc\
-		std::function<\
-			std::tuple<\
-				double,\
-				std::vector<EigenMatrix>\
-			> (std::vector<EigenMatrix>, int)\
-		>
+typedef std::function<
+			std::tuple<
+				double,
+				std::vector<EigenMatrix>
+			> (std::vector<EigenMatrix>, int)
+		> UnpreconFirstFunc;
 
-#define PreconFirstFunc\
-		std::function<\
-			std::tuple<\
-				double,\
-				std::vector<EigenMatrix>,\
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>,\
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>\
-			> (std::vector<EigenMatrix>, int)\
-		>
+typedef std::function<
+			std::tuple<
+				double,
+				std::vector<EigenMatrix>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>
+			> (std::vector<EigenMatrix>, int)
+		> PreconFirstFunc;
 		// Preconditioners of S
 		// Inverse Preconditioner of S
 		// Preconditioner of G
