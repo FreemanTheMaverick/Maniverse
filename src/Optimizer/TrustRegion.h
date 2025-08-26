@@ -7,24 +7,22 @@ class TrustRegionSetting{ public:
 	TrustRegionSetting();
 };
 
-#define UnpreconSecondFunc\
-		std::function<\
-			std::tuple<\
-				double,\
-				std::vector<EigenMatrix>,\
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>\
-			> (std::vector<EigenMatrix>, int)\
-		>
+typedef std::function<
+			std::tuple<
+				double,
+				std::vector<EigenMatrix>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>
+			> (std::vector<EigenMatrix>, int)
+		> UnpreconSecondFunc;
 
-#define PreconSecondFunc\
-		std::function<\
-			std::tuple<\
-				double,\
-				std::vector<EigenMatrix>,\
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>,\
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>\
-			> (std::vector<EigenMatrix>, int)\
-		>
+typedef std::function<
+			std::tuple<
+				double,
+				std::vector<EigenMatrix>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>,
+				std::vector<std::function<EigenMatrix (EigenMatrix)>>
+			> (std::vector<EigenMatrix>, int)
+		> PreconSecondFunc;
 
 template <typename FuncType>
 bool TrustRegion(
