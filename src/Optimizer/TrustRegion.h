@@ -22,7 +22,7 @@ typedef std::function<
 				std::vector<std::function<EigenMatrix (EigenMatrix)>>,
 				std::vector<std::function<EigenMatrix (EigenMatrix)>>
 			> (std::vector<EigenMatrix>, int)
-		> PreconSecondFunc;
+		> PreconFunc;
 
 template <typename FuncType>
 bool TrustRegion(
@@ -42,7 +42,7 @@ extern template bool TrustRegion(
 		double& L, Iterate& M, int output);
 
 extern template bool TrustRegion(
-		PreconSecondFunc& func,
+		PreconFunc& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
