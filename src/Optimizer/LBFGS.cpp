@@ -35,7 +35,7 @@ bool LBFGS(
 		std::printf("Dimension number: %d\n", M.getDimension());
 		if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 			std::printf("Preconditioner: False\n");
-		}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
+		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 			std::printf("Preconditioner: True\n");
 		}
 		std::printf("Maximum number of iterations: %d\n", max_iter);
@@ -57,7 +57,7 @@ bool LBFGS(
 	std::vector<EigenMatrix> P = M.getPoint();
 	std::vector<EigenMatrix> Ge;
 	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon;
-	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> InvPrecon; // These variables may or may not be used, depending on whether UnpreconFirstFunc or PreconFirstFunc is specified.
+	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> InvPrecon; // These variables may or may not be used, depending on whether UnpreconFirstFunc or PreconFunc is specified.
 
 	std::deque<EigenMatrix> Ss;
 	std::deque<EigenMatrix> Gs;
@@ -72,7 +72,7 @@ bool LBFGS(
 
 		if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 			std::tie(L, Ge) = func(P, 1);
-		}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
+		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 			std::tie(L, Ge, Precon, InvPrecon) = func(P, 1);
 		}
 		actual_delta_L = L - oldL;
@@ -116,7 +116,7 @@ bool LBFGS(
 		// Transporting previous vectors II
 		std::vector<EigenMatrix> preconSs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
 		std::vector<EigenMatrix> preconYs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
-		if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
+		if constexpr (std::is_same_v<FuncType, PreconFunc>){
 			M.setPreconditioner(Precon);
 			M.setInversePreconditioner(InvPrecon);
 		}
@@ -129,7 +129,7 @@ bool LBFGS(
 					else
 						preconYs[i] = M.Gradient - Gs[i];
 				}
-			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
+			}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 				for ( int i = 0; i < (int)Ss.size(); i++ ){
 					preconSs[i] = M.InversePreconditioner(Ss[i]);
 					if ( i < (int)Ss.size() - 1 )
@@ -147,7 +147,7 @@ bool LBFGS(
 			EigenMatrix Q = EigenZero(Pmat.rows(), Pmat.cols());
 			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				Q = M.Gradient;
-			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
+			}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 				Q = M.Preconditioner(M.Gradient);
 			}
 			const int mem = (int)Ss.size();
@@ -165,7 +165,7 @@ bool LBFGS(
 			EigenMatrix Eta;
 			if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
 				Eta = - R;
-			}else if constexpr (std::is_same_v<FuncType, PreconFirstFunc>){
+			}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 				Eta = - M.Preconditioner(R);
 			}
 			// TODO: Line search
@@ -189,7 +189,7 @@ template bool LBFGS(
 		double& L, Iterate& M, int output);
 
 template bool LBFGS(
-		PreconFirstFunc& func,
+		PreconFunc& func,
 		std::tuple<double, double, double> tol,
 		int max_iter, int max_mem,
 		double& L, Iterate& M, int output);
@@ -197,7 +197,7 @@ template bool LBFGS(
 #ifdef __PYTHON__
 void Init_LBFGS(pybind11::module_& m){
 	m.def("LBFGS", &LBFGS<UnpreconFirstFunc>);
-	m.def("PreconLBFGS", &LBFGS<PreconFirstFunc>);
+	m.def("PreconLBFGS", &LBFGS<PreconFunc>);
 }
 #endif
 

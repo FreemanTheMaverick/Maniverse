@@ -14,7 +14,7 @@ typedef std::function<
 				std::vector<std::function<EigenMatrix (EigenMatrix)>>,
 				std::vector<std::function<EigenMatrix (EigenMatrix)>>
 			> (std::vector<EigenMatrix>, int)
-		> PreconFirstFunc;
+		> PreconFunc;
 		// Preconditioners of S
 		// Inverse Preconditioner of S
 		// Preconditioner of G
@@ -33,7 +33,7 @@ extern template bool LBFGS(
 		double& L, Iterate& M, int output);
 
 extern template bool LBFGS(
-		PreconFirstFunc& func,
+		PreconFunc& func,
 		std::tuple<double, double, double> tol,
 		int max_mem, int max_iter,
 		double& L, Iterate& M, int output);

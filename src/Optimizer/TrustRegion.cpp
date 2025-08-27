@@ -50,7 +50,7 @@ bool TrustRegion(
 		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
 		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 			std::printf("Preconditioner: False\n");
-		}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
+		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 			std::printf("Preconditioner: True\n");
 		}
 		std::printf("Maximum number of iterations: %d\n", max_iter);
@@ -77,7 +77,7 @@ bool TrustRegion(
 	TruncatedConjugateGradient tcg{&M, &bfgs_hess, 1, output > 0, 1};
 	if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 		tcg.Preconditioned = 0;
-	}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
+	}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 		tcg.Preconditioned = 1;
 	}
 
@@ -87,7 +87,7 @@ bool TrustRegion(
 	std::vector<EigenMatrix> P = M.getPoint();
 	std::vector<EigenMatrix> Ge;
 	std::vector<std::function<EigenMatrix (EigenMatrix)>> He;
-	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconSecondFunc is specified.
+	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconFunc is specified.
 
 	bool accepted = 1;
 	bool converged = 0;
@@ -101,7 +101,7 @@ bool TrustRegion(
 
 		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
 			std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
-		}else if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
+		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 			std::tie(L, Ge, He, Precon) = func(P, calc_hess ? 2 : 1);
 		}
 
@@ -153,7 +153,7 @@ bool TrustRegion(
 				M.setHessian(He);
 				if ( ! M.MatrixFree ) M.getHessianMatrix();
 			}
-			if constexpr (std::is_same_v<FuncType, PreconSecondFunc>){
+			if constexpr (std::is_same_v<FuncType, PreconFunc>){
 				M.setPreconditioner(Precon);
 			}
 			bfgs.Append(M, S);
@@ -210,7 +210,7 @@ template bool TrustRegion(
 		double& L, Iterate& M, int output);
 
 template bool TrustRegion(
-		PreconSecondFunc& func,
+		PreconFunc& func,
 		TrustRegionSetting& tr_setting,
 		std::tuple<double, double, double> tol,
 		double tcg_tol,
@@ -225,7 +225,7 @@ void Init_TrustRegion(pybind11::module_& m){
 		.def_readwrite("Update", &TrustRegionSetting::Update)
 		.def(pybind11::init<>());
 	m.def("TrustRegion", &TrustRegion<UnpreconSecondFunc>);
-	m.def("PreconTrustRegion", &TrustRegion<PreconSecondFunc>);
+	m.def("PreconTrustRegion", &TrustRegion<PreconFunc>);
 }
 #endif
 
