@@ -33,7 +33,7 @@ void TruncatedConjugateGradient::Run(){
 	EigenMatrix v = EigenZero(G.rows(), G.cols());
 	EigenMatrix r = - G;
 	EigenMatrix z = this->Preconditioned ? this->M->Preconditioner(r) : r;
-	EigenMatrix p = - G;
+	EigenMatrix p = z;
 	double vnorm = 0;
 	double vplusnorm = 0;
 	double r2 = this->M->Inner(r, z);
@@ -59,7 +59,7 @@ void TruncatedConjugateGradient::Run(){
 		vnorm = std::sqrt(this->M->Inner(v, v));
 		const double step = std::abs(alpha) * std::sqrt(this->M->Inner(p, p));
 		if (this->Verbose) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
-		if ( iiter > 0 && ( this->Tolerance(deltaL, L, std::sqrt(r2), step) ) ){
+		if ( iiter > 0 && this->Tolerance(deltaL, L, std::sqrt(r2), step) ){
 			if (this->Verbose) std::printf("Tolerance met!\n");
 			this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 			return;
@@ -79,11 +79,11 @@ void TruncatedConjugateGradient::Run(){
 		vnorm = vplusnorm;
 		this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 		const double r2old = r2;
-		r = this->M->TangentPurification(r - alpha * Hp);
-		const EigenMatrix z = this->Preconditioned ? this->M->TangentPurification(this->M->Preconditioner(r)) : r;
+		r -= alpha * Hp;
+		const EigenMatrix z = this->M->TangentPurification(this->Preconditioned ? this->M->Preconditioner(r) : r);
 		r2 = this->M->Inner(r, z);
 		const double beta = r2 / r2old;
-		p = this->M->TangentPurification(z + beta * p);
+		p = z + beta * p;
 	}
 	if (this->Verbose) std::printf("Dimension completed!\n");
 }
