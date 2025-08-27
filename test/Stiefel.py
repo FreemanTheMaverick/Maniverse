@@ -29,7 +29,34 @@ class Stiefel(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TrustRegion(
 				Objective, tr_setting, tol,
-				0.001, 1, 8, L, M, 0
+				0.001, 1, 3, L, M, 0
+		)
+		assert converged
+		assert np.allclose(M.Point.T, Copt)
+
+	def testRayleighQuotientLBFGS(self):
+		# Rayleigh quotient
+		# Finding the smallest eigenvalue of A
+		# Minimize L(C) = C.t A C
+		# A \in Sym(10)
+		# C \in St(10, 1)
+		A = np.fromfile("Sym10.dat")
+		A.shape = (10, 10)
+		_, evectors = np.linalg.eigh(A)
+		Copt = evectors[:, 0] # Truth value
+		C0 = ( evectors[:, 0] + evectors[:, 1] ) / np.sqrt(2) # Initial guess
+		def Objective(Cs, _):
+			C = Cs[0]
+			L = np.sum( C * ( A @ C ) )
+			G = 2 * A @ C
+			return L, [G]
+		stiefel = mv.Stiefel(C0)
+		M = mv.Iterate({stiefel.Clone()}, True)
+		L = 0
+		tol = (1.e-5, 1.e-5, 1.e-5)
+		converged = mv.LBFGS(
+				Objective, tol,
+				20, 12, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point.T, Copt)
@@ -66,4 +93,5 @@ class Stiefel(ut.TestCase):
 
 if __name__ == "__main__":
 	Stiefel().testRayleighQuotient()
+	Stiefel().testRayleighQuotientLBFGS()
 	Stiefel().testOrthogonalProjection()

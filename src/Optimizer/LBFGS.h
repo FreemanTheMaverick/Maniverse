@@ -29,13 +29,13 @@ bool LBFGS(
 extern template bool LBFGS(
 		UnpreconFirstFunc& func,
 		std::tuple<double, double, double> tol,
-		int max_iter, int max_mem,
+		int max_mem, int max_iter,
 		double& L, Iterate& M, int output);
 
 extern template bool LBFGS(
 		PreconFirstFunc& func,
 		std::tuple<double, double, double> tol,
-		int max_iter, int max_mem,
+		int max_mem, int max_iter,
 		double& L, Iterate& M, int output);
 
 }
