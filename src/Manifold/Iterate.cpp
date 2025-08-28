@@ -176,11 +176,11 @@ void Iterate::setHessian(std::vector<std::function<EigenMatrix (EigenMatrix)>> h
 
 void Iterate::setPreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> precons){
 	const int nMs = (int)this->Ms.size();
-	if ( (int)precons.size() != nMs ) throw std::runtime_error("Wrong number of preconditioners!");
+	if ( (int)precons.size() != nMs * nMs ) throw std::runtime_error("Wrong number of preconditioners!");
 	this->Preconditioner = [nMs, precons, BlockParameters = this->BlockParameters](EigenMatrix X){
 		EigenMatrix PX = EigenZero(X.rows(), X.cols());
-		for ( int iM = 0; iM < nMs; iM++ ){
-			GetBlock(PX, iM) = precons[iM](GetBlock(X, iM));
+		for ( int iM = 0, kprecon = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, kprecon++ ){
+			GetBlock(PX, iM) += precons[kprecon](GetBlock(X, jM));
 		}
 		return PX;
 	};
@@ -188,11 +188,11 @@ void Iterate::setPreconditioner(std::vector<std::function<EigenMatrix (EigenMatr
 
 void Iterate::setInversePreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> inv_precons){
 	const int nMs = (int)this->Ms.size();
-	if ( (int)inv_precons.size() != nMs ) throw std::runtime_error("Wrong number of inverse preconditioners!");
+	if ( (int)inv_precons.size() != nMs * nMs ) throw std::runtime_error("Wrong number of inverse preconditioners!");
 	this->InversePreconditioner = [nMs, inv_precons, BlockParameters = this->BlockParameters](EigenMatrix PX){
 		EigenMatrix X = EigenZero(PX.rows(), PX.cols());
-		for ( int iM = 0; iM < nMs; iM++ ){
-			GetBlock(X, iM) = inv_precons[iM](GetBlock(PX, iM));
+		for ( int iM = 0, kinv_precon = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, kinv_precon++ ){
+			GetBlock(X, iM) += inv_precons[kinv_precon](GetBlock(PX, jM));
 		}
 		return X;
 	};
