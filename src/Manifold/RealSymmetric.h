@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Euclidean.h"
 
 namespace Maniverse{
