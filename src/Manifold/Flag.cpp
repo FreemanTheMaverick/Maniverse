@@ -22,13 +22,13 @@ void Flag::setBlockParameters(std::vector<int> sizes){
 	this->Name = "Flag(";
 	int tot_size = 0;
 	for ( int size : sizes ){
-		if ( size <= 0 ) throw std::runtime_error("Invalid sizes of subspaces!");
+		if ( size <= 0 ) throw std::runtime_error("Invalid sizes of subspaces! (Non-positive dimension)");
 		this->BlockParameters.push_back(std::make_tuple(tot_size, size));
 		if ( tot_size > 0 ) this->Name += ", ";
 		tot_size += size;
 		this->Name += std::to_string(tot_size);
 	}
-	if ( tot_size > this->P.rows() ) throw std::runtime_error("Invalid sizes of subspaces!");
+	if ( tot_size > this->P.cols() ) throw std::runtime_error("Invalid sizes of subspaces! (Dimension exceeds)");
 	this->Name += "; " + std::to_string(this->P.rows()) + ")";
 }
 
