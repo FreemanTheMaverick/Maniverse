@@ -108,7 +108,7 @@ class Iterate{ public:
 			std::get<3>(BlockParameters[iM])\
 	)
 
-#define AssemblyBlock(big_mat, mat_vec){\
+#define AssembleBlock(big_mat, mat_vec){\
 	int _nrows_ = 0;\
 	int _ncols_ = 0;\
 	for ( EigenMatrix& mat : mat_vec ){\
