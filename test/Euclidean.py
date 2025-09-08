@@ -71,6 +71,38 @@ class Euclidean(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
 
+	def testQuadraticAnderson(self):
+		# Quadratic minimization
+		# Finding the bottom of a quadratic form
+		# Minimize L(x) = x.t A x
+		# A \in SPD(10), nearly diagonal
+		# x \in R(10)
+		A = np.fromfile("Sym10.dat").reshape([10, 10])
+		A = A @ A + np.eye(10) * 0.01 # Constructing a SPD matrix
+		for i in range(10):
+			for j in range(10):
+				if i != j:
+					A[i, j] *= 0.01
+
+		x0 = range(10)
+		def Objective(xs):
+			x = xs[0]
+			L = np.sum( x * ( A @ x ) )
+			G = 2 * A @ x
+			return L, [- 0.2 * G]
+		euclidean = mv.Euclidean(x0)
+		M = mv.Iterate({euclidean.Clone()}, True)
+		L = 0
+		tol = (1.e-5, 1.e-5, 1.e-5)
+		converged = mv.Anderson(
+				Objective, tol, 1,
+				6, 12, L, M, 1
+		)
+		assert converged
+		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
+
+
 if __name__ == "__main__":
 	Euclidean().testQuadratic()
 	Euclidean().testPreconditionedQuadratic()
+	Euclidean().testQuadraticAnderson()
