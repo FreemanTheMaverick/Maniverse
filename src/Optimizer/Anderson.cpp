@@ -85,7 +85,10 @@ bool Anderson(
 		Rmat = M.TangentProjection(Rmat);
 		const double Rnorm = std::sqrt( M.Inner(Rmat, Rmat) );
 		const double Snorm = std::sqrt( M.Inner(S, S) );
-		if ( std::abs(actual_delta_L) < tol0 && Rnorm < tol1 && Snorm < tol2 ) converged = 1;
+		if ( Rnorm < tol1 ){
+			if ( iiter == 0 ) converged = 1;
+			else if ( std::abs(actual_delta_L) < tol0 && Snorm < tol2 ) converged = 1;
+		}
 		if (output){
 			std::printf("Convergence info: current / threshold / converged?\n");
 			std::printf("| Target    change: % E / %E / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
