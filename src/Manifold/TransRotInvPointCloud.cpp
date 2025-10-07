@@ -35,9 +35,8 @@ int TransRotInvPointCloud::getDimension() const{
 }
 
 static EigenMatrix Procrustes(EigenMatrix P, EigenMatrix Q, EigenMatrix X){
-	Eigen::JacobiSVD<EigenMatrix> svd;
 	const EigenMatrix Qinv = Q.completeOrthogonalDecomposition().pseudoInverse();
-	svd.compute(Qinv * P, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	Eigen::JacobiSVD<EigenMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd(Qinv * P);
 	const EigenMatrix Rotation = svd.matrixU() * svd.matrixV().transpose();
 	return X * Rotation;
 }

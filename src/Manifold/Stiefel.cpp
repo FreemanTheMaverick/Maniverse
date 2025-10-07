@@ -50,8 +50,7 @@ EigenMatrix Stiefel::Retract(EigenMatrix X) const{
 		C.topRows(X.cols()) = ( - this->P.transpose() * X ).exp();
 		return A * B.exp() * C;
 	}else if ( this->Geodesic == "POLAR" ){
-		Eigen::BDCSVD<EigenMatrix> svd;
-		svd.compute(this->P + X, Eigen::ComputeThinU | Eigen::ComputeFullV);
+		Eigen::BDCSVD<EigenMatrix, Eigen::ComputeThinU | Eigen::ComputeFullV> svd(this->P + X);
 		return svd.matrixU() * svd.matrixV().transpose();
 	}
 	__Check_Geodesic_Func__
@@ -133,7 +132,7 @@ EigenMatrix Stiefel::TangentPurification(EigenMatrix X) const{
 
 void Stiefel::setPoint(EigenMatrix p, bool purify){
 	if (purify){
-		Eigen::BDCSVD<EigenMatrix> svd(p, Eigen::ComputeThinU | Eigen::ComputeThinV);
+		Eigen::BDCSVD<EigenMatrix, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(p);
 		p = svd.matrixU() * svd.matrixV().transpose();
 	}
 	this->P = p;

@@ -80,8 +80,8 @@ EigenMatrix Grassmann::InverseRetract(Manifold& N) const{
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
 	const EigenMatrix U = this->Projector;
 	const EigenMatrix Y = N_.Projector;
-	Eigen::JacobiSVD<EigenMatrix> svd;
-	svd.compute(Y.transpose() * U, Eigen::ComputeFullU | Eigen::ComputeFullV);
+	Eigen::JacobiSVD<EigenMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd;
+	svd.compute(Y.transpose() * U);
 	const EigenMatrix Ystar = Y * svd.matrixU() * svd.matrixV().transpose();
 	svd.compute( (EigenOne(U.rows(), U.rows()) - U * U.transpose() ) * Ystar);
 	const EigenArray Sigma = svd.singularValues().array().asin();
