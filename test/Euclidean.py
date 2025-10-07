@@ -96,7 +96,7 @@ class Euclidean(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5)
 		converged = mv.Anderson(
 				Objective, tol, 1,
-				6, 12, L, M, 1
+				6, 12, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
