@@ -20,6 +20,8 @@ class Flag: public Stiefel{ public:
 	std::unique_ptr<Manifold> Clone() const override;
 };
 
+}
+
 #define FlagGetColumns(big_mat, imat)\
 	big_mat( Eigen::placeholders::all, Eigen::seqN(\
 			std::get<0>(BlockParameters[imat]),\
@@ -33,5 +35,3 @@ class Flag: public Stiefel{ public:
 			std::get<1>(BlockParameters[imat]),\
 			std::get<1>(BlockParameters[jmat])\
 	)
-
-}
