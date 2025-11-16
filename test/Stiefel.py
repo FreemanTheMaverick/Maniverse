@@ -54,10 +54,11 @@ class Stiefel(ut.TestCase):
 		stiefel = mv.Stiefel(C0)
 		M = mv.Iterate({stiefel.Clone()}, True)
 		L = 0
-		tol = (1.e-5, 1.e-5, 1.e-5)
+		tol = (1.e-6, 1.e-6, 1.e-6)
 		converged = mv.LBFGS(
 				Objective, tol,
-				20, 12, L, M, 0
+				20, 10, 0.1, 0.75, 5,
+				L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point.T, Copt)
@@ -114,7 +115,8 @@ class Stiefel(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5)
 		converged = mv.LBFGS(
 				Objective, tol,
-				20, 35, L, M, 0
+				20, 35, 0.1, 0.75, 5,
+				L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, Copt, atol = 1.e-5)

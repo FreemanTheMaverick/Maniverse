@@ -17,6 +17,7 @@
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
 #include "LBFGS.h"
+#include "LineSearch.h"
 
 namespace Maniverse{
 
@@ -26,6 +27,7 @@ bool LBFGS(
 		FuncType& func,
 		std::tuple<double, double, double> tol,
 		int max_mem, int max_iter,
+		double c1, double tau, int ls_max_iter,
 		double& L, Iterate& M, int output){
 
 	auto [tol0, tol1, tol2] = tol;
@@ -70,14 +72,22 @@ bool LBFGS(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		if constexpr (std::is_same_v<FuncType, UnpreconFirstFunc>){
-			std::tie(L, Ge) = func(P, 1);
-		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-			std::tie(L, Ge, Precon, InvPrecon) = func(P, 1);
-		}
+		ArmijoBacktracking(
+			func,
+			M, S,
+			c1, tau, iiter == 0 ? 1 : ls_max_iter,
+			L, &Ge,
+			&Precon, &InvPrecon,
+			output > 0
+		);
+
 		actual_delta_L = L - oldL;
 		oldL = L;
 		if (output) std::printf("Target = %.10f\n", L);
+
+		Snorm = std::sqrt(M.Inner(S, S));
+		Pmat = M.Retract(S);
+		DecoupleBlock(Pmat, P);
 
 		// Transporting previous vectors I
 		if ( (int)Rhos.size() == max_mem ){
@@ -170,9 +180,6 @@ bool LBFGS(
 			}
 			// TODO: Line search
 			S = Eta;
-			Snorm = std::sqrt(M.Inner(S, S));
-			Pmat = M.Retract(S);
-			DecoupleBlock(Pmat, P);
 		}
 
 		// Elapsed time
@@ -186,12 +193,14 @@ template bool LBFGS(
 		UnpreconFirstFunc& func,
 		std::tuple<double, double, double> tol,
 		int max_iter, int max_mem,
+		double c1, double tau, int ls_max_iter,
 		double& L, Iterate& M, int output);
 
 template bool LBFGS(
 		PreconFunc& func,
 		std::tuple<double, double, double> tol,
 		int max_iter, int max_mem,
+		double c1, double tau, int ls_max_iter,
 		double& L, Iterate& M, int output);
 
 #ifdef __PYTHON__
