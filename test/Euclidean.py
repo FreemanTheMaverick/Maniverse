@@ -29,7 +29,8 @@ class Euclidean(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.LBFGS(
 				Objective, tol,
-				20, 12, L, M, 0
+				20, 12, 0.1, 0.75, 5,
+				L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
@@ -66,7 +67,8 @@ class Euclidean(ut.TestCase):
 		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.PreconLBFGS(
 				Objective, tol,
-				20, 8, L, M, 0
+				20, 8, 0.1, 0.75, 5,
+				L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
