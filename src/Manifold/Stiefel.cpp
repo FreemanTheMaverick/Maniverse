@@ -18,7 +18,7 @@
 namespace Maniverse{
 
 Stiefel::Stiefel(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
-	__Check_Geodesic__("EXACT", "POLAR")
+	__Check_Geodesic__("EXACT", "POLAR", "QR")
 	this->Name = "Stiefel("
 		+ std::to_string(p.rows())
 		+ ", "
@@ -39,19 +39,24 @@ double Stiefel::Inner(EigenMatrix X, EigenMatrix Y) const{
 }
 
 EigenMatrix Stiefel::Retract(EigenMatrix X) const{
+	const int nrows = X.rows();
+	const int ncols = X.cols();
 	if ( this->Geodesic == "EXACT" ){
-		EigenMatrix A = EigenZero(X.rows(), 2 * X.cols());
+		EigenMatrix A = EigenZero(nrows, 2 * ncols);
 		A << this->P, X;
-		EigenMatrix B = EigenZero(2 * X.cols(), 2 * X.cols());
-		B.topLeftCorner(X.cols(), X.cols()) = B.bottomRightCorner(X.cols(), X.cols()) = this->P.transpose() * X;
-		B.topRightCorner(X.cols(), X.cols()) = - X.transpose() * X;
-		B.bottomLeftCorner(X.cols(), X.cols()) = EigenOne(X.cols(), X.cols());
-		EigenMatrix C = EigenZero(2 * X.cols(), X.cols());
-		C.topRows(X.cols()) = ( - this->P.transpose() * X ).exp();
+		EigenMatrix B = EigenZero(2 * ncols, 2 * ncols);
+		B.topLeftCorner(ncols, ncols) = B.bottomRightCorner(ncols, ncols) = this->P.transpose() * X;
+		B.topRightCorner(ncols, ncols) = - X.transpose() * X;
+		B.bottomLeftCorner(ncols, ncols) = EigenOne(ncols, ncols);
+		EigenMatrix C = EigenZero(2 * ncols, ncols);
+		C.topRows(ncols) = ( - this->P.transpose() * X ).exp();
 		return A * B.exp() * C;
 	}else if ( this->Geodesic == "POLAR" ){
 		Eigen::BDCSVD<EigenMatrix, Eigen::ComputeThinU | Eigen::ComputeFullV> svd(this->P + X);
 		return svd.matrixU() * svd.matrixV().transpose();
+	}else if ( this->Geodesic == "QR" ){
+		Eigen::ColPivHouseholderQR<EigenMatrix> qr(this->P + X);
+		return qr.householderQ() * EigenOne(nrows, ncols);
 	}
 	__Check_Geodesic_Func__
 	return X;
@@ -94,8 +99,10 @@ EigenMatrix Stiefel::InverseRetract(Manifold& N) const{
 EigenMatrix Stiefel::TransportTangent(EigenMatrix Y, EigenMatrix Z) const{
 	// Transport Y along Z
 	// Section 3.5, https://doi.org/10.1007/s10589-016-9883-4
+	const int nrows = Y.rows();
+	const int ncols = Y.cols();
 	if ( this->Geodesic == "POLAR" ){
-		const EigenMatrix IplusZtZ = EigenOne(Z.cols(), Z.cols()) + Z.transpose() * Z;
+		const EigenMatrix IplusZtZ = EigenOne(ncols, ncols) + Z.transpose() * Z;
 		Eigen::SelfAdjointEigenSolver<EigenMatrix> es(IplusZtZ);
 		const EigenMatrix A = es.operatorSqrt();
 		const EigenMatrix Ainv = es.operatorInverseSqrt();
@@ -103,7 +110,19 @@ EigenMatrix Stiefel::TransportTangent(EigenMatrix Y, EigenMatrix Z) const{
 		const EigenMatrix RZtY = RZ.transpose() * Y;
 		const EigenMatrix Q = RZtY - RZtY.transpose();
 		const EigenMatrix Lambda = Sylvester(A, Q);
-		return RZ * Lambda + ( EigenOne(Z.rows(), Z.rows()) - RZ * RZ.transpose() ) * Y * Ainv;
+		return RZ * Lambda + ( EigenOne(nrows, nrows) - RZ * RZ.transpose() ) * Y * Ainv;
+	}else if ( this->Geodesic == "QR" ){
+		Eigen::ColPivHouseholderQR<EigenMatrix> qr(this->P + Z);
+		const EigenMatrix Q = qr.householderQ() * EigenOne(nrows, ncols);
+		const EigenMatrix Rinv = qr.matrixQR().topLeftCorner(ncols, ncols).triangularView<Eigen::Upper>();
+		EigenMatrix TMP = Q.transpose() * Y * Rinv;
+		for ( int i = 0; i < ncols; i++ ){
+			for ( int j = 0; j < ncols; j++ ){
+				if ( i == j ) TMP(i, j) = 0;
+				else if ( i < j ) TMP(i, j) = - TMP(i, j);
+			}
+		}
+		return Q * TMP + ( EigenOne(nrows, nrows) - Q * Q.transpose() ) * Y * Rinv;
 	}
 	__Check_Geodesic_Func__
 	return Y;
@@ -161,7 +180,7 @@ std::unique_ptr<Manifold> Stiefel::Clone() const{
 #ifdef __PYTHON__
 void Init_Stiefel(pybind11::module_& m){
 	pybind11::classh<Stiefel, Manifold>(m, "Stiefel")
-		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR");
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "QR");
 }
 #endif
 
