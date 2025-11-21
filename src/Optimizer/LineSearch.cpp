@@ -45,7 +45,6 @@ bool ArmijoBacktracking(
 
 	double alpha = 1;
 	std::vector<EigenMatrix> P = M.getPoint();
-	Iterate N(M);
 	for ( int iiter = 0; iiter < max_iter; iiter++ ){
 		const auto start = __now__;
 		const EigenMatrix Pmat = M.Retract(alpha * S);
@@ -57,8 +56,6 @@ bool ArmijoBacktracking(
 		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 			std::tie(L, *Ge, *func1, *func2) = func(P, 1);
 		}
-		N.setPoint(P, 1);
-		N.setGradient(*Ge);
 
 		const double RHS = oldL + c1 * alpha * SGr;
 
