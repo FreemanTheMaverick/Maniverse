@@ -55,7 +55,7 @@ EigenMatrix Stiefel::Retract(EigenMatrix X) const{
 		Eigen::BDCSVD<EigenMatrix, Eigen::ComputeThinU | Eigen::ComputeFullV> svd(this->P + X);
 		return svd.matrixU() * svd.matrixV().transpose();
 	}else if ( this->Geodesic == "QR" ){
-		Eigen::ColPivHouseholderQR<EigenMatrix> qr(this->P + X);
+		Eigen::HouseholderQR<EigenMatrix> qr(this->P + X);
 		return qr.householderQ() * EigenOne(nrows, ncols);
 	}
 	__Check_Geodesic_Func__
@@ -112,7 +112,7 @@ EigenMatrix Stiefel::TransportTangent(EigenMatrix Y, EigenMatrix Z) const{
 		const EigenMatrix Lambda = Sylvester(A, Q);
 		return RZ * Lambda + ( EigenOne(nrows, nrows) - RZ * RZ.transpose() ) * Y * Ainv;
 	}else if ( this->Geodesic == "QR" ){
-		Eigen::ColPivHouseholderQR<EigenMatrix> qr(this->P + Z);
+		Eigen::HouseholderQR<EigenMatrix> qr(this->P + Z);
 		const EigenMatrix Q = qr.householderQ() * EigenOne(nrows, ncols);
 		const EigenMatrix Rinv = qr.matrixQR().topLeftCorner(ncols, ncols).triangularView<Eigen::Upper>();
 		EigenMatrix TMP = Q.transpose() * Y * Rinv;
