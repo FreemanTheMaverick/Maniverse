@@ -1,28 +1,27 @@
 #ifdef __PYTHON__
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
+#include <vector>
 #include <tuple>
-#include <map>
+#include <functional>
 #include <cstdio>
 #include <chrono>
+#include <cassert>
 #include <string>
+#include <tuple>
 #include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
 #include "TrustRegion.h"
-#include "SubSolver.h"
-#include "HessUpdate.h"
 
 namespace Maniverse{
 
-TrustRegionSetting::TrustRegionSetting(){
+TrustRegion::TrustRegion(){
 	this->R0 = 1;
 	this->RhoThreshold = 0.1;
 	this->Update = [&R0 = this->R0](double R, double Rho, double Snorm){
@@ -32,200 +31,13 @@ TrustRegionSetting::TrustRegionSetting(){
 	};
 }
 
-template <typename FuncType>
-bool TrustRegion(
-		FuncType& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		double tcg_tol,
-		int recalc_hess, int max_iter,
-		double& L, Iterate& M, int output){
-
-	auto [tol0, tol1, tol2] = tol;
-	if (output > 0){
-		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
-		std::printf("Manifold: %s\n", M.getName().c_str());
-		std::printf("Dimension number: %d\n", M.getDimension());
-		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
-		std::printf("True hessian calculated every %d iterations\n", recalc_hess);
-		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-			std::printf("Preconditioner: False\n");
-		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-			std::printf("Preconditioner: True\n");
-		}
-		std::printf("Maximum number of iterations: %d\n", max_iter);
-		std::printf("Trust region settings:\n");
-		std::printf("| Initial radius: %f\n", tr_setting.R0);
-		std::printf("| Rho threshold: %f\n", tr_setting.RhoThreshold);
-		std::printf("Convergence threshold:\n");
-		std::printf("| Target change (T. C.)               : %E\n", tol0);
-		std::printf("| Gradient norm (Grad.)               : %E\n", tol1);
-		std::printf("| Independent variable update (V. U.) : %E\n\n", tol2);
-	}
-
-	const auto all_start = __now__;
-
-	double R = tr_setting.R0;
-	double oldL = 0;
-	double actual_delta_L = 0;
-	double predicted_delta_L = 0;
-
-	BroydenFletcherGoldfarbShanno bfgs(recalc_hess);
-	std::function<EigenMatrix (EigenMatrix)> bfgs_hess;
-	bfgs_hess = [&bfgs](EigenMatrix v){ return (EigenMatrix)bfgs.Hessian(v); };
-
-	TruncatedConjugateGradient tcg{&M, &bfgs_hess, 1, output > 0, 1};
-	if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-		tcg.Preconditioned = 0;
-	}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-		tcg.Preconditioned = 1;
-	}
-
-	EigenMatrix Pmat = M.Point;
-	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
-	double Snorm = 0;
-	std::vector<EigenMatrix> P = M.getPoint();
-	std::vector<EigenMatrix> Ge;
-	std::vector<std::function<EigenMatrix (EigenMatrix)>> He;
-	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconFunc is specified.
-
-	bool accepted = 1;
-	bool converged = 0;
-
-	for ( int iiter = 0; ( iiter < max_iter ) && ( ! converged ); iiter++ ){
-		if (output) std::printf("Iteration %d\n", iiter);
-		const auto iter_start = __now__;
-
-		const bool calc_hess = iiter == 0 || (int)bfgs.Ms.size() == recalc_hess;
-		if (output) std::printf("Calculate true hessian: %s\n", __True_False__(calc_hess));
-
-		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-			std::tie(L, Ge, He) = func(P, calc_hess ? 2 : 1);
-		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-			std::tie(L, Ge, He, Precon) = func(P, calc_hess ? 2 : 1);
-		}
-
-		// Rating the new step
-		actual_delta_L = L - oldL;
-		const double rho = actual_delta_L / predicted_delta_L;
-		if ( ( accepted = ( rho > tr_setting.RhoThreshold || iiter == 0 ) ) ){
-			oldL = L;
-			M.setPoint(P, 1);
-		}
-		if (output){
-			std::printf("Target = %.10f\n", L);
-			std::printf("Step score:\n");
-			std::printf("| Predicted and actual changes in target = %E, %E\n", predicted_delta_L, actual_delta_L);
-			std::printf("| Score of the new step Rho = %f, compared with RhoThreshold %f\n", rho, tr_setting.RhoThreshold);
-			if (accepted) std::printf("| Step accepted\n");
-			else std::printf("| Step rejected\n");
-		}
-
-		// Obtaining Riemannian gradient
-		if ( accepted ) M.setGradient(Ge);
-		const double Gnorm = std::sqrt(std::abs(M.Inner(M.Gradient, M.Gradient)));
-
-		// Checking convergence
-		if ( Gnorm < tol1 ){
-			if ( iiter == 0 ) converged = 1;
-			else if ( std::abs(actual_delta_L) < tol0 && Snorm < tol2 ) converged = 1;
-		}
-		if (output){
-			std::printf("Convergence info: current / threshold / converged?\n");
-			std::printf("| Target    change: % E / %E / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
-			std::printf("| Gradient    norm: % E / %E / %s\n", Gnorm, tol1, __True_False__(Gnorm < tol1));
-			std::printf("| Step length norm: % E / %E / %s\n", Snorm, tol2, __True_False__(Snorm < tol2));
-			if ( converged ) std::printf("| Converged!\n");
-			else std::printf("| Not converged yet!\n");
-		}
-
-		// Adjusting the trust radius according to the score
-		if ( ! converged ){
-			if ( iiter > 0 ) R = tr_setting.Update(R, rho, Snorm);
-			if (output) std::printf("Trust radius is adjusted to %f\n", R);
-		}
-
-		// Preparing hessian and storing this step
-		if (accepted && ( ! converged )){
-			if (calc_hess) bfgs.Clear();
-			if ( ! M.MatrixFree ) M.getBasisSet();
-			if (calc_hess){
-				M.setHessian(He);
-				if ( ! M.MatrixFree ) M.getHessianMatrix();
-			}
-			if constexpr (std::is_same_v<FuncType, PreconFunc>){
-				M.setPreconditioner(Precon);
-			}
-			bfgs.Append(M, S);
-			if ( ! M.MatrixFree ){
-				int negative = 0;
-				for ( auto& [eigenvalue, _] : bfgs.EigenPairs ){
-					if ( eigenvalue < 0 ) negative++;
-				}
-				const double shift = std::get<0>(bfgs.EigenPairs[negative]) - std::get<0>(bfgs.EigenPairs[0]);
-				for ( auto& [eigenvalue, _] : bfgs.EigenPairs ) eigenvalue += shift;
-				if (output){
-					std::printf("Hessian has %d negative eigenvalues\n", negative);
-					std::printf("Lowest eigenvalue is %f\n", std::get<0>(bfgs.EigenPairs[0]) - shift);
-					if (negative) std::printf("All eigenvalues will be shifted up by %f\n", shift);
-				}
-			}
-
-			// Truncated conjugate gradient
-			tcg.Tolerance = [tcg_tol](double deltaL, double L, double rnorm, double step){
-				rnorm += step; // Avoiding unused-variable warning
-				return std::abs(deltaL / L) < tcg_tol;
-			};
-			tcg.Radius = R;
-			tcg.Run();
-		}
-
-		// Obtaining the next step within the trust region
-		if ( ! converged ){
-			tcg.Radius = R;
-			std::tie(Snorm, S) = tcg.Find();
-			Pmat = M.Retract(S);
-			DecoupleBlock(Pmat, P);
-			predicted_delta_L = M.Inner(M.Gradient + 0.5 * bfgs_hess(S), S);
-			if (output){
-				std::printf("Next step:\n");
-				std::printf("| Step length: %E\n", Snorm);
-				std::printf("| Predicted change in target: %E\n", predicted_delta_L);
-			}
-		}
-
-		// Elapsed time
-		if (output) std::printf("Elapsed time: %f seconds for current iteration; %f seconds in total\n\n", __duration__(iter_start, __now__), __duration__(all_start, __now__));
-	}
-
-	return converged;
-}
-
-template bool TrustRegion(
-		UnpreconSecondFunc& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		double tcg_tol,
-		int recalc_hess, int max_iter,
-		double& L, Iterate& M, int output);
-
-template bool TrustRegion(
-		PreconFunc& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		double tcg_tol,
-		int recalc_hess, int max_iter,
-		double& L, Iterate& M, int output);
-
 #ifdef __PYTHON__
 void Init_TrustRegion(pybind11::module_& m){
-	pybind11::class_<TrustRegionSetting>(m, "TrustRegionSetting")
-		.def_readwrite("R0", &TrustRegionSetting::R0)
-		.def_readwrite("RhoThreshold", &TrustRegionSetting::RhoThreshold)
-		.def_readwrite("Update", &TrustRegionSetting::Update)
+	pybind11::class_<TrustRegion>(m, "TrustRegion")
+		.def_readwrite("R0", &TrustRegion::R0)
+		.def_readwrite("RhoThreshold", &TrustRegion::RhoThreshold)
+		.def_readwrite("Update", &TrustRegion::Update)
 		.def(pybind11::init<>());
-	m.def("TrustRegion", &TrustRegion<UnpreconSecondFunc>);
-	m.def("PreconTrustRegion", &TrustRegion<PreconFunc>);
 }
 #endif
 

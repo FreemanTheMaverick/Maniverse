@@ -1,52 +1,10 @@
 namespace Maniverse{
 
-class TrustRegionSetting{ public:
+class TrustRegion{ public:
 	double R0;
 	double RhoThreshold;
 	std::function<double (double, double, double)> Update;
-	TrustRegionSetting();
+	TrustRegion();
 };
-
-typedef std::function<
-			std::tuple<
-				double,
-				std::vector<EigenMatrix>,
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>
-			> (std::vector<EigenMatrix>, int)
-		> UnpreconSecondFunc;
-
-typedef std::function<
-			std::tuple<
-				double,
-				std::vector<EigenMatrix>,
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>,
-				std::vector<std::function<EigenMatrix (EigenMatrix)>>
-			> (std::vector<EigenMatrix>, int)
-		> PreconFunc;
-
-template <typename FuncType>
-bool TrustRegion(
-		FuncType& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		double tcg_tol,
-		int recalc_hess, int max_iter,
-		double& L, Iterate& M, int output);
-
-extern template bool TrustRegion(
-		UnpreconSecondFunc& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		double tcg_tol,
-		int recalc_hess, int max_iter,
-		double& L, Iterate& M, int output);
-
-extern template bool TrustRegion(
-		PreconFunc& func,
-		TrustRegionSetting& tr_setting,
-		std::tuple<double, double, double> tol,
-		double tcg_tol,
-		int recalc_hess, int max_iter,
-		double& L, Iterate& M, int output);
 
 }
