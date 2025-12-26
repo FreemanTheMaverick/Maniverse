@@ -180,7 +180,7 @@ std::unique_ptr<Manifold> Stiefel::Clone() const{
 #ifdef __PYTHON__
 void Init_Stiefel(pybind11::module_& m){
 	pybind11::classh<Stiefel, Manifold>(m, "Stiefel")
-		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "QR");
+		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR");
 }
 #endif
 

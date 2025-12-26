@@ -34,11 +34,11 @@ class Orthogonal(ut.TestCase):
 		orthogonal = mv.Orthogonal(C0)
 		M = mv.Iterate([euclidean.Clone(), orthogonal.Clone()], True)
 		L = 0
-		tr_setting = mv.TrustRegionSetting()
+		tr = mv.TrustRegion()
 		tol = (1.e-5, 1.e-5, 1.e-5) 
-		converged = mv.TrustRegion(
-				Objective, tr_setting, tol,
-				0.001, 1, 35, L, M, 0
+		converged = mv.TruncatedNewton(
+				Objective, tr, tol,
+				0.001, 28, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, A)
@@ -93,11 +93,11 @@ class Orthogonal(ut.TestCase):
 		orthogonal = mv.Orthogonal(V0)
 		M = mv.Iterate([stiefel.Clone(), euclidean.Clone(), orthogonal.Clone()], True)
 		L = 0
-		tr_setting = mv.TrustRegionSetting()
+		tr = mv.TrustRegion()
 		tol = (1.e-5, 1.e-5, 1.e-5) 
-		converged = mv.TrustRegion(
-				Objective, tr_setting, tol,
-				0.001, 1, 30, L, M, 0
+		converged = mv.TruncatedNewton(
+				Objective, tr, tol,
+				0.001, 25, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, A)

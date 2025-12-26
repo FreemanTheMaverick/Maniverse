@@ -178,7 +178,6 @@ bool LBFGS(
 			}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
 				Eta = - M.Preconditioner(R);
 			}
-			// TODO: Line search
 			S = Eta;
 		}
 

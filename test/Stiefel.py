@@ -26,11 +26,11 @@ class Stiefel(ut.TestCase):
 		stiefel = mv.Stiefel(C0)
 		M = mv.Iterate({stiefel.Clone()}, True)
 		L = 0
-		tr_setting = mv.TrustRegionSetting()
+		tr = mv.TrustRegion()
 		tol = (1.e-5, 1.e-5, 1.e-5) 
-		converged = mv.TrustRegion(
-				Objective, tr_setting, tol,
-				0.001, 1, 3, L, M, 0
+		converged = mv.TruncatedNewton(
+				Objective, tr, tol,
+				0.001, 3, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point.T, Copt)
@@ -84,11 +84,11 @@ class Stiefel(ut.TestCase):
 		stiefel = mv.Stiefel(C0)
 		M = mv.Iterate({stiefel.Clone()}, True)
 		L = 0
-		tr_setting = mv.TrustRegionSetting()
+		tr = mv.TrustRegion()
 		tol = (1.e-5, 1.e-5, 1.e-5)
-		converged = mv.TrustRegion(
-				Objective, tr_setting, tol,
-				0.001, 1, 15, L, M, 0
+		converged = mv.TruncatedNewton(
+				Objective, tr, tol,
+				0.001, 14, L, M, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, Copt)
