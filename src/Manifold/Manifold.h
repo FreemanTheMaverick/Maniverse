@@ -134,4 +134,14 @@ class Iterate{ public:
 	}\
 }
 
+class Objective{ public:
+	virtual void Calculate(std::vector<EigenMatrix>& P);
+	double Value = 0;
+	std::vector<EigenMatrix> Gradient = {};
+	virtual std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix>& X);
+	virtual std::vector<EigenMatrix> Preconditioner(std::vector<EigenMatrix>& X);
+	virtual std::vector<EigenMatrix> PreconditionerSqrt(std::vector<EigenMatrix>& X);
+	virtual std::vector<EigenMatrix> PreconditionerInvSqrt(std::vector<EigenMatrix>& X);
+};
+
 }

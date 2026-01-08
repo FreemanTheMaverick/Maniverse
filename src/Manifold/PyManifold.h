@@ -1,6 +1,7 @@
 #ifdef PyManiverseIn
 Init_Manifold(m);
 Init_Iterate(m);
+Init_Objective(m);
 
 Init_Euclidean(m);
 Init_TransRotInvPointCloud(m);
@@ -18,6 +19,7 @@ Init_Simplex(m);
 #ifdef PyManiverseOut
 void Init_Manifold(pybind11::module_& m);
 void Init_Iterate(pybind11::module_& m);
+void Init_Objective(pybind11::module_& m);
 
 void Init_Euclidean(pybind11::module_& m);
 void Init_TransRotInvPointCloud(pybind11::module_& m);
