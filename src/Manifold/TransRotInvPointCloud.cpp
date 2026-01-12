@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <string>
 #include <memory>
 
@@ -120,10 +118,8 @@ void TransRotInvPointCloud::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-std::function<EigenMatrix (EigenMatrix)> TransRotInvPointCloud::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
-	return [P = this->P, He](EigenMatrix v){
-		return CloudTangentProjection(P, He(v));
-	};
+EigenMatrix TransRotInvPointCloud::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
+	return this->TangentProjection(HeX);
 }
 
 std::unique_ptr<Manifold> TransRotInvPointCloud::Clone() const{

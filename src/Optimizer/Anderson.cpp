@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <tuple>
 #include <deque>
 #include <cstdio>
@@ -22,10 +20,10 @@ namespace Maniverse{
 
 // https://doi.org/10.1287/moor.2023.0284
 bool Anderson(
-		FixedPointFunc& func,
+		Iterate& M,
 		std::tuple<double, double, double> tol,
 		double beta, int max_mem, int max_iter,
-		double& L, Iterate& M, int output){
+		int output){
 
 	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
@@ -60,12 +58,14 @@ bool Anderson(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		oldL = L;
 		EigenMatrix oldRmat = M.TransportTangent(Rmat, S);
-		std::tie(L, R) = func(P);
-		actual_delta_L = L - oldL;
+		M.Func->Calculate(P, 1);
+		actual_delta_L = M.Func->Value - oldL;
+		oldL = M.Func->Value;
+		if (output) std::printf("Target = %.10f\n", M.Func->Value);
+
+		R = M.Func->Gradient;
 		AssembleBlock(Rmat, R);
-		if (output) std::printf("Target = %.10f\n", L);
 
 		// Transporting previous vectors I
 		if ( (int)Ss.size() == max_mem ){

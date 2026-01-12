@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <memory>
 
 #include "../Macro.h"
@@ -43,10 +41,8 @@ void RealSymmetric::getGradient(){
 	this->Gr = Symmetrize(this->Ge);
 }
 
-std::function<EigenMatrix (EigenMatrix)> RealSymmetric::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
-	return [He](EigenMatrix v){
-		return Symmetrize(He(v));
-	};
+EigenMatrix RealSymmetric::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
+	return Symmetrize(HeX);
 }
 
 std::unique_ptr<Manifold> RealSymmetric::Clone() const{

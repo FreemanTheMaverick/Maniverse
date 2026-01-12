@@ -2,12 +2,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Core>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
-#include <functional>
 #include <tuple>
 #include <memory>
 
@@ -70,17 +68,12 @@ EigenMatrix Flag::TangentPurification(EigenMatrix X) const{
 	return FlagTangentProjection(this->P, this->BlockParameters, X);
 }
 
-std::function<EigenMatrix (EigenMatrix)> Flag::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
+EigenMatrix Flag::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const{
 	// https://doi.org/10.1007/s10957-023-02242-z
-	const EigenMatrix P = this->P;
-	const std::vector<std::tuple<int, int>> B = this->BlockParameters;
-	const EigenMatrix tmp = symf(B, this->P.transpose() * this->Ge);
-	if ( weingarten ) return [P, B, tmp, He](EigenMatrix v){
-		return FlagTangentProjection(P, B, He(v) - v * tmp);
-	};
-	else return [P, B, He](EigenMatrix v){
-		return FlagTangentProjection(P, B, He(v));
-	};
+	if ( weingarten ){
+		const EigenMatrix tmp = symf(this->BlockParameters, this->P.transpose() * this->Ge);
+		return this->TangentProjection(HeX - X * tmp);
+	}else return this->TangentProjection(HeX);
 }
 
 std::unique_ptr<Manifold> Flag::Clone() const{

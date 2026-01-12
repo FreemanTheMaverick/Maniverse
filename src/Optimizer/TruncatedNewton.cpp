@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <tuple>
 #include <map>
 #include <cstdio>
@@ -32,7 +30,7 @@ void TruncatedConjugateGradient::Run(){
 	this->Sequence.clear(); this->Sequence.reserve(20);
 	EigenMatrix v = EigenZero(G.rows(), G.cols());
 	EigenMatrix r = - G;
-	EigenMatrix z = this->Preconditioned ? this->M->Preconditioner(r) : r;
+	EigenMatrix z = this->M->Preconditioner(r);
 	EigenMatrix p = z;
 	double vnorm = 0;
 	double vplusnorm = 0;
@@ -80,7 +78,7 @@ void TruncatedConjugateGradient::Run(){
 		this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 		const double r2old = r2;
 		r -= alpha * Hp;
-		const EigenMatrix z = this->M->TangentPurification(this->Preconditioned ? this->M->Preconditioner(r) : r);
+		const EigenMatrix z = this->M->TangentPurification(this->M->Preconditioner(r));
 		r2 = this->M->Inner(r, z);
 		const double beta = r2 / r2old;
 		p = z + beta * p;
@@ -105,14 +103,12 @@ std::tuple<double, EigenMatrix> TruncatedConjugateGradient::Find(){
 	);
 }
 
-
-template <typename FuncType>
 bool TruncatedNewton(
-		FuncType& func,
+		Iterate& M,
 		TrustRegion& tr,
 		std::tuple<double, double, double> tol,
 		double tcg_tol, int max_iter,
-		double& L, Iterate& M, int output){
+		int output){
 
 	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
@@ -120,11 +116,6 @@ bool TruncatedNewton(
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
-		if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-			std::printf("Preconditioner: False\n");
-		}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-			std::printf("Preconditioner: True\n");
-		}
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("Trust region settings:\n");
 		std::printf("| Initial radius: %f\n", tr.R0);
@@ -138,25 +129,18 @@ bool TruncatedNewton(
 	const auto all_start = __now__;
 
 	double R = tr.R0;
+
 	double oldL = 0;
 	double predicted_delta_L = 0;
 	double actual_delta_L = 0;
 
-	TruncatedConjugateGradient tcg{&M, 1, output > 0, 1};
-	if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-		tcg.Preconditioned = 0;
-	}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-		tcg.Preconditioned = 1;
-	}
+	TruncatedConjugateGradient tcg{&M, output > 0, 1};
 
 	EigenMatrix Pmat = M.Point;
 	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
 	double Snorm = 0;
 	double Gnorm = 0;
 	std::vector<EigenMatrix> P = M.getPoint();
-	std::vector<EigenMatrix> Ge;
-	std::vector<std::function<EigenMatrix (EigenMatrix)>> He;
-	[[maybe_unused]] std::vector<std::function<EigenMatrix (EigenMatrix)>> Precon; // This variable may or may not be used, depending on whether UnpreconSecondFunc or PreconFunc is specified.
 
 	bool converged = 0;
 	for ( int iiter = 0; ( iiter < max_iter ) && ( ! converged ); iiter++ ){
@@ -183,18 +167,14 @@ bool TruncatedNewton(
 			}
 
 			// Evaluating the objective function
-			if constexpr (std::is_same_v<FuncType, UnpreconSecondFunc>){
-				std::tie(L, Ge, He) = func(P, 2);
-			}else if constexpr (std::is_same_v<FuncType, PreconFunc>){
-				std::tie(L, Ge, He, Precon) = func(P, 2);
-			}
+			M.Func->Calculate(P, 2);
 
 			// Rating the new step
-			actual_delta_L = L - oldL;
+			actual_delta_L = M.Func->Value - oldL;
 			const double rho = actual_delta_L / predicted_delta_L;
 			accepted = ( rho > tr.RhoThreshold || iiter == 0 || ( Gnorm < tol1 && Snorm < tol2 ) );
 			if (output){
-				std::printf("Target = %.10f\n", L);
+				std::printf("Target = %.10f\n", M.Func->Value);
 				std::printf("Step score:\n");
 				std::printf("| Predicted and actual changes in target = %E, %E\n", predicted_delta_L, actual_delta_L);
 				std::printf("| Score of the new step Rho = %f, compared with RhoThreshold %f\n", rho, tr.RhoThreshold);
@@ -211,11 +191,11 @@ bool TruncatedNewton(
 		}
 
 		// Updating the new step
-		oldL = L;
+		oldL = M.Func->Value;
 		M.setPoint(P, 1);
 
 		// Obtaining Riemannian gradient
-		M.setGradient(Ge);
+		M.setGradient();
 		Gnorm = std::sqrt(std::abs(M.Inner(M.Gradient, M.Gradient)));
 
 		// Checking convergence
@@ -234,11 +214,6 @@ bool TruncatedNewton(
 
 		// Preparing hessian and storing this step
 		if ( ! converged ){
-			M.setHessian(He);
-			if constexpr (std::is_same_v<FuncType, PreconFunc>){
-				M.setPreconditioner(Precon);
-			}
-
 			// Truncated conjugate gradient
 			tcg.Tolerance = [tcg_tol](double deltaL, double L, double /*rnorm*/, double /*step*/){
 				return std::abs(deltaL / L) < tcg_tol;
@@ -254,36 +229,20 @@ bool TruncatedNewton(
 	return converged;
 }
 
-template bool TruncatedNewton(
-		UnpreconSecondFunc& func,
-		TrustRegion& tr,
-		std::tuple<double, double, double> tol,
-		double tcg_tol, int max_iter,
-		double& L, Iterate& M, int output);
-
-template bool TruncatedNewton(
-		PreconFunc& func,
-		TrustRegion& tr,
-		std::tuple<double, double, double> tol,
-		double tcg_tol, int max_iter,
-		double& L, Iterate& M, int output);
-
 #ifdef __PYTHON__
 void Init_TruncatedNewton(pybind11::module_& m){
 	pybind11::class_<TruncatedConjugateGradient>(m, "TruncatedConjugateGradient")
 		.def_readwrite("M", &TruncatedConjugateGradient::M)
-		.def_readwrite("Preconditioned", &TruncatedConjugateGradient::Preconditioned)
 		.def_readwrite("Verbose", &TruncatedConjugateGradient::Verbose)
 		.def_readwrite("ShowTarget", &TruncatedConjugateGradient::ShowTarget)
 		.def_readwrite("Radius", &TruncatedConjugateGradient::Radius)
 		.def_readwrite("Tolerance", &TruncatedConjugateGradient::Tolerance)
 		.def_readwrite("Sequence", &TruncatedConjugateGradient::Sequence)
 		.def(pybind11::init<>())
-		.def(pybind11::init<Iterate*, bool, bool, bool>())
+		.def(pybind11::init<Iterate*, bool, bool>())
 		.def("Run", &TruncatedConjugateGradient::Run)
 		.def("Find", &TruncatedConjugateGradient::Find);
-	m.def("TruncatedNewton", &TruncatedNewton<UnpreconSecondFunc>);
-	m.def("PreconTruncatedNewton", &TruncatedNewton<PreconFunc>);
+	m.def("TruncatedNewton", &TruncatedNewton);
 }
 #endif
 

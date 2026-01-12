@@ -48,22 +48,31 @@ class Manifold{ public:
 	virtual void setPoint(EigenMatrix p, bool purify);
 
 	virtual void getGradient();
-	virtual std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const;
+	virtual EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const;
 
 	virtual ~Manifold() = default;
 	virtual std::unique_ptr<Manifold> Clone() const;
 };
 
-std::vector<std::tuple<double, EigenMatrix>> Diagonalize(
-		EigenMatrix& A, std::vector<EigenMatrix>& basis_set);
+class Objective{ public:
+	virtual void Calculate(std::vector<EigenMatrix> P, int derivative);
+	double Value = 0;
+	std::vector<EigenMatrix> Gradient = {};
+	virtual std::vector<std::vector<EigenMatrix>> Hessian(std::vector<EigenMatrix> X) const;
+	virtual std::vector<std::vector<EigenMatrix>> Preconditioner(std::vector<EigenMatrix> X) const;
+	virtual std::vector<std::vector<EigenMatrix>> PreconditionerSqrt(std::vector<EigenMatrix> X) const;
+	virtual std::vector<std::vector<EigenMatrix>> PreconditionerInvSqrt(std::vector<EigenMatrix> X) const;
+};
 
 class Iterate{ public:
 	std::vector<std::unique_ptr<Manifold>> Ms;
+	Objective* Func;
 	EigenMatrix Point;
 	EigenMatrix Gradient;
-	std::function<EigenMatrix (EigenMatrix)> Hessian;
-	std::function<EigenMatrix (EigenMatrix)> Preconditioner;
-	std::function<EigenMatrix (EigenMatrix)> InversePreconditioner;
+	EigenMatrix Hessian(EigenMatrix X) const;
+	EigenMatrix Preconditioner(EigenMatrix X) const;
+	EigenMatrix PreconditionerSqrt(EigenMatrix X) const;
+	EigenMatrix PreconditionerInvSqrt(EigenMatrix X) const;
 
 	bool MatrixFree;
 	std::vector<EigenMatrix> BasisSet;
@@ -71,7 +80,7 @@ class Iterate{ public:
 
 	std::vector<std::tuple<int, int, int, int>> BlockParameters;
 
-	Iterate(std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free);
+	Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free);
 	Iterate(const Iterate& another_iterate);
 
 	std::string getName() const;
@@ -87,12 +96,8 @@ class Iterate{ public:
 	EigenMatrix TangentPurification(EigenMatrix A) const;
  
 	void setPoint(std::vector<EigenMatrix> ps, bool purify);
+	void setGradient();
 
-	void setGradient(std::vector<EigenMatrix> gs);
-	void setHessian(std::vector<std::function<EigenMatrix (EigenMatrix)>> hs);
-	void setPreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> precons);
-	void setInversePreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> inv_precons);
-	
 	std::vector<EigenMatrix> getPoint() const;
 	std::vector<EigenMatrix> getGradient() const;
 	
@@ -133,15 +138,5 @@ class Iterate{ public:
 		_ncols_ += mat.cols();\
 	}\
 }
-
-class Objective{ public:
-	virtual void Calculate(std::vector<EigenMatrix>& P);
-	double Value = 0;
-	std::vector<EigenMatrix> Gradient = {};
-	virtual std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix>& X);
-	virtual std::vector<EigenMatrix> Preconditioner(std::vector<EigenMatrix>& X);
-	virtual std::vector<EigenMatrix> PreconditionerSqrt(std::vector<EigenMatrix>& X);
-	virtual std::vector<EigenMatrix> PreconditionerInvSqrt(std::vector<EigenMatrix>& X);
-};
 
 }

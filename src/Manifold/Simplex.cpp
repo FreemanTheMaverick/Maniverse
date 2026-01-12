@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <memory>
 
 #include "../Macro.h"
@@ -82,7 +80,7 @@ static EigenMatrix Projection(EigenMatrix P, EigenMatrix A){
 	return ( EigenOne(n, n) - tmp ) * A;
 }
 
-std::function<EigenMatrix (EigenMatrix)> Simplex::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
+EigenMatrix Simplex::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const{
 	const int n = this->P.size();
 	const EigenMatrix ones = EigenZero(n, n).array() + 1;
 	const EigenMatrix proj = Projection(this->P, EigenOne(n, n));
@@ -92,12 +90,8 @@ std::function<EigenMatrix (EigenMatrix)> Simplex::getHessian(std::function<Eigen
 			- ones * this->Ge.cwiseProduct(this->P)
 			- 0.5 * this->Gr.cwiseProduct(this->P.cwiseInverse())
 	).asDiagonal();
-	if ( weingarten ) return [He, M, N](EigenMatrix v){
-		return (EigenMatrix)(M * He(v) + N * v); // The forced conversion "(EigenMatrix)" is necessary. Without it the result will be wrong. I do not know why. Then I forced convert every EigenMatrix return value in std::function for ensurance.
-	};
-	else return [He, M](EigenMatrix v){ // Not sure about this one.
-		return (EigenMatrix)(M * He(v));
-	};
+	if ( weingarten ) return (EigenMatrix)(M * HeX + N * X);
+	else return (EigenMatrix)(M * HeX); // Not sure about this one.
 }
 
 std::unique_ptr<Manifold> Simplex::Clone() const{

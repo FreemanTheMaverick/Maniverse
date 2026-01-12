@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <memory>
 
 #include "../Macro.h"
@@ -62,8 +60,8 @@ void Euclidean::getGradient(){
 	this->Gr = this->Ge;
 }
 
-std::function<EigenMatrix (EigenMatrix)> Euclidean::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool /*weingarten*/) const{
-	return He;
+EigenMatrix Euclidean::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
+	return HeX;
 }
 
 std::unique_ptr<Manifold> Euclidean::Clone() const{

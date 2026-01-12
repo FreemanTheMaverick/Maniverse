@@ -21,7 +21,7 @@ class Stiefel: public Manifold{ public:
 	virtual void setPoint(EigenMatrix p, bool purify) override;
 
 	virtual void getGradient() override;
-	virtual std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> h, bool weingarten) const override;
+	virtual EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
 	std::unique_ptr<Manifold> Clone() const override;
 };
 

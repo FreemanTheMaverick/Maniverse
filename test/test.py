@@ -1,8 +1,10 @@
 import unittest as ut
 
-from Euclidean import *
-from Stiefel import *
-from Flag import *
-from Orthogonal import *
+from Diagonalization import *
+from Principal import *
+from Projection import *
+from Quadratic import *
+from Rayleigh import *
+from Singular import *
 
 ut.main()

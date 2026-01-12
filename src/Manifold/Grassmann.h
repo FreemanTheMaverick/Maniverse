@@ -26,7 +26,7 @@ class Grassmann: public Manifold{ public:
 	void setPoint(EigenMatrix p, bool purify) override;
 
 	void getGradient() override;
-	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> h, bool weingarten) const override;
+	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
