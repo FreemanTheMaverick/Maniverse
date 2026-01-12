@@ -2,12 +2,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
 #include <cmath>
-#include <functional>
 #include <tuple>
 #include <memory>
 
@@ -161,16 +159,13 @@ void Stiefel::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-std::function<EigenMatrix (EigenMatrix)> Stiefel::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
+EigenMatrix Stiefel::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const{
 	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	const EigenMatrix P = this->P;
-	const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
-	if ( weingarten ) return [P, tmp, He](EigenMatrix v){
-		return StiefelTangentProjection(P, He(v) - 0.5 * v * tmp);
-	};
-	else return [P, He](EigenMatrix v){
-		return StiefelTangentProjection(P, He(v));
-	};
+	if ( ! weingarten ) return StiefelTangentProjection(this->P, HeX);
+	else{
+		const EigenMatrix tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
+		return StiefelTangentProjection(this->P, HeX - 0.5 * X * tmp);
+	}
 }
 
 std::unique_ptr<Manifold> Stiefel::Clone() const{

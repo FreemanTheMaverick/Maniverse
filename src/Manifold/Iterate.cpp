@@ -2,7 +2,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <typeinfo>
@@ -14,7 +13,9 @@
 
 namespace Maniverse{
 
-Iterate::Iterate(std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free){
+Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free){
+	this->Func = &func;
+
 	const int nMs = (int)Ms.size();
 	this->Ms.clear();
 	for ( int iM = 0; iM < nMs; iM++ ) this->Ms.push_back(Ms[iM]->Clone());
@@ -42,12 +43,10 @@ Iterate::Iterate(std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free){
 }
 
 Iterate::Iterate(const Iterate& another_iterate){
+	this->Func = another_iterate.Func;
 	for ( auto& M : another_iterate.Ms ) this->Ms.push_back(M->Clone());
 	this->Point = another_iterate.Point;
 	this->Gradient = another_iterate.Gradient;
-	this->Hessian = another_iterate.Hessian;
-	this->Preconditioner = another_iterate.Preconditioner;
-	this->InversePreconditioner = another_iterate.InversePreconditioner;
 	this->MatrixFree = another_iterate.MatrixFree;
 	this->BasisSet = another_iterate.BasisSet;
 	this->HessianMatrix = another_iterate.HessianMatrix;
@@ -134,10 +133,9 @@ void Iterate::setPoint(std::vector<EigenMatrix> ps, bool purify){
 	}
 }
 
-void Iterate::setGradient(std::vector<EigenMatrix> gs){
-	if ( gs.size() != this->Ms.size() ) throw std::runtime_error("Wrong number of gradients!");
+void Iterate::setGradient(){
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		this->Ms[iM]->Ge = gs[iM];
+		this->Ms[iM]->Ge = this->Func->Gradient[iM];
 		this->Ms[iM]->getGradient();
 		GetBlock(this->Gradient, iM) = this->Ms[iM]->Gr;
 	}
@@ -159,158 +157,75 @@ std::vector<EigenMatrix> Iterate::getGradient() const{
 	return gs;
 }
 
-void Iterate::setHessian(std::vector<std::function<EigenMatrix (EigenMatrix)>> hs){
+EigenMatrix Iterate::Hessian(EigenMatrix Xmat) const{
 	const int nMs = (int)this->Ms.size();
-	if ( (int)hs.size() != nMs * nMs ) throw std::runtime_error("Wrong number of hessians!");
+	std::vector<EigenMatrix> X(nMs);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+
+	std::vector<std::vector<EigenMatrix>> HeX = this->Func->Hessian(X);
+
+	EigenMatrix HrXmat = EigenZero(Xmat.rows(), Xmat.cols());
 	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		hs[khess] = this->Ms[iM]->getHessian(hs[khess], iM == jM);
+		GetBlock(HrXmat, iM) += this->Ms[iM]->getHessian(HeX[iM][jM], X[jM], iM == jM);
 	}
-	this->Hessian = [nMs, hs, BlockParameters = this->BlockParameters](EigenMatrix X){
-		EigenMatrix HX = EigenZero(X.rows(), X.cols());
-		for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-			GetBlock(HX, iM) += hs[khess](GetBlock(X, jM));
-		}
-		return HX;
-	};
+	return HrXmat;
 }
 
-void Iterate::setPreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> precons){
+EigenMatrix Iterate::Preconditioner(EigenMatrix Xmat) const{
 	const int nMs = (int)this->Ms.size();
-	if ( (int)precons.size() != nMs * nMs ) throw std::runtime_error("Wrong number of preconditioners!");
-	this->Preconditioner = [nMs, precons, BlockParameters = this->BlockParameters](EigenMatrix X){
-		EigenMatrix PX = EigenZero(X.rows(), X.cols());
-		for ( int iM = 0, kprecon = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, kprecon++ ){
-			GetBlock(PX, iM) += precons[kprecon](GetBlock(X, jM));
-		}
-		return PX;
-	};
+	std::vector<EigenMatrix> X(nMs);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+
+	std::vector<std::vector<EigenMatrix>> PX = this->Func->Preconditioner(X);
+
+	EigenMatrix PXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
+		GetBlock(PXmat, iM) += PX[iM][jM];
+	}
+	return PXmat;
 }
 
-void Iterate::setInversePreconditioner(std::vector<std::function<EigenMatrix (EigenMatrix)>> inv_precons){
+EigenMatrix Iterate::PreconditionerSqrt(EigenMatrix Xmat) const{
 	const int nMs = (int)this->Ms.size();
-	if ( (int)inv_precons.size() != nMs * nMs ) throw std::runtime_error("Wrong number of inverse preconditioners!");
-	this->InversePreconditioner = [nMs, inv_precons, BlockParameters = this->BlockParameters](EigenMatrix PX){
-		EigenMatrix X = EigenZero(PX.rows(), PX.cols());
-		for ( int iM = 0, kinv_precon = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, kinv_precon++ ){
-			GetBlock(X, iM) += inv_precons[kinv_precon](GetBlock(PX, jM));
-		}
-		return X;
-	};
+	std::vector<EigenMatrix> X(nMs);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+
+	std::vector<std::vector<EigenMatrix>> PX = this->Func->PreconditionerSqrt(X);
+
+	EigenMatrix PXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
+		GetBlock(PXmat, iM) += PX[iM][jM];
+	}
+	return PXmat;
 }
 
-static std::tuple<EigenVector, EigenMatrix> ThinEigen(EigenMatrix A, int m){
-	// n - Total number of eigenvalues
-	// m - Number of non-trivial eigenvalues
-	const int n = A.rows();
-	Eigen::SelfAdjointEigenSolver<EigenMatrix> es;
-	es.compute(A);
-	std::vector<std::tuple<double, EigenVector>> eigen_tuples;
-	eigen_tuples.reserve(n);
-	for ( int i = 0; i < n; i++ )
-		eigen_tuples.push_back(std::make_tuple(es.eigenvalues()(i), es.eigenvectors().col(i)));
-	std::sort( // Sorting the eigenvalues in decreasing order of magnitude.
-			eigen_tuples.begin(), eigen_tuples.end(),
-			[](std::tuple<double, EigenVector>& a, std::tuple<double, EigenVector>& b){
-				return std::abs(std::get<0>(a)) > std::abs(std::get<0>(b));
-			}
-	); // Now the eigenvalues closest to zero are in the back.
-	eigen_tuples.resize(m); // Deleting them.
-	std::sort( // Resorting the eigenvalues in increasing order.
-			eigen_tuples.begin(), eigen_tuples.end(),
-			[](std::tuple<double, EigenVector>& a, std::tuple<double, EigenVector>& b){
-				return std::get<0>(a) < std::get<0>(b);
-			}
-	);
-	EigenVector eigenvalues = EigenZero(m, 1);
-	EigenMatrix eigenvectors = EigenZero(n, m);
-	for ( int i = 0; i < m; i++ ){
-		eigenvalues(i) = std::get<0>(eigen_tuples[i]);
-		eigenvectors.col(i) = std::get<1>(eigen_tuples[i]);
-	}
-	return std::make_tuple(eigenvalues, eigenvectors);
-}
+EigenMatrix Iterate::PreconditionerInvSqrt(EigenMatrix Xmat) const{
+	const int nMs = (int)this->Ms.size();
+	std::vector<EigenMatrix> X(nMs);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
 
-void Iterate::getBasisSet(){
-	const int nrows = this->Point.rows();
-	const int ncols = this->Point.cols();
-	const int size = nrows * ncols;
-	const int rank = this->getDimension();
-	EigenMatrix euclidean_basis = EigenZero(nrows, ncols);
-	std::vector<EigenMatrix> unorthogonal_basis_set(size, EigenZero(nrows, ncols));
-	for ( int i = 0, n = 0; i < nrows; i++ ) for ( int j = 0; j < ncols; j++ , n++){
-		euclidean_basis(i, j) = 1;
-		unorthogonal_basis_set[n] = TangentProjection(euclidean_basis);
-		euclidean_basis(i, j) = 0;
-	}
-	EigenMatrix gram = EigenZero(size, size);
-	for ( int i = 0; i < size; i++ ) for ( int j = 0; j <= i; j++ ){
-		gram(i, j) = gram(j, i) = this->Inner(unorthogonal_basis_set[i], unorthogonal_basis_set[j]);
-	}
-	auto [Sigma, U] = ThinEigen(gram, rank);
-	const EigenMatrix C = U * Sigma.cwiseSqrt().asDiagonal();
-	this->BasisSet.resize(rank);
-	for ( int i = 0; i < rank; i++ ){
-		this->BasisSet[i].resize(nrows, ncols); this->BasisSet[i].setZero();
-		for ( int j = 0; j < size; j++ ){
-			this->BasisSet[i] += C(j, i) * unorthogonal_basis_set[j].reshaped<Eigen::RowMajor>(nrows, ncols);
-		}
-	}
-}
+	std::vector<std::vector<EigenMatrix>> PX = this->Func->PreconditionerInvSqrt(X);
 
-std::vector<std::tuple<double, EigenMatrix>> Diagonalize(
-		EigenMatrix& A, std::vector<EigenMatrix>& basis_set){
-	Eigen::SelfAdjointEigenSolver<EigenMatrix> es;
-	es.compute( ( A + A.transpose() ) / 2 );
-	const EigenMatrix Lambda = es.eigenvalues();
-	const EigenMatrix Y = es.eigenvectors();
-	const int nrows = basis_set[0].rows();
-	const int ncols = basis_set[0].cols();
-	const int rank = basis_set.size();
-	std::vector<std::tuple<double, EigenMatrix>> hrm(rank, std::tuple(0, EigenZero(nrows, ncols)));
-	for ( int i = 0; i < rank; i++ ){
-		std::get<0>(hrm[i]) = Lambda(i);
-		for ( int j = 0; j < rank; j++ ){
-			std::get<1>(hrm[i]) += basis_set[j] * Y(j, i);
-		}
+	EigenMatrix PXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
+		GetBlock(PXmat, iM) += PX[iM][jM];
 	}
-	return hrm;
-}
-
-void Iterate::getHessianMatrix(){
-	// Representing the Riemannian hessian with the orthogonal basis set
-	const int rank = this->getDimension();
-	EigenMatrix hrm = EigenZero(rank, rank);
-	for ( int i = 0; i < rank; i++ ) for ( int j = 0; j <= i; j++ ){
-		hrm(i, j) = hrm(j, i) = this->Inner(this->BasisSet[i], this->Hessian(this->BasisSet[j]));
-	}
-
-	// Diagonalizing the Riemannian hessian and representing the eigenvectors in Euclidean space
-	this->HessianMatrix = Diagonalize(hrm, this->BasisSet);
-
-	// Updating the Riemannian hessian operator
-	this->Hessian = [&hrm = this->HessianMatrix](EigenMatrix v){ // Passing reference instead of value to std::function, so that the eigenvalues can be modified elsewhere without rewriting this part.
-		EigenMatrix Hv = EigenZero(v.rows(), v.cols());
-		for ( auto [eigenvalue, eigenvector] : hrm ){
-			Hv += eigenvalue * eigenvector.cwiseProduct(v).sum() * eigenvector;
-		}
-		return Hv;
-	};
+	return PXmat;
 }
 
 #ifdef __PYTHON__
 void Init_Iterate(pybind11::module_& m){
-	pybind11::class_<Iterate>(m, "Iterate")
+	pybind11::classh<Iterate>(m, "Iterate")
 		.def_readonly("Ms", &Iterate::Ms)
 		.def_readwrite("Point", &Iterate::Point)
 		.def_readwrite("Gradient", &Iterate::Gradient)
-		.def_readwrite("Hessian", &Iterate::Hessian)
-		.def_readwrite("Preconditioner", &Iterate::Preconditioner)
-		.def_readwrite("InversePreconditioner", &Iterate::InversePreconditioner)
+		.def("Hessian", &Iterate::Hessian)
+		.def("Preconditioner", &Iterate::Preconditioner)
+		.def("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
+		.def("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
 		.def_readwrite("MatrixFree", &Iterate::MatrixFree)
-		.def_readwrite("BasisSet", &Iterate::BasisSet)
-		.def_readwrite("HessianMatrix", &Iterate::HessianMatrix)
 		.def_readwrite("BlockParameters", &Iterate::BlockParameters)
-		.def(pybind11::init<std::vector<std::shared_ptr<Manifold>>, bool>())
+		.def(pybind11::init<Objective&, std::vector<std::shared_ptr<Manifold>>, bool>())
 		.def(pybind11::init<const Iterate&>())
 		.def("getName", &Iterate::getName)
 		.def("getDimension", &Iterate::getDimension)
@@ -321,13 +236,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def("TangentPurification", &Iterate::TangentPurification)
 		.def("TransportManifold", &Iterate::TransportManifold)
 		.def("setPoint", &Iterate::setPoint)
-		.def("setGradient", &Iterate::setGradient)
-		.def("setHessian", &Iterate::setHessian)
-		.def("setPreconditioner", &Iterate::setPreconditioner)
-		.def("setInversePreconditioner", &Iterate::setPreconditioner)
-		.def("getBasisSet", &Iterate::getBasisSet)
-		.def("getHessianMatrix", &Iterate::getHessianMatrix);
-	m.def("Diagonalize", &Diagonalize);
+		.def("setGradient", &Iterate::setGradient);
 }
 #endif
 

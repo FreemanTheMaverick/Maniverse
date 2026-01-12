@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
-#include <functional>
 #include <typeinfo>
 #include <memory>
 

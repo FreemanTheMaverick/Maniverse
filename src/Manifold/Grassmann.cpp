@@ -2,11 +2,9 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <cmath>
-#include <functional>
 #include <tuple>
 #include <memory>
 
@@ -144,21 +142,16 @@ void Grassmann::getGradient(){
 	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
 }
 
-std::function<EigenMatrix (EigenMatrix)> Grassmann::getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const{
+EigenMatrix Grassmann::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const{
 	// https://arxiv.org/abs/0709.2205
-	if ( weingarten ) return [P = this->P, Ge = this->Ge, He](EigenMatrix v){
-		const EigenMatrix Phe = P * He(v);
-		const EigenMatrix partA = Phe - Phe.transpose();
-		const EigenMatrix Gev = Ge * v;
-		const EigenMatrix partB = Gev - Gev.transpose();
+	const EigenMatrix PHeX = P * HeX;
+	const EigenMatrix partA = PHeX - PHeX.transpose();
+	if ( weingarten ){
+		const EigenMatrix GeX = Ge * X;
+		const EigenMatrix partB = GeX - GeX.transpose();
 		const EigenMatrix sum = partA - partB;
 		return (EigenMatrix)(2 * P * sum);
-	};
-	else return [P = this->P, He](EigenMatrix v){
-		const EigenMatrix Phe = P * He(v);
-		const EigenMatrix partA = Phe - Phe.transpose();
-		return (EigenMatrix)(2 * P * partA);
-	};
+	}else return (EigenMatrix)(2 * P * partA);
 }
 
 std::unique_ptr<Manifold> Grassmann::Clone() const{

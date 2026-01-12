@@ -2,7 +2,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
-#include <pybind11/functional.h>
 #endif
 #include <Eigen/Dense>
 #include <typeinfo>
@@ -71,10 +70,9 @@ void Manifold::getGradient(){
 	__Not_Implemented__
 }
 
-std::function<EigenMatrix (EigenMatrix)> Manifold::getHessian(std::function<EigenMatrix (EigenMatrix)> /*h*/, bool /*weingarten*/) const{
+EigenMatrix Manifold::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
 	__Not_Implemented__
-	std::function<EigenMatrix (EigenMatrix)> H = [](EigenMatrix){ return EigenZero(0, 0); };
-	return H;
+	return HeX;
 }
 
 std::unique_ptr<Manifold> Manifold::Clone() const{
@@ -87,7 +85,7 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 	using Manifold::Manifold;
 
 	int getDimension() const override{
-		PYBIND11_OVERRIDE(int, Manifold, getDimension,);
+		PYBIND11_OVERRIDE(int, Manifold, getDimension);
 	}
 	double Inner(EigenMatrix X, EigenMatrix Y) const override{
 		PYBIND11_OVERRIDE(double, Manifold, Inner, X, Y);
@@ -119,14 +117,14 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 	}
 
 	void getGradient() override{
-		PYBIND11_OVERRIDE(void, Manifold, getGradient,);
+		PYBIND11_OVERRIDE(void, Manifold, getGradient);
 	}
-	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const override{
-		PYBIND11_OVERRIDE(std::function<EigenMatrix (EigenMatrix)>, Manifold, getHessian, He, weingarten);
+	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override{
+		PYBIND11_OVERRIDE(EigenMatrix, Manifold, getHessian, HeX, X, weingarten);
 	}
 
 	std::unique_ptr<Manifold> Clone() const override{
-		PYBIND11_OVERRIDE(std::unique_ptr<Manifold>, Manifold, Clone,);
+		PYBIND11_OVERRIDE(std::unique_ptr<Manifold>, Manifold, Clone);
 	}
 };
 

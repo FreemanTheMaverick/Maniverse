@@ -15,7 +15,7 @@ class Flag: public Stiefel{ public:
 	EigenMatrix TangentProjection(EigenMatrix A) const override;
 	EigenMatrix TangentPurification(EigenMatrix A) const override;
 
-	std::function<EigenMatrix (EigenMatrix)> getHessian(std::function<EigenMatrix (EigenMatrix)> He, bool weingarten) const override;
+	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
 
 	std::unique_ptr<Manifold> Clone() const override;
 };
