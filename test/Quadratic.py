@@ -12,18 +12,18 @@ class UnpreconObj(mv.Objective):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
-		self.A = self.A @ self.A + np.eye(10) * 0.01 # Constructing a SPD matrix
+		self.A = self.A @ self.A + np.eye(10) * 0.01 # Constructing a SPD matrix whose diagonal elements dominate
 		for i in range(10):
 			for j in range(10):
 				if i != j:
 					self.A[i, j] *= 0.01
 
-	def Calculate(self, X, _):
-		self.Value = np.sum( X * ( self.A @ X[0] ) )
-		self.Gradient = [2 * self.A @ X[0]]
+	def Calculate(self, x, _):
+		self.Value = np.sum( x[0] * ( self.A @ x[0] ) )
+		self.Gradient = [ 2 * self.A @ x[0] ]
 
-	def Hessian(self, V):
-		return [[ 2 * self.A @ V[0] ]]
+	def Hessian(self, v):
+		return [[ 2 * self.A @ v[0] ]]
 
 class PreconObj(UnpreconObj):
 	def __init__(self):
@@ -41,11 +41,17 @@ class PreconObj(UnpreconObj):
 	def PreconditionerInvSqrt(self, V):
 		return [[ self.Asqrt @ V[0] ]]
 
+class AndersonObj(UnpreconObj):
+	def Calculate(self, x, _):
+		super().Calculate(x, _)
+		self.Gradient = [ - 2 * self.A @ x[0] ]
+
 class TestQuadratic(ut.TestCase):
 	def __init__(self, *args):
 		super().__init__(*args)
 		self.UnpreconObj = UnpreconObj()
 		self.PreconObj = PreconObj()
+		self.AndersonObj = AndersonObj()
 		self.Manifold = mv.Euclidean(range(10))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.TrustRegion = mv.TrustRegion()
@@ -87,7 +93,7 @@ class TestQuadratic(ut.TestCase):
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
 
 	def testAnderson(self):
-		M = mv.Iterate(self.UnpreconObj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.AndersonObj, [self.Manifold.Clone()], True)
 		converged = mv.Anderson(
 				M, self.Tolerance,
 				0.2, 6, 12, 0

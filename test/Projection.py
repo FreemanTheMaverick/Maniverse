@@ -12,7 +12,7 @@ from scipy.linalg import expm
 class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([10, 6])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
 
 	def Calculate(self, C, _):
 		self.Value = np.linalg.norm(C[0] - self.A) ** 2
@@ -32,35 +32,34 @@ class TestProjection(ut.TestCase):
 		self.Obj = Obj()
 		self.AndersonObj = AndersonObj()
 		U, _, Vt = np.linalg.svd(self.Obj.A, full_matrices = False)
-		self.Manifold0 = mv.Stiefel(U)
+		self.Manifold = mv.Stiefel( U @ Vt @ expm( self.Obj.A[4:, :] - self.Obj.A[4:, :].T ) )
 		self.Solution = U @ Vt
-		self.Manifold1 = mv.Stiefel(self.Solution @ expm( ( self.Obj.A[:6, :] - self.Obj.A[:6, :].T ) / 10 ))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.TrustRegion = mv.TrustRegion()
 
 	def testTruncatedNewton(self):
-		M = mv.Iterate(self.Obj, [self.Manifold0.Clone()], True)
+		M = mv.Iterate(self.Obj, [self.Manifold.Clone()], True)
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
-				0.001, 14, 0
+				0.001, 9, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, self.Solution, atol = 1e-5)
 
 	def testLBFGS(self):
-		M = mv.Iterate(self.Obj, [self.Manifold0.Clone()], True)
+		M = mv.Iterate(self.Obj, [self.Manifold.Clone()], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
-				20, 33, 0.1, 0.75, 5, 0
+				20, 19, 0.1, 0.75, 5, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, self.Solution, atol = 1.e-5)
 
 	def testAnderson(self):
-		M = mv.Iterate(self.AndersonObj, [self.Manifold1.Clone()], True)
+		M = mv.Iterate(self.AndersonObj, [self.Manifold.Clone()], True)
 		converged = mv.Anderson(
 				M, self.Tolerance,
-				0.2, 6, 16, 0
+				0.2, 6, 28, 0
 		)
 		assert converged
 		assert np.allclose(M.Point, self.Solution, atol = 1.e-5)
