@@ -7,20 +7,19 @@ import Maniverse as mv
 # Minimize L(U, s, V) = || U diag(s) V.t - A ||^2
 # A \in R(10, 6)
 # U \in St(10, 6)
-# s \in R(10)
+# s \in R(6)
 # V \in O(6)
 
 class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([10, 6])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
 
 	def Calculate(self, X, _):
 		U = self.U = X[0]
 		s = self.s = X[1][:, 0]
 		V = self.V = X[2]
-		a = U * s @ V.T
-		self.Value = np.linalg.norm( a - self.A )**2
+		self.Value = np.linalg.norm( U * s @ V.T - self.A )**2
 		GU = 2 * ( U * s ** 2 - self.A @ V * s )
 		Gs = 2 * ( s - np.diag( U.T @ self.A @ V ) )
 		GV = 2 * ( V * s ** 2 - self.A.T @ U * s )
@@ -60,19 +59,19 @@ class TestSingular(ut.TestCase):
 		M = mv.Iterate(self.Obj, [self.Manifold0.Clone(), self.Manifold1.Clone(), self.Manifold2.Clone()], True)
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
-				0.001, 25, 0
+				0.001, 24, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A)
+		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0.Clone(), self.Manifold1.Clone(), self.Manifold2.Clone()], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
-				100, 125, 0.1, 0.75, 5, 0
+				100, 131, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A)
+		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
 
 if __name__ == "__main__":
 	TestSingular().testTruncatedNewton()

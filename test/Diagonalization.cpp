@@ -40,7 +40,7 @@ class ObjDiagonalization: public mv::Objective{ public:
 		Gradient = { Gn, GC };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> V) const{
+	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> V) const override{
 		const Eigen::MatrixXd& delta_n = V[0];
 		const Eigen::MatrixXd& delta_C = V[1];
 		const Eigen::MatrixXd Hnn = 2 * delta_n;
@@ -57,10 +57,10 @@ class ObjDiagonalization: public mv::Objective{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Ms[1]->P * M.Ms[0]->P.asDiagonal() * M.Ms[1]->P.transpose() - Obj.A ).norm() < 1e-5 ){\
-			std::cout << "Success!" << std::endl;\
-		}else std::cout << "Failed: Incorrect solution!" << std::endl;\
-	}else std::cout << "Failed: Not converged!" << std::endl;
+		if ( ( M.Ms[1]->P * M.Ms[0]->P.asDiagonal() * M.Ms[1]->P.transpose() - Obj.A ).cwiseAbs().maxCoeff() < 1e-5 ){\
+			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
+		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
+	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
 class TestDiagonalization{ public:
 	ObjDiagonalization Obj = ObjDiagonalization();

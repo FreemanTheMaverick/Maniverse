@@ -17,8 +17,8 @@ class Obj(mv.Objective):
 		self.Value = np.sum( C[0] * ( self.A @ C[0] ) )
 		self.Gradient = [ 2 * self.A @ C[0] ]
 
-	def Hessian(self, X):
-		return [[ 2 * self.A @ X[0] ]]
+	def Hessian(self, V):
+		return [[ 2 * self.A @ V[0] ]]
 
 class TestRayleigh(ut.TestCase):
 	def __init__(self, *args):
@@ -32,7 +32,6 @@ class TestRayleigh(ut.TestCase):
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, {self.Manifold.Clone()}, True)
-		tol = (1.e-5, 1.e-5, 1.e-5) 
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 3, 0

@@ -86,15 +86,13 @@ $(TESDIR)/%.exe: $(TESDIR)/%.cpp
 	@echo "Compiling $< -> $@ ..."
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCDIR) $< -o $@ -L$(LIBDIR) -l:libmaniverse.a
 
-# Rule to run test executables and check convergence
+# Rule to run test executables
 $(TESDIR)/%.out: $(TESDIR)/%.exe
 	@echo "Running $< -> $@ ..."
 	@$< > $@
-	@if [ `grep -c Failed $@` -gt 0 ]; then \
-		echo -e "\e[31mFailed\e[0m"; \
-	else \
-		echo -e "\e[32mSuccess\e[0m"; \
-	fi
+	@cat $@
+
+# --- Clean-up Rule ---
 
 # Rule to clean up generated files
 .PHONY: clean

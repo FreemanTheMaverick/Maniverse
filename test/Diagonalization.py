@@ -57,7 +57,7 @@ class TestDiagonalization(ut.TestCase):
 		M = mv.Iterate(self.Obj, [self.Manifold0.Clone(), self.Manifold1.Clone()], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
-				100, 110, 0.1, 0.75, 5, 1
+				100, 110, 0.1, 0.75, 5, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
