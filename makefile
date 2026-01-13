@@ -1,9 +1,9 @@
 # --- Compiler ---
-CXX = __CXX__
+CXX         = __CXX__
 # Note: MAKE is implicitly defined, no need to export unless overriding
 
 # --- Paths to Dependencies ---
-EIGEN3_PATH    = __EIGEN3__
+EIGEN3_PATH = __EIGEN3__
 # Eigen3: The path where you can find "Eigen/", "signature_of_eigen3_matrix_library" and "unsupported/".
 
 # --- Project Structure ---
@@ -11,11 +11,16 @@ SRCDIR      = src
 INCDIR      = include
 OBJDIR      = obj
 LIBDIR      = lib
+TESDIR      = test
 SOURCES     = $(shell find $(SRCDIR) -name '*.cpp')
 # Generate corresponding object file paths in OBJDIR, preserving subdirectory structure
 OBJECTS     = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SOURCES))
 # Generate dependency files (optional but good practice for header changes)
 DEPS        = $(OBJECTS:.o=.d)
+TESTS       = $(shell find $(TESDIR) -name '*.cpp')
+TESTDEPS    = $(TESTS:.cpp=.d)
+EXECUTABLES = $(TESTS:.cpp=.exe)
+REPORTS     = $(TESTS:.cpp=.out)
 
 # --- Build Flags ---
 # General Compiler Flags (apply to compilation steps)
@@ -27,7 +32,7 @@ CPPFLAGS    = -isystem $(EIGEN3_PATH) \
 
 CXXFLAGS    = -Wall -Wextra -Wpedantic -fPIC -march=native -O3 -std=c++17
 
-# --- Main Rules ---
+# --- Compilation Rule ---
 
 # Default target: compile all sources and expose the header
 .PHONY: all
@@ -41,8 +46,6 @@ all: $(OBJECTS) | $(INCDIR) $(LIBDIR)
 	sed -i "s/EigenMatrix/Eigen::MatrixXd/g" $(INCDIR)/Maniverse/*/*.h
 	@echo "The headers are put in $(INCDIR)/."
 
-# --- Compilation Rule ---
-
 # Pattern rule to compile .cpp files from SRCDIR into .o files in OBJDIR
 # This handles source files in subdirectories of SRCDIR as well.
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR) # Use order-only prerequisite for OBJDIR
@@ -52,8 +55,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR) # Use order-only prerequisite for OBJ
 # $< expands to the first prerequisite (the .cpp file)
 # $@ expands to the target (the .o file)
 # $(@D) expands to the directory part of the target
-
-# --- Utility Rules ---
 
 # Rule to create the include directory
 $(INCDIR):
@@ -71,13 +72,38 @@ $(OBJDIR):
 	@echo "Creating directory $@"
 	@mkdir -p $@
 
+# --- Test Rule ---
+
+# Compile all test source files, run the executables and check convergence
+.PHONY: test
+test: $(REPORTS)
+	@echo "All tests done!"
+	@echo "$(words $(shell grep -l Failed $(REPORTS))) failed tests:"
+	@echo $(foreach FILE, $(shell grep -l Failed $(REPORTS)), $(notdir $(basename $(FILE))))
+
+# Rule to compile test source files
+$(TESDIR)/%.exe: $(TESDIR)/%.cpp
+	@echo "Compiling $< -> $@ ..."
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I$(INCDIR) $< -o $@ -L$(LIBDIR) -l:libmaniverse.a
+
+# Rule to run test executables and check convergence
+$(TESDIR)/%.out: $(TESDIR)/%.exe
+	@echo "Running $< -> $@ ..."
+	@$< > $@
+	@if [ `grep -c Failed $@` -gt 0 ]; then \
+		echo -e "\e[31mFailed\e[0m"; \
+	else \
+		echo -e "\e[32mSuccess\e[0m"; \
+	fi
+
 # Rule to clean up generated files
 .PHONY: clean
 clean:
 	@echo "Cleaning..."
-	rm -rf $(INCDIR)  # Remove header
-	rm -rf $(LIBDIR)  # Remove libraries
-	rm -rf $(OBJDIR)  # Remove object directory and all its contents (.o, .d files)
+	rm -rf $(INCDIR)              # Remove header
+	rm -rf $(LIBDIR)              # Remove libraries
+	rm -rf $(OBJDIR)              # Remove object directory and all its contents (.o, .d files)
+	rm -rf $(TESTDEPS) $(REPORTS) # Remove tests
 
 # Include dependency files, if they exist
 # This makes Make automatically recompile files if included headers change

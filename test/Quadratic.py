@@ -11,7 +11,7 @@ import Maniverse as mv
 class UnpreconObj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.fromfile("Sym10.dat").reshape([10, 10])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
 		self.A = self.A @ self.A + np.eye(10) * 0.01 # Constructing a SPD matrix
 		for i in range(10):
 			for j in range(10):

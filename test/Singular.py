@@ -13,7 +13,7 @@ import Maniverse as mv
 class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.fromfile("Sym10.dat")[:60].reshape([10, 6])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([10, 6])
 
 	def Calculate(self, X, _):
 		U = self.U = X[0]
@@ -41,9 +41,9 @@ class Obj(mv.Objective):
 		HVs = 4 * V * s * delta_s[:, 0] - 2 * self.A.T @ U * delta_s[:, 0]
 		HVV = 2 * delta_V * s ** 2
 		return [
-				[ HUU, HUs, HUV ],
-				[ HsU, Hss, HsV ],
-				[ HVU, HVs, HVV ]
+					[ HUU, HUs, HUV ],
+					[ HsU, Hss, HsV ],
+					[ HVU, HVs, HVV ]
 		]
 
 class TestSingular(ut.TestCase):

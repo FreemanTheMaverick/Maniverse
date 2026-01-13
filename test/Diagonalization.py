@@ -12,7 +12,7 @@ import Maniverse as mv
 class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.fromfile("Sym10.dat").reshape([10, 10])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
 
 	def Calculate(self, X, _):
 		n = self.n = X[0][:, 0]
@@ -31,8 +31,8 @@ class Obj(mv.Objective):
 		HCn = 8 * C * n * delta_n[:, 0] - 4 * self.A @ C * delta_n[:, 0]
 		HCC = 4 * ( delta_C * n ** 2 - self.A @ delta_C * n )
 		return [
-				[ Hnn, HnC ],
-				[ HCn, HCC ]
+					[ Hnn, HnC ],
+					[ HCn, HCC ]
 		]
 
 class TestDiagonalization(ut.TestCase):
@@ -57,7 +57,7 @@ class TestDiagonalization(ut.TestCase):
 		M = mv.Iterate(self.Obj, [self.Manifold0.Clone(), self.Manifold1.Clone()], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
-				100, 110, 0.1, 0.75, 5, 0
+				100, 110, 0.1, 0.75, 5, 1
 		)
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
