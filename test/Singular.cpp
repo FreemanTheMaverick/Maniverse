@@ -21,13 +21,13 @@
 
 namespace mv = Maniverse;
 
-class ObjSingularization: public mv::Objective{ public:
+class ObjSingular: public mv::Objective{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 6);
 	Eigen::MatrixXd U = Eigen::MatrixXd::Zero(10, 6);
 	Eigen::MatrixXd s = Eigen::MatrixXd::Zero(6, 1);
 	Eigen::MatrixXd V = Eigen::MatrixXd::Zero(6, 6);
 
-	ObjSingularization(){
+	ObjSingular(){
 		const double data[] = {
 			#include "Sym10.txt"
 		};
@@ -74,8 +74,8 @@ class ObjSingularization: public mv::Objective{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
-class TestSingularization{ public:
-	ObjSingularization Obj = ObjSingularization();
+class TestSingular{ public:
+	ObjSingular Obj = ObjSingular();
 	mv::Stiefel Manifold0 = mv::Stiefel(Eigen::MatrixXd::Identity(10, 6));
 	mv::Euclidean Manifold1 = mv::Euclidean(Eigen::MatrixXd::Zero(6, 1));
 	mv::Orthogonal Manifold2 = mv::Orthogonal(Eigen::MatrixXd::Identity(6, 6));
@@ -102,6 +102,6 @@ class TestSingularization{ public:
 };
 
 int main(){
-	TestSingularization().testTruncatedNewton();
-	TestSingularization().testLBFGS();
+	TestSingular().testTruncatedNewton();
+	TestSingular().testLBFGS();
 }
