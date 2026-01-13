@@ -56,7 +56,7 @@ class TestSingular(ut.TestCase):
 		self.TrustRegion = mv.TrustRegion()
 
 	def testTruncatedNewton(self):
-		M = mv.Iterate(self.Obj, [self.Manifold0.Clone(), self.Manifold1.Clone(), self.Manifold2.Clone()], True)
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2], True)
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 24, 0
@@ -65,7 +65,7 @@ class TestSingular(ut.TestCase):
 		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
 
 	def testLBFGS(self):
-		M = mv.Iterate(self.Obj, [self.Manifold0.Clone(), self.Manifold1.Clone(), self.Manifold2.Clone()], True)
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
 				100, 131, 0.1, 0.75, 5, 0
