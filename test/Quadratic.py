@@ -57,7 +57,7 @@ class TestQuadratic(ut.TestCase):
 		self.TrustRegion = mv.TrustRegion()
 
 	def testUnpreconTruncatedNewton(self):
-		M = mv.Iterate(self.UnpreconObj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.UnpreconObj, [self.Manifold], True)
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 21, 0
@@ -66,7 +66,7 @@ class TestQuadratic(ut.TestCase):
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
 
 	def testPreconTruncatedNewton(self):
-		M = mv.Iterate(self.PreconObj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.PreconObj, [self.Manifold], True)
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 19, 0
@@ -75,7 +75,7 @@ class TestQuadratic(ut.TestCase):
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
 
 	def testUnpreconLBFGS(self):
-		M = mv.Iterate(self.UnpreconObj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.UnpreconObj, [self.Manifold], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
 				20, 11, 0.1, 0.75, 5, 0
@@ -84,7 +84,7 @@ class TestQuadratic(ut.TestCase):
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
 
 	def testPreconLBFGS(self):
-		M = mv.Iterate(self.PreconObj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.PreconObj, [self.Manifold], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
 				20, 7, 0.1, 0.75, 5, 0
@@ -93,7 +93,7 @@ class TestQuadratic(ut.TestCase):
 		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
 
 	def testAnderson(self):
-		M = mv.Iterate(self.AndersonObj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.AndersonObj, [self.Manifold], True)
 		converged = mv.Anderson(
 				M, self.Tolerance,
 				0.2, 6, 12, 0

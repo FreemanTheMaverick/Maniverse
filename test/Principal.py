@@ -31,7 +31,7 @@ class TestPrincipal(ut.TestCase):
 		self.Solution = np.linalg.eigh(self.Obj.A)[1][:, 5:]
 
 	def testTruncatedNewton(self):
-		M = mv.Iterate(self.Obj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.Obj, [self.Manifold], True)
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 13, 0
@@ -40,7 +40,7 @@ class TestPrincipal(ut.TestCase):
 		assert np.allclose(M.Point @ M.Point.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
 	def testLBFGS(self):
-		M = mv.Iterate(self.Obj, [self.Manifold.Clone()], True)
+		M = mv.Iterate(self.Obj, [self.Manifold], True)
 		converged = mv.LBFGS(
 				M, self.Tolerance,
 				10, 46, 0.1, 0.75, 5, 0
