@@ -12,7 +12,7 @@ from scipy.linalg import expm
 class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.fromfile("Sym10.dat")[:60].reshape([10, 6])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([10, 6])
 
 	def Calculate(self, C, _):
 		self.Value = np.linalg.norm(C[0] - self.A) ** 2

@@ -11,7 +11,7 @@ import Maniverse as mv
 class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
-		self.A = np.fromfile("Sym10.dat").reshape([10, 10])
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
 
 	def Calculate(self, C, _):
 		self.Value = np.sum( C[0] * ( self.A @ C[0] ) )
