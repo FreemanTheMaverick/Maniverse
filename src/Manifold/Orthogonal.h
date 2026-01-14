@@ -10,7 +10,7 @@ class Orthogonal: public Stiefel{ public:
 	EigenMatrix Retract(EigenMatrix X) const override;
 	EigenMatrix InverseRetract(Manifold& N) const override;
 
-	std::unique_ptr<Manifold> Clone() const override;
+	std::shared_ptr<Manifold> Share() const override;
 };
 
 }

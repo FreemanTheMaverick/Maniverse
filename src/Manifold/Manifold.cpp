@@ -75,9 +75,9 @@ EigenMatrix Manifold::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*wein
 	return HeX;
 }
 
-std::unique_ptr<Manifold> Manifold::Clone() const{
+std::shared_ptr<Manifold> Manifold::Share() const{
 	__Not_Implemented__
-	return std::make_unique<Manifold>(*this);
+	return std::make_shared<Manifold>(*this);
 }
 
 #ifdef __PYTHON__
@@ -123,8 +123,8 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 		PYBIND11_OVERRIDE(EigenMatrix, Manifold, getHessian, HeX, X, weingarten);
 	}
 
-	std::unique_ptr<Manifold> Clone() const override{
-		PYBIND11_OVERRIDE(std::unique_ptr<Manifold>, Manifold, Clone);
+	std::shared_ptr<Manifold> Share() const override{
+		PYBIND11_OVERRIDE(std::shared_ptr<Manifold>, Manifold, Share);
 	}
 };
 
@@ -147,7 +147,7 @@ void Init_Manifold(pybind11::module_& m){
 		.def("setPoint", &Manifold::setPoint)
 		.def("getGradient", &Manifold::getGradient)
 		.def("getHessian", &Manifold::getHessian)
-		.def("Clone", &Manifold::Clone);
+		.def("Share", &Manifold::Share);
 }
 #endif
 

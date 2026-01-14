@@ -122,8 +122,8 @@ EigenMatrix TransRotInvPointCloud::getHessian(EigenMatrix HeX, EigenMatrix /*X*/
 	return this->TangentProjection(HeX);
 }
 
-std::unique_ptr<Manifold> TransRotInvPointCloud::Clone() const{
-	return std::make_unique<TransRotInvPointCloud>(*this);
+std::shared_ptr<Manifold> TransRotInvPointCloud::Share() const{
+	return std::make_shared<TransRotInvPointCloud>(*this);
 }
 
 #ifdef __PYTHON__
