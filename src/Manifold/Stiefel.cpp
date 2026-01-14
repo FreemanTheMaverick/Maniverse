@@ -168,8 +168,8 @@ EigenMatrix Stiefel::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten)
 	}
 }
 
-std::unique_ptr<Manifold> Stiefel::Clone() const{
-	return std::make_unique<Stiefel>(*this);
+std::shared_ptr<Manifold> Stiefel::Share() const{
+	return std::make_shared<Stiefel>(*this);
 }
 
 #ifdef __PYTHON__

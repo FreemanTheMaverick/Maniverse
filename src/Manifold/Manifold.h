@@ -51,7 +51,7 @@ class Manifold{ public:
 	virtual EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const;
 
 	virtual ~Manifold() = default;
-	virtual std::unique_ptr<Manifold> Clone() const;
+	virtual std::shared_ptr<Manifold> Share() const;
 };
 
 class Objective{ public:
@@ -65,7 +65,7 @@ class Objective{ public:
 };
 
 class Iterate{ public:
-	std::vector<std::unique_ptr<Manifold>> Ms;
+	std::vector<std::shared_ptr<Manifold>> Ms;
 	Objective* Func;
 	EigenMatrix Point;
 	EigenMatrix Gradient;

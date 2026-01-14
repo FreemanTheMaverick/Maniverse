@@ -23,7 +23,7 @@ class Euclidean: public Manifold{ public:
 	virtual void getGradient() override;
 	virtual EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
 
-	virtual std::unique_ptr<Manifold> Clone() const override;
+	virtual std::shared_ptr<Manifold> Share() const override;
 };
 
 }

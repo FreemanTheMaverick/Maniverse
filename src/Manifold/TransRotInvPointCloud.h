@@ -20,7 +20,7 @@ class TransRotInvPointCloud: public Euclidean{ public:
 	void getGradient() override;
 	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
 
-	std::unique_ptr<Manifold> Clone() const override;
+	std::shared_ptr<Manifold> Share() const override;
 };
 
 }

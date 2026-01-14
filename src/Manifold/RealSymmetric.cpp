@@ -45,8 +45,8 @@ EigenMatrix RealSymmetric::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /
 	return Symmetrize(HeX);
 }
 
-std::unique_ptr<Manifold> RealSymmetric::Clone() const{
-	return std::make_unique<RealSymmetric>(*this);
+std::shared_ptr<Manifold> RealSymmetric::Share() const{
+	return std::make_shared<RealSymmetric>(*this);
 }
 
 #ifdef __PYTHON__

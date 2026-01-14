@@ -37,8 +37,8 @@ EigenMatrix Orthogonal::InverseRetract(Manifold& N) const{
 	return q;
 }
 
-std::unique_ptr<Manifold> Orthogonal::Clone() const{
-	return std::make_unique<Orthogonal>(*this);
+std::shared_ptr<Manifold> Orthogonal::Share() const{
+	return std::make_shared<Orthogonal>(*this);
 }
 
 #ifdef __PYTHON__

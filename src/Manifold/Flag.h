@@ -17,7 +17,7 @@ class Flag: public Stiefel{ public:
 
 	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
 
-	std::unique_ptr<Manifold> Clone() const override;
+	std::shared_ptr<Manifold> Share() const override;
 };
 
 }

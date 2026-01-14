@@ -64,8 +64,8 @@ EigenMatrix Euclidean::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*wei
 	return HeX;
 }
 
-std::unique_ptr<Manifold> Euclidean::Clone() const{
-	return std::make_unique<Euclidean>(*this);
+std::shared_ptr<Manifold> Euclidean::Share() const{
+	return std::make_shared<Euclidean>(*this);
 }
 
 #ifdef __PYTHON__

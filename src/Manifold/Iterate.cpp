@@ -18,7 +18,7 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, boo
 
 	const int nMs = (int)Ms.size();
 	this->Ms.clear();
-	for ( int iM = 0; iM < nMs; iM++ ) this->Ms.push_back(Ms[iM]->Clone());
+	for ( int iM = 0; iM < nMs; iM++ ) this->Ms.push_back(Ms[iM]);
 
 	int nrows = 0;
 	int ncols = 0;
@@ -34,7 +34,7 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, boo
 
 	this->Point.resize(nrows, ncols); this->Point.setZero();
 	this->Gradient.resize(nrows, ncols); this->Gradient.setZero();
-	for ( int iM = 0; iM < (int)Ms.size(); iM++ ){
+	for ( int iM = 0; iM < nMs; iM++ ){
 		GetBlock(this->Point, iM) = Ms[iM]->P;
 		GetBlock(this->Gradient, iM) = Ms[iM]->Gr;
 	}
@@ -44,7 +44,7 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, boo
 
 Iterate::Iterate(const Iterate& another_iterate){
 	this->Func = another_iterate.Func;
-	for ( auto& M : another_iterate.Ms ) this->Ms.push_back(M->Clone());
+	for ( auto& M : another_iterate.Ms ) this->Ms.push_back(M->Share());
 	this->Point = another_iterate.Point;
 	this->Gradient = another_iterate.Gradient;
 	this->MatrixFree = another_iterate.MatrixFree;

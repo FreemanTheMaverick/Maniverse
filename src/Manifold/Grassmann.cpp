@@ -154,8 +154,8 @@ EigenMatrix Grassmann::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarte
 	}else return (EigenMatrix)(2 * P * partA);
 }
 
-std::unique_ptr<Manifold> Grassmann::Clone() const{
-	return std::make_unique<Grassmann>(*this);
+std::shared_ptr<Manifold> Grassmann::Share() const{
+	return std::make_shared<Grassmann>(*this);
 }
 
 #ifdef __PYTHON__
