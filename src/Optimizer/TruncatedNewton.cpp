@@ -112,7 +112,7 @@ bool TruncatedNewton(
 
 	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
-		std::printf("*********************** Trust Region Optimizer Vanilla ************************\n\n");
+		std::printf("****************************** Truncated Newton *******************************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
