@@ -1,3 +1,5 @@
+#include "TrustRegion.h"
+
 namespace Maniverse{
 
 class TruncatedConjugateGradient{ public:
