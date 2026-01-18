@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Maniverse{
 
 class TrustRegion{ public:

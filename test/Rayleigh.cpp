@@ -5,7 +5,6 @@
 #include <memory>
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
-#include <Maniverse/Optimizer/TrustRegion.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 

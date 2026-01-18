@@ -6,7 +6,6 @@
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
-#include <Maniverse/Optimizer/TrustRegion.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 
