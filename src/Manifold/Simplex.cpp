@@ -19,7 +19,7 @@ static double Distance(EigenMatrix p, EigenMatrix q){
 
 Simplex::Simplex(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
 	__Check_Geodesic__("EXACT")
-	this->Name = "Simplex";
+	this->Name = "Simplex(" + std::to_string(p.size()) + ")";
 	if ( p.cols() != 1 ) throw std::runtime_error("A point on the Simplex manifold should have only one column!");
 }
 
@@ -32,6 +32,7 @@ double Simplex::Inner(EigenMatrix X, EigenMatrix Y) const{
 }
 
 EigenMatrix Simplex::Retract(EigenMatrix X) const{
+	if ( X.norm() == 0 ) return this->P;
 	const EigenMatrix Xp = X.cwiseProduct(this->P.array().rsqrt().matrix());
 	const double norm = Xp.norm();
 	const EigenMatrix Xpn = Xp / norm;
