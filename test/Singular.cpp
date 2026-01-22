@@ -85,7 +85,7 @@ class TestSingular{ public:
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()}, true);
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
-				0.001, 24, 0
+				0.001, 24, 1
 		);
 		__Check_Result__
 	};
@@ -94,7 +94,7 @@ class TestSingular{ public:
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()}, true);
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
-				100, 131, 0.1, 0.75, 5, 0
+				100, 131, 0.1, 0.75, 5, 1
 		);
 		__Check_Result__
 	};

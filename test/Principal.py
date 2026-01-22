@@ -37,7 +37,7 @@ class TestPrincipal(ut.TestCase):
 				0.001, 13, 0
 		)
 		assert converged
-		assert np.allclose(M.Point @ M.Point.T, self.Solution @ self.Solution.T, atol = 1e-5)
+		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold], True)
@@ -46,7 +46,7 @@ class TestPrincipal(ut.TestCase):
 				10, 46, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Point @ M.Point.T, self.Solution @ self.Solution.T, atol = 1e-5)
+		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
 if __name__ == "__main__":
 	TestPrincipal().testTruncatedNewton()

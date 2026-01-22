@@ -37,7 +37,7 @@ class TestRayleigh(ut.TestCase):
 				0.001, 3, 0
 		)
 		assert converged
-		assert np.allclose(M.Point[:, 0], self.Solution, atol = 1e-5)
+		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, {self.Manifold}, True)
@@ -46,7 +46,7 @@ class TestRayleigh(ut.TestCase):
 				10, 8, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Point[:, 0], self.Solution, atol = 1e-5)
+		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
 
 if __name__ == "__main__":
 	TestRayleigh().testTruncatedNewton()

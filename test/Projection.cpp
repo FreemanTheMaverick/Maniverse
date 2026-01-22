@@ -20,7 +20,6 @@ namespace mv = Maniverse;
 
 class ObjProjection: public mv::Objective{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 6);
-	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(10, 6);
 
 	ObjProjection(){
 		const double data[] = {
@@ -49,7 +48,7 @@ class AndersonObjProjection: public ObjProjection{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Point - Solution ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Ms[0]->P - Solution ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -74,7 +73,7 @@ class TestProjection{ public:
 		mv::Iterate M(Obj, {Manifold.Share()}, true);
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
-				0.001, 9, 0
+				0.001, 9, 1
 		);
 		__Check_Result__
 	};
@@ -83,7 +82,7 @@ class TestProjection{ public:
 		mv::Iterate M(Obj, {Manifold.Share()}, true);
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
-				20, 19, 0.1, 0.75, 5, 0
+				20, 19, 0.1, 0.75, 5, 1
 		);
 		__Check_Result__
 	};
@@ -92,7 +91,7 @@ class TestProjection{ public:
 		mv::Iterate M(AndersonObj, {Manifold.Share()}, true);
 		const bool converged = mv::Anderson(
 				M, Tolerance,
-				0.2, 6, 28, 0
+				0.2, 6, 28, 1
 		);
 		__Check_Result__
 	};

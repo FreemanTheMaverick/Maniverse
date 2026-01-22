@@ -67,33 +67,34 @@ class Objective{ public:
 class Iterate{ public:
 	std::vector<std::shared_ptr<Manifold>> Ms;
 	Objective* Func;
-	EigenMatrix Point;
-	EigenMatrix Gradient;
-	EigenMatrix Hessian(EigenMatrix X) const;
-	EigenMatrix Preconditioner(EigenMatrix X) const;
-	EigenMatrix PreconditionerSqrt(EigenMatrix X) const;
-	EigenMatrix PreconditionerInvSqrt(EigenMatrix X) const;
+	EigenVector Point;
+	EigenVector Gradient;
+	EigenVector Hessian(EigenVector X) const;
+	EigenVector Preconditioner(EigenVector X) const;
+	EigenVector PreconditionerSqrt(EigenVector X) const;
+	EigenVector PreconditionerInvSqrt(EigenVector X) const;
 
+	int TotalSize;
 	bool MatrixFree;
 	std::vector<EigenMatrix> BasisSet;
 	std::vector<std::tuple<double, EigenMatrix>> HessianMatrix;
 
-	std::vector<std::tuple<int, int, int, int>> BlockParameters;
+	std::vector<std::tuple<int, int, int>> BlockParameters;
 
 	Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free);
 	Iterate(const Iterate& another_iterate);
 
 	std::string getName() const;
 	int getDimension() const;
-	double Inner(EigenMatrix X, EigenMatrix Y) const;
+	double Inner(EigenVector X, EigenVector Y) const;
 
-	EigenMatrix Retract(EigenMatrix X) const;
-	EigenMatrix InverseRetract(Iterate& N) const;
-	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
-	EigenMatrix TransportManifold(EigenMatrix A, Iterate& N) const;
+	EigenVector Retract(EigenVector X) const;
+	EigenVector InverseRetract(Iterate& N) const;
+	EigenVector TransportTangent(EigenVector X, EigenVector Y) const;
+	EigenVector TransportManifold(EigenVector A, Iterate& N) const;
 
-	EigenMatrix TangentProjection(EigenMatrix A) const;
-	EigenMatrix TangentPurification(EigenMatrix A) const;
+	EigenVector TangentProjection(EigenVector A) const;
+	EigenVector TangentPurification(EigenVector A) const;
  
 	void setPoint(std::vector<EigenMatrix> ps, bool purify);
 	void setGradient();
@@ -105,38 +106,29 @@ class Iterate{ public:
 	void getHessianMatrix();
 };
 
-#define GetBlock(mat, iM)\
-	mat.block(\
-			std::get<0>(BlockParameters[iM]),\
+#define GetBlock(mat, iM, BlockParameters)\
+	Eigen::Map<const EigenMatrix>(\
+			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
-			std::get<2>(BlockParameters[iM]),\
-			std::get<3>(BlockParameters[iM])\
+			std::get<2>(BlockParameters[iM])\
 	)
 
-#define AssembleBlock(big_mat, mat_vec){\
-	int _nrows_ = 0;\
-	int _ncols_ = 0;\
-	for ( EigenMatrix& mat : mat_vec ){\
-		big_mat.block(\
-				_nrows_, _ncols_,\
-				mat.rows(), mat.cols()\
-		) = mat;\
-		_nrows_ += mat.rows();\
-		_ncols_ += mat.cols();\
+#define SetBlock(mat, iM, BlockParameters)\
+	Eigen::Map<EigenMatrix> _##mat##_##iM##_(\
+			mat.data() + std::get<0>(BlockParameters[iM]),\
+			std::get<1>(BlockParameters[iM]),\
+			std::get<2>(BlockParameters[iM])\
+	); _##mat##_##iM##_
+
+#define AssembleBlock(big_mat, mat_vec, BlockParameters){\
+	for ( int _imat_ = 0; _imat_ < (int)mat_vec.size(); _imat_++ ){\
+		SetBlock(big_mat, _imat_, BlockParameters) = mat_vec[_imat_];\
 	}\
 }
 
-#define DecoupleBlock(big_mat, mat_vec){\
-	int _nrows_ = 0;\
-	int _ncols_ = 0;\
-	for ( EigenMatrix& mat : mat_vec ){\
-		mat = big_mat.block(\
-				_nrows_, _ncols_,\
-				mat.rows(), mat.cols()\
-		);\
-		_nrows_ += mat.rows();\
-		_ncols_ += mat.cols();\
-	}\
+#define DecoupleBlock(big_mat, mat_vec, BlockParameters){\
+	for ( int _imat_ = 0; _imat_ < (int)mat_vec.size(); _imat_++ )\
+		mat_vec[_imat_] = GetBlock(big_mat, _imat_, BlockParameters);\
 }
 
 }

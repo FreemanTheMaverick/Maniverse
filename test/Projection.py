@@ -44,7 +44,7 @@ class TestProjection(ut.TestCase):
 				0.001, 9, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, self.Solution, atol = 1e-5)
+		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold], True)
@@ -53,7 +53,7 @@ class TestProjection(ut.TestCase):
 				20, 19, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, self.Solution, atol = 1.e-5)
+		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
 
 	def testAnderson(self):
 		M = mv.Iterate(self.AndersonObj, [self.Manifold], True)
@@ -62,7 +62,7 @@ class TestProjection(ut.TestCase):
 				0.2, 6, 28, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, self.Solution, atol = 1.e-5)
+		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
 
 if __name__ == "__main__":
 	TestProjection().testTruncatedNewton()

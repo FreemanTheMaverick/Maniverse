@@ -27,7 +27,7 @@ class UnpreconObjQuadratic: public mv::Objective{ public:
 		std::memcpy(A.data(), &data, 10 * 10 * 8);
 		A = A * A + Eigen::MatrixXd::Identity(10, 10) * 0.01; // Constructing a SPD matrix whose diagonal elements dominate
 		for ( int i = 0; i < 10; i++ ) for ( int j = 0; j < 10; j++ )
-			A(i, j)  *= 0.01;
+			if ( i != j ) A(i, j) *= 0.01;
 	};
 
 	virtual void Calculate(std::vector<Eigen::MatrixXd> x, int /*derivative*/) override{
@@ -36,7 +36,7 @@ class UnpreconObjQuadratic: public mv::Objective{ public:
 	};
 
 	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ 2 * v[0] }};
+		return std::vector<std::vector<Eigen::MatrixXd>>{{ 2 * A * v[0] }};
 	};
 };
 
@@ -68,7 +68,7 @@ class AndersonObjQuadratic: public UnpreconObjQuadratic{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Point ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Ms[0]->P ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -84,13 +84,14 @@ class TestQuadratic{ public:
 	TestQuadratic(){
 		Eigen::MatrixXd from0to9(10, 1);
 		from0to9 << 0, 1, 2, 3, 4, 5, 6, 7, 8, 9;
+		Manifold = mv::Euclidean(from0to9);
 	};
 
 	void testUnpreconTruncatedNewton(){
 		mv::Iterate M(UnpreconObj, {Manifold.Share()}, true);
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
-				0.001, 21, 0
+				0.001, 21, 1
 		);
 		__Check_Result__
 	};
@@ -99,7 +100,7 @@ class TestQuadratic{ public:
 		mv::Iterate M(PreconObj, {Manifold.Share()}, true);
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
-				0.001, 19, 0
+				0.001, 19, 1
 		);
 		__Check_Result__
 	};
@@ -108,7 +109,7 @@ class TestQuadratic{ public:
 		mv::Iterate M(UnpreconObj, {Manifold.Share()}, true);
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
-				20, 11, 0.1, 0.75, 5, 0
+				20, 11, 0.1, 0.75, 5, 1
 		);
 		__Check_Result__
 	};
@@ -117,7 +118,7 @@ class TestQuadratic{ public:
 		mv::Iterate M(PreconObj, {Manifold.Share()}, true);
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
-				20, 7, 0.1, 0.75, 5, 0
+				20, 7, 0.1, 0.75, 5, 1
 		);
 		__Check_Result__
 	};
@@ -126,7 +127,7 @@ class TestQuadratic{ public:
 		mv::Iterate M(AndersonObj, {Manifold.Share()}, true);
 		const bool converged = mv::Anderson(
 				M, Tolerance,
-				0.2, 6, 12, 0
+				0.2, 6, 12, 1
 		);
 		__Check_Result__
 	};

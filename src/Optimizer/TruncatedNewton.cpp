@@ -158,7 +158,7 @@ bool TruncatedNewton(
 			tcg.Radius = R;
 			if ( iiter > 0 ) std::tie(Snorm, S) = tcg.Find();
 			Pmat = M.Retract(S);
-			DecoupleBlock(Pmat, P);
+			DecoupleBlock(Pmat, P, M.BlockParameters);
 			if ( iiter > 0 ) predicted_delta_L = M.Inner(M.Gradient + 0.5 * M.Hessian(S), S);
 			if (output){
 				std::printf("Trial %d - %d:\n", iiter, trial);
