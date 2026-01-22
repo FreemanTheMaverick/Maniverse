@@ -40,7 +40,7 @@ class ObjPrincipal: public mv::Objective{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Point * M.Point.transpose() - Solution * Solution.transpose() ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Ms[0]->P * M.Ms[0]->P.transpose() - Solution * Solution.transpose() ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -63,7 +63,7 @@ class TestPrincipal{ public:
 		mv::Iterate M(Obj, {Manifold.Share()}, true);
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
-				0.001, 13, 0
+				0.001, 13, 1
 		);
 		__Check_Result__
 	};
@@ -72,7 +72,7 @@ class TestPrincipal{ public:
 		mv::Iterate M(Obj, {Manifold.Share()}, true);
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
-				10, 46, 0.1, 0.75, 5, 0
+				10, 46, 0.1, 0.75, 5, 1
 		);
 		__Check_Result__
 	};

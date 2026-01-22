@@ -65,7 +65,7 @@ bool Anderson(
 		if (output) std::printf("Target = %.10f\n", M.Func->Value);
 
 		R = M.Func->Gradient;
-		AssembleBlock(Rmat, R);
+		AssembleBlock(Rmat, R, M.BlockParameters);
 
 		// Transporting previous vectors I
 		if ( (int)Ss.size() == max_mem ){
@@ -126,7 +126,7 @@ bool Anderson(
 		}else S = Rmat;
 
 		const EigenMatrix Pmat = M.Retract(S);
-		DecoupleBlock(Pmat, P);
+		DecoupleBlock(Pmat, P, M.BlockParameters);
 
 		// Elapsed time
 		if (output) std::printf("Elapsed time: %f seconds for current iteration; %f seconds in total\n\n", __duration__(iter_start, __now__), __duration__(all_start, __now__));

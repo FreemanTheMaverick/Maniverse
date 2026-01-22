@@ -20,23 +20,21 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, boo
 	this->Ms.clear();
 	for ( int iM = 0; iM < nMs; iM++ ) this->Ms.push_back(Ms[iM]);
 
-	int nrows = 0;
-	int ncols = 0;
+	this->TotalSize = 0;
 	for ( int iM = 0; iM < nMs; iM++ ){
 		this->BlockParameters.push_back(std::make_tuple(
-				nrows, ncols,
+				this->TotalSize,
 				this->Ms[iM]->P.rows(),
 				this->Ms[iM]->P.cols()
 		));
-		nrows += this->Ms[iM]->P.rows();
-		ncols += this->Ms[iM]->P.cols();
+		this->TotalSize += this->Ms[iM]->P.size();
 	}
 
-	this->Point.resize(nrows, ncols); this->Point.setZero();
-	this->Gradient.resize(nrows, ncols); this->Gradient.setZero();
+	this->Point.resize(this->TotalSize); this->Point.setZero();
+	this->Gradient.resize(this->TotalSize); this->Gradient.setZero();
 	for ( int iM = 0; iM < nMs; iM++ ){
-		GetBlock(this->Point, iM) = Ms[iM]->P;
-		GetBlock(this->Gradient, iM) = Ms[iM]->Gr;
+		SetBlock(Point, iM, this->BlockParameters) = Ms[iM]->P;
+		SetBlock(Gradient, iM, this->BlockParameters) = Ms[iM]->Gr;
 	}
 
 	this->MatrixFree = matrix_free;
@@ -44,7 +42,7 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, boo
 
 Iterate::Iterate(const Iterate& another_iterate){
 	this->Func = another_iterate.Func;
-	for ( auto& M : another_iterate.Ms ) this->Ms.push_back(M->Share());
+	for ( auto& M : another_iterate.Ms ) this->Ms.push_back(M);
 	this->Point = another_iterate.Point;
 	this->Gradient = another_iterate.Gradient;
 	this->MatrixFree = another_iterate.MatrixFree;
@@ -69,58 +67,58 @@ int Iterate::getDimension() const{
 	return ndims;
 }
 
-double Iterate::Inner(EigenMatrix X, EigenMatrix Y) const{
+double Iterate::Inner(EigenVector X, EigenVector Y) const{
 	double inner = 0;
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		inner += this->Ms[iM]->Inner(GetBlock(X, iM), GetBlock(Y, iM));
+		inner += this->Ms[iM]->Inner(GetBlock(X, iM, this->BlockParameters), GetBlock(Y, iM, this->BlockParameters));
 	}
 	return inner;
 }
 
-EigenMatrix Iterate::Retract(EigenMatrix X) const{
-	EigenMatrix Exp = EigenZero(X.rows(), X.cols());
+EigenVector Iterate::Retract(EigenVector X) const{
+	EigenVector Exp = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(Exp, iM) = this->Ms[iM]->Retract(GetBlock(X, iM));
+		SetBlock(Exp, iM, this->BlockParameters) = this->Ms[iM]->Retract(GetBlock(X, iM, this->BlockParameters));
 	}
 	return Exp;
 }
 
-EigenMatrix Iterate::InverseRetract(Iterate& N) const{
-	EigenMatrix Log = EigenZero(this->Point.rows(), this->Point.cols());
+EigenVector Iterate::InverseRetract(Iterate& N) const{
+	EigenMatrix Log = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(Log, iM) = this->Ms[iM]->InverseRetract(*(N.Ms[iM]));
+		SetBlock(Log, iM, this->BlockParameters) = this->Ms[iM]->InverseRetract(*(N.Ms[iM]));
 	}
 	return Log;
 }
 
-EigenMatrix Iterate::TransportTangent(EigenMatrix A, EigenMatrix Y) const{
-	EigenMatrix B = EigenZero(A.rows(), A.cols());
+EigenVector Iterate::TransportTangent(EigenVector A, EigenVector Y) const{
+	EigenVector B = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(B, iM) = this->Ms[iM]->TransportTangent(GetBlock(A, iM), GetBlock(Y, iM));
+		SetBlock(B, iM, this->BlockParameters) = this->Ms[iM]->TransportTangent(GetBlock(A, iM, this->BlockParameters), GetBlock(Y, iM, this->BlockParameters));
 	}
 	return B;
 }
 
-EigenMatrix Iterate::TransportManifold(EigenMatrix A, Iterate& N) const{
-	EigenMatrix B = EigenZero(A.rows(), A.cols());
+EigenVector Iterate::TransportManifold(EigenVector A, Iterate& N) const{
+	EigenVector B = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(B, iM) = this->Ms[iM]->TransportManifold(GetBlock(A, iM), *(N.Ms[iM]));
+		SetBlock(B, iM, this->BlockParameters) = this->Ms[iM]->TransportManifold(GetBlock(A, iM, this->BlockParameters), *(N.Ms[iM]));
 	}
 	return B;
 }
 
-EigenMatrix Iterate::TangentProjection(EigenMatrix A) const{
-	EigenMatrix X = EigenZero(A.rows(), A.cols());
+EigenVector Iterate::TangentProjection(EigenVector A) const{
+	EigenVector X = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(X, iM) = this->Ms[iM]->TangentProjection(GetBlock(A, iM));
+		SetBlock(X, iM, this->BlockParameters) = this->Ms[iM]->TangentProjection(GetBlock(A, iM, this->BlockParameters));
 	}
 	return X;
 }
 
-EigenMatrix Iterate::TangentPurification(EigenMatrix A) const{
-	EigenMatrix X = EigenZero(A.rows(), A.cols());
+EigenVector Iterate::TangentPurification(EigenVector A) const{
+	EigenVector X = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		GetBlock(X, iM) = this->Ms[iM]->TangentPurification(GetBlock(A, iM));
+		SetBlock(X, iM, this->BlockParameters) = this->Ms[iM]->TangentPurification(GetBlock(A, iM, this->BlockParameters));
 	}
 	return X;
 }
@@ -129,7 +127,7 @@ void Iterate::setPoint(std::vector<EigenMatrix> ps, bool purify){
 	if ( ps.size() != this->Ms.size() ) throw std::runtime_error("Wrong number of Points!");
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
 		this->Ms[iM]->setPoint(ps[iM], purify);
-		GetBlock(this->Point, iM) = this->Ms[iM]->P;
+		SetBlock(Point, iM, this->BlockParameters) = this->Ms[iM]->P;
 	}
 }
 
@@ -137,78 +135,74 @@ void Iterate::setGradient(){
 	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
 		this->Ms[iM]->Ge = this->Func->Gradient[iM];
 		this->Ms[iM]->getGradient();
-		GetBlock(this->Gradient, iM) = this->Ms[iM]->Gr;
+		SetBlock(Gradient, iM, this->BlockParameters) = this->Ms[iM]->Gr;
 	}
 }
 
 std::vector<EigenMatrix> Iterate::getPoint() const{
-	std::vector<EigenMatrix> ps;
-	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		ps.push_back(GetBlock(this->Point, iM));
-	}
+	std::vector<EigenMatrix> ps(Ms.size());
+	DecoupleBlock(this->Point, ps, this->BlockParameters);
 	return ps;
 }
 
 std::vector<EigenMatrix> Iterate::getGradient() const{
 	std::vector<EigenMatrix> gs;
-	for ( int iM = 0; iM < (int)this->Ms.size(); iM++ ){
-		gs.push_back(GetBlock(this->Gradient, iM));
-	}
+	DecoupleBlock(this->Gradient, gs, this->BlockParameters);
 	return gs;
 }
 
-EigenMatrix Iterate::Hessian(EigenMatrix Xmat) const{
+EigenVector Iterate::Hessian(EigenVector Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<EigenMatrix> X(nMs);
-	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
 	std::vector<std::vector<EigenMatrix>> HeX = this->Func->Hessian(X);
 
-	EigenMatrix HrXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	EigenVector HrXmat = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		GetBlock(HrXmat, iM) += this->Ms[iM]->getHessian(HeX[iM][jM], X[jM], iM == jM);
+		SetBlock(HrXmat, iM, this->BlockParameters) += this->Ms[iM]->getHessian(HeX[iM][jM], X[jM], iM == jM);
 	}
 	return HrXmat;
 }
 
-EigenMatrix Iterate::Preconditioner(EigenMatrix Xmat) const{
+EigenVector Iterate::Preconditioner(EigenVector Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<EigenMatrix> X(nMs);
-	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
 	std::vector<std::vector<EigenMatrix>> PX = this->Func->Preconditioner(X);
 
-	EigenMatrix PXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	EigenVector PXmat = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		GetBlock(PXmat, iM) += PX[iM][jM];
+		SetBlock(PXmat, iM, this->BlockParameters) += PX[iM][jM];
 	}
 	return PXmat;
 }
 
-EigenMatrix Iterate::PreconditionerSqrt(EigenMatrix Xmat) const{
+EigenVector Iterate::PreconditionerSqrt(EigenVector Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<EigenMatrix> X(nMs);
-	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
 	std::vector<std::vector<EigenMatrix>> PX = this->Func->PreconditionerSqrt(X);
 
-	EigenMatrix PXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	EigenVector PXmat = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		GetBlock(PXmat, iM) += PX[iM][jM];
+		SetBlock(PXmat, iM, this->BlockParameters) += PX[iM][jM];
 	}
 	return PXmat;
 }
 
-EigenMatrix Iterate::PreconditionerInvSqrt(EigenMatrix Xmat) const{
+EigenVector Iterate::PreconditionerInvSqrt(EigenVector Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<EigenMatrix> X(nMs);
-	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
 	std::vector<std::vector<EigenMatrix>> PX = this->Func->PreconditionerInvSqrt(X);
 
-	EigenMatrix PXmat = EigenZero(Xmat.rows(), Xmat.cols());
+	EigenVector PXmat = EigenZero(this->TotalSize, 1);
 	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		GetBlock(PXmat, iM) += PX[iM][jM];
+		SetBlock(PXmat, iM, this->BlockParameters) += PX[iM][jM];
 	}
 	return PXmat;
 }

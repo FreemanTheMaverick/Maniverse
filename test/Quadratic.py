@@ -63,7 +63,7 @@ class TestQuadratic(ut.TestCase):
 				0.001, 21, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
 	def testPreconTruncatedNewton(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold], True)
@@ -72,7 +72,7 @@ class TestQuadratic(ut.TestCase):
 				0.001, 19, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
 	def testUnpreconLBFGS(self):
 		M = mv.Iterate(self.UnpreconObj, [self.Manifold], True)
@@ -81,7 +81,7 @@ class TestQuadratic(ut.TestCase):
 				20, 11, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
 	def testPreconLBFGS(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold], True)
@@ -90,7 +90,7 @@ class TestQuadratic(ut.TestCase):
 				20, 7, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
 	def testAnderson(self):
 		M = mv.Iterate(self.AndersonObj, [self.Manifold], True)
@@ -99,7 +99,7 @@ class TestQuadratic(ut.TestCase):
 				0.2, 6, 12, 0
 		)
 		assert converged
-		assert np.allclose(M.Point, np.zeros_like(M.Point), atol = 1e-5)
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
 
 if __name__ == "__main__":
