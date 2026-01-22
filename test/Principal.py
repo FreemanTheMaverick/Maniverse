@@ -18,7 +18,7 @@ class Obj(mv.Objective):
 		self.Gradient = [ - 2 * self.A @ C[0] ]
 
 	def Hessian(self, V):
-		return [[ - 2 * self.A @ V[0] ]]
+		return [ - 2 * self.A @ V[0] ]
 
 class TestPrincipal(ut.TestCase):
 	def __init__(self, *args):

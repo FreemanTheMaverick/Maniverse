@@ -40,9 +40,9 @@ class Obj(mv.Objective):
 		HVs = 4 * V * s * delta_s[:, 0] - 2 * self.A.T @ U * delta_s[:, 0]
 		HVV = 2 * delta_V * s ** 2
 		return [
-					[ HUU, HUs, HUV ],
-					[ HsU, Hss, HsV ],
-					[ HVU, HVs, HVV ]
+					HUU + HUs + HUV,
+					HsU + Hss + HsV,
+					HVU + HVs + HVV
 		]
 
 class TestSingular(ut.TestCase):
