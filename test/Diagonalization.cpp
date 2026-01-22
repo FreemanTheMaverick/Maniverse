@@ -39,16 +39,16 @@ class ObjDiagonalization: public mv::Objective{ public:
 		Gradient = { Gn, GC };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> V) const override{
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{
 		const Eigen::MatrixXd& delta_n = V[0];
 		const Eigen::MatrixXd& delta_C = V[1];
 		const Eigen::MatrixXd Hnn = 2 * delta_n;
 		const Eigen::MatrixXd HnC = - 4 * ( C.transpose() * A * delta_C ).diagonal();
 		const Eigen::MatrixXd HCn = 8 * C * n.asDiagonal() * delta_n.asDiagonal() - 4 * A * C * delta_n.asDiagonal();
 		const Eigen::MatrixXd HCC = 4 * ( delta_C * n.asDiagonal() * n.asDiagonal() - A * delta_C * n.asDiagonal() );
-		return std::vector<std::vector<Eigen::MatrixXd>>{
-			{ Hnn, HnC },
-			{ HCn, HCC }
+		return std::vector<Eigen::MatrixXd>{
+			Hnn + HnC,
+			HCn + HCC
 		};
 	};
 };
@@ -72,7 +72,7 @@ class TestDiagonalization{ public:
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()}, true);
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
-				0.0001, 26, 1
+				0.0001, 28, 1
 		);
 		__Check_Result__
 	};

@@ -23,7 +23,7 @@ class UnpreconObj(mv.Objective):
 		self.Gradient = [ 2 * self.A @ x[0] ]
 
 	def Hessian(self, v):
-		return [[ 2 * self.A @ v[0] ]]
+		return [ 2 * self.A @ v[0] ]
 
 class PreconObj(UnpreconObj):
 	def __init__(self):
@@ -33,13 +33,13 @@ class PreconObj(UnpreconObj):
 		self.Ainvsqrt = np.linalg.inv( self.Asqrt )
 
 	def Preconditioner(self, V):
-		return [[ self.Ainv @ V[0] ]]
+		return [ self.Ainv @ V[0] ]
 
 	def PreconditionerSqrt(self, V):
-		return [[ self.Ainvsqrt @ V[0] ]]
+		return [ self.Ainvsqrt @ V[0] ]
 
 	def PreconditionerInvSqrt(self, V):
-		return [[ self.Asqrt @ V[0] ]]
+		return [ self.Asqrt @ V[0] ]
 
 class AndersonObj(UnpreconObj):
 	def Calculate(self, x, _):

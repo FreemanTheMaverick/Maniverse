@@ -156,11 +156,11 @@ EigenVector Iterate::Hessian(EigenVector Xmat) const{
 	std::vector<EigenMatrix> X(nMs);
 	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
-	std::vector<std::vector<EigenMatrix>> HeX = this->Func->Hessian(X);
+	std::vector<EigenMatrix> HeX = this->Func->Hessian(X);
 
 	EigenVector HrXmat = EigenZero(this->TotalSize, 1);
-	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		SetBlock(HrXmat, iM, this->BlockParameters) += this->Ms[iM]->getHessian(HeX[iM][jM], X[jM], iM == jM);
+	for ( int iM = 0; iM < nMs; iM++ ){
+		SetBlock(HrXmat, iM, this->BlockParameters) = this->Ms[iM]->getHessian(HeX[iM], X[iM], 1);
 	}
 	return HrXmat;
 }
@@ -170,11 +170,11 @@ EigenVector Iterate::Preconditioner(EigenVector Xmat) const{
 	std::vector<EigenMatrix> X(nMs);
 	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
-	std::vector<std::vector<EigenMatrix>> PX = this->Func->Preconditioner(X);
+	std::vector<EigenMatrix> PX = this->Func->Preconditioner(X);
 
 	EigenVector PXmat = EigenZero(this->TotalSize, 1);
-	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		SetBlock(PXmat, iM, this->BlockParameters) += PX[iM][jM];
+	for ( int iM = 0; iM < nMs; iM++ ){
+		SetBlock(PXmat, iM, this->BlockParameters) = PX[iM];
 	}
 	return PXmat;
 }
@@ -184,11 +184,11 @@ EigenVector Iterate::PreconditionerSqrt(EigenVector Xmat) const{
 	std::vector<EigenMatrix> X(nMs);
 	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
-	std::vector<std::vector<EigenMatrix>> PX = this->Func->PreconditionerSqrt(X);
+	std::vector<EigenMatrix> PX = this->Func->PreconditionerSqrt(X);
 
 	EigenVector PXmat = EigenZero(this->TotalSize, 1);
-	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		SetBlock(PXmat, iM, this->BlockParameters) += PX[iM][jM];
+	for ( int iM = 0; iM < nMs; iM++ ){
+		SetBlock(PXmat, iM, this->BlockParameters) = PX[iM];
 	}
 	return PXmat;
 }
@@ -198,11 +198,11 @@ EigenVector Iterate::PreconditionerInvSqrt(EigenVector Xmat) const{
 	std::vector<EigenMatrix> X(nMs);
 	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
 
-	std::vector<std::vector<EigenMatrix>> PX = this->Func->PreconditionerInvSqrt(X);
+	std::vector<EigenMatrix> PX = this->Func->PreconditionerInvSqrt(X);
 
 	EigenVector PXmat = EigenZero(this->TotalSize, 1);
-	for ( int iM = 0, khess = 0; iM < nMs; iM++ ) for ( int jM = 0; jM < nMs; jM++, khess++ ){
-		SetBlock(PXmat, iM, this->BlockParameters) += PX[iM][jM];
+	for ( int iM = 0; iM < nMs; iM++ ){
+		SetBlock(PXmat, iM, this->BlockParameters) = PX[iM];
 	}
 	return PXmat;
 }

@@ -58,10 +58,10 @@ class Objective{ public:
 	virtual void Calculate(std::vector<EigenMatrix> P, int derivative);
 	double Value = 0;
 	std::vector<EigenMatrix> Gradient = {};
-	virtual std::vector<std::vector<EigenMatrix>> Hessian(std::vector<EigenMatrix> X) const;
-	virtual std::vector<std::vector<EigenMatrix>> Preconditioner(std::vector<EigenMatrix> X) const;
-	virtual std::vector<std::vector<EigenMatrix>> PreconditionerSqrt(std::vector<EigenMatrix> X) const;
-	virtual std::vector<std::vector<EigenMatrix>> PreconditionerInvSqrt(std::vector<EigenMatrix> X) const;
+	virtual std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix> X) const;
+	virtual std::vector<EigenMatrix> Preconditioner(std::vector<EigenMatrix> X) const;
+	virtual std::vector<EigenMatrix> PreconditionerSqrt(std::vector<EigenMatrix> X) const;
+	virtual std::vector<EigenMatrix> PreconditionerInvSqrt(std::vector<EigenMatrix> X) const;
 };
 
 class Iterate{ public:

@@ -33,8 +33,8 @@ class ObjProjection: public mv::Objective{ public:
 		Gradient = { 2 * ( C[0] - A ) };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> V) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ 2 * V[0] }};
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{
+		return std::vector<Eigen::MatrixXd>{ 2 * V[0] };
 	};
 };
 

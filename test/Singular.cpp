@@ -44,7 +44,7 @@ class ObjSingular: public mv::Objective{ public:
 		Gradient = { GU, Gs, GV };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> K) const override{
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> K) const override{
 		const Eigen::MatrixXd& delta_U = K[0];
 		const Eigen::MatrixXd& delta_s = K[1];
 		const Eigen::MatrixXd& delta_V = K[2];
@@ -57,10 +57,10 @@ class ObjSingular: public mv::Objective{ public:
 		const Eigen::MatrixXd HVU = - 2 * A.transpose() * delta_U * s.asDiagonal();
 		const Eigen::MatrixXd HVs = 4 * V * s.asDiagonal() * delta_s.asDiagonal() - 2 * A.transpose() * U * delta_s.asDiagonal();
 		const Eigen::MatrixXd HVV = 2 * delta_V * s.asDiagonal() * s.asDiagonal();
-		return std::vector<std::vector<Eigen::MatrixXd>>{
-			{ HUU, HUs, HUV },
-			{ HsU, Hss, HsV },
-			{ HVU, HVs, HVV }
+		return std::vector<Eigen::MatrixXd>{
+			HUU + HUs + HUV,
+			HsU + Hss + HsV,
+			HVU + HVs + HVV
 		};
 	};
 };

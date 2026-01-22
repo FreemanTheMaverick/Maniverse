@@ -19,7 +19,7 @@ class Obj(mv.Objective):
 		self.Gradient = [ 2 * ( C[0] - self.A ) ]
 
 	def Hessian(self, X):
-		return [[ 2 * X[0] ]]
+		return [ 2 * X[0] ]
 
 class AndersonObj(Obj):
 	def Calculate(self, C, _):

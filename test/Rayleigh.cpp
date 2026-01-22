@@ -31,8 +31,8 @@ class ObjRayleigh: public mv::Objective{ public:
 		Gradient = { 2 * A * C[0] };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> V) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ 2 * A * V[0] }};
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{
+		return std::vector<Eigen::MatrixXd>{ 2 * A * V[0] };
 	};
 };
 

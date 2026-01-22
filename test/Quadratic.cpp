@@ -35,8 +35,8 @@ class UnpreconObjQuadratic: public mv::Objective{ public:
 		Gradient = { 2 * A * x[0] };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> Hessian(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ 2 * A * v[0] }};
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> v) const override{
+		return std::vector<Eigen::MatrixXd>{ 2 * A * v[0] };
 	};
 };
 
@@ -45,16 +45,16 @@ class PreconObjQuadratic: public UnpreconObjQuadratic{ public:
 	Eigen::MatrixXd Asqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseSqrt().asDiagonal();
 	Eigen::MatrixXd Ainvsqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().cwiseSqrt().asDiagonal();
 
-	std::vector<std::vector<Eigen::MatrixXd>> Preconditioner(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ Ainv * v[0] }};
+	std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> v) const override{
+		return std::vector<Eigen::MatrixXd>{ Ainv * v[0] };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> PreconditionerSqrt(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ Ainvsqrt * v[0] }};
+	std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> v) const override{
+		return std::vector<Eigen::MatrixXd>{ Ainvsqrt * v[0] };
 	};
 
-	std::vector<std::vector<Eigen::MatrixXd>> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<std::vector<Eigen::MatrixXd>>{{ Asqrt * v[0] }};
+	std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> v) const override{
+		return std::vector<Eigen::MatrixXd>{ Asqrt * v[0] };
 	};
 };
 
