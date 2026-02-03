@@ -26,9 +26,13 @@ class ObjRayleigh: public mv::Objective{ public:
 		std::memcpy(A.data(), &data, 10 * 10 * 8);
 	};
 
-	void Calculate(std::vector<Eigen::MatrixXd> C, int /*derivative*/) override{
-		Value = C[0].cwiseProduct( A * C[0] ).sum();
-		Gradient = { 2 * A * C[0] };
+	void Calculate(std::vector<Eigen::MatrixXd> C, std::vector<int> derivatives) override{
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			Value = C[0].cwiseProduct( A * C[0] ).sum();
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { 2 * A * C[0] };
+		}
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{

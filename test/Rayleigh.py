@@ -13,9 +13,11 @@ class Obj(mv.Objective):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
 
-	def Calculate(self, C, _):
-		self.Value = np.sum( C[0] * ( self.A @ C[0] ) )
-		self.Gradient = [ 2 * self.A @ C[0] ]
+	def Calculate(self, C, derivatives):
+		if 0 in derivatives:
+			self.Value = np.sum( C[0] * ( self.A @ C[0] ) )
+		if 1 in derivatives:
+			self.Gradient = [ 2 * self.A @ C[0] ]
 
 	def Hessian(self, V):
 		return [ 2 * self.A @ V[0] ]

@@ -14,7 +14,7 @@
 
 namespace Maniverse{
 
-void Objective::Calculate(std::vector<EigenMatrix> /*P*/, int /*derivative*/){
+void Objective::Calculate(std::vector<EigenMatrix> /*P*/, std::vector<int> /*derivative*/){
 	__Not_Implemented__
 }
 

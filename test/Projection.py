@@ -14,17 +14,20 @@ class Obj(mv.Objective):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
 
-	def Calculate(self, C, _):
-		self.Value = np.linalg.norm(C[0] - self.A) ** 2
-		self.Gradient = [ 2 * ( C[0] - self.A ) ]
+	def Calculate(self, C, derivatives):
+		if 0 in derivatives:
+			self.Value = np.linalg.norm(C[0] - self.A) ** 2
+		if 1 in derivatives:
+			self.Gradient = [ 2 * ( C[0] - self.A ) ]
 
 	def Hessian(self, X):
 		return [ 2 * X[0] ]
 
 class AndersonObj(Obj):
-	def Calculate(self, C, _):
-		super().Calculate(C, _)
-		self.Gradient = [ -2 * ( C[0] - self.A ) ]
+	def Calculate(self, C, derivatives):
+		super().Calculate(C, derivatives)
+		if 1 in derivatives:
+			self.Gradient = [ -2 * ( C[0] - self.A ) ]
 
 class TestProjection(ut.TestCase):
 	def __init__(self, *args):

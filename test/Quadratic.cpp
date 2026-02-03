@@ -19,6 +19,7 @@ namespace mv = Maniverse;
 
 class UnpreconObjQuadratic: public mv::Objective{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
+	Eigen::MatrixXd Ax = Eigen::MatrixXd::Zero(10, 1); // Temporary variable to reuse
 
 	UnpreconObjQuadratic(){
 		const double data[] = {
@@ -30,9 +31,14 @@ class UnpreconObjQuadratic: public mv::Objective{ public:
 			if ( i != j ) A(i, j) *= 0.01;
 	};
 
-	virtual void Calculate(std::vector<Eigen::MatrixXd> x, int /*derivative*/) override{
-		Value = x[0].cwiseProduct( A * x[0] ).sum();
-		Gradient = { 2 * A * x[0] };
+	virtual void Calculate(std::vector<Eigen::MatrixXd> x, std::vector<int> derivatives) override{
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			Ax = A * x[0];
+			Value = x[0].cwiseProduct(Ax).sum();
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { 2 * Ax };
+		}
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> v) const override{
@@ -59,9 +65,11 @@ class PreconObjQuadratic: public UnpreconObjQuadratic{ public:
 };
 
 class AndersonObjQuadratic: public UnpreconObjQuadratic{ public:
-	void Calculate(std::vector<Eigen::MatrixXd> x, int /*derivative*/) override{
-		UnpreconObjQuadratic::Calculate(x, 0);
-		Gradient = { - 2 * A * x[0] };
+	void Calculate(std::vector<Eigen::MatrixXd> x, std::vector<int> derivatives) override{
+		UnpreconObjQuadratic::Calculate(x, derivatives);
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { - 2 * A * x[0] };
+		}
 	};
 };
 

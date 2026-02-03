@@ -28,9 +28,13 @@ class ObjProjection: public mv::Objective{ public:
 		std::memcpy(A.data(), &data, 10 * 6 * 8);
 	};
 
-	virtual void Calculate(std::vector<Eigen::MatrixXd> C, int /*derivative*/) override{
-		Value = ( C[0] - A ).squaredNorm();
-		Gradient = { 2 * ( C[0] - A ) };
+	virtual void Calculate(std::vector<Eigen::MatrixXd> C, std::vector<int> derivatives) override{
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			Value = ( C[0] - A ).squaredNorm();
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { 2 * ( C[0] - A ) };
+		}
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{
@@ -39,9 +43,11 @@ class ObjProjection: public mv::Objective{ public:
 };
 
 class AndersonObjProjection: public ObjProjection{ public:
-	void Calculate(std::vector<Eigen::MatrixXd> C, int /*derivative*/) override{
-		ObjProjection::Calculate(C, 0);
-		Gradient = { - 2 * ( C[0] - A ) };
+	void Calculate(std::vector<Eigen::MatrixXd> C, std::vector<int> derivatives) override{
+		ObjProjection::Calculate(C, derivatives);
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { - 2 * ( C[0] - A ) };
+		}
 	};
 };
 

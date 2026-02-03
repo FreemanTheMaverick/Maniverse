@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <string>
+#include <algorithm>
 #include <vector>
 #include <memory>
 #include <iostream>
@@ -30,13 +31,17 @@ class ObjDiagonalization: public mv::Objective{ public:
 		std::memcpy(A.data(), &data, 10 * 10 * 8);
 	};
 
-	void Calculate(std::vector<Eigen::MatrixXd> X, int /*derivative*/) override{
-		n = X[0];
-		C = X[1];
-		Value = std::pow(( C * n.asDiagonal() * C.transpose() - A ).norm(), 2);
-		const Eigen::MatrixXd Gn = 2 * ( n - ( C.transpose() * A * C ).diagonal() );
-		const Eigen::MatrixXd GC = 4 * ( C * n.asDiagonal() * n.asDiagonal() - A * C * n.asDiagonal() );
-		Gradient = { Gn, GC };
+	void Calculate(std::vector<Eigen::MatrixXd> X, std::vector<int> derivatives) override{
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			n = X[0];
+			C = X[1];
+			Value = std::pow(( C * n.asDiagonal() * C.transpose() - A ).norm(), 2);
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			const Eigen::MatrixXd Gn = 2 * ( n - ( C.transpose() * A * C ).diagonal() );
+			const Eigen::MatrixXd GC = 4 * ( C * n.asDiagonal() * n.asDiagonal() - A * C * n.asDiagonal() );
+			Gradient = { Gn, GC };
+		}
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{
