@@ -14,7 +14,7 @@
 
 namespace Maniverse{
 
-void Objective::Calculate(std::vector<EigenMatrix> /*P*/, std::vector<int> /*derivative*/){
+void Objective::Calculate(std::vector<EigenMatrix> /*P*/, std::vector<int> /*derivatives*/){
 	__Not_Implemented__
 }
 
@@ -39,8 +39,8 @@ std::vector<EigenMatrix> Objective::PreconditionerInvSqrt(std::vector<EigenMatri
 class PyObjective : public Objective, pybind11::trampoline_self_life_support{ public:
 	using Objective::Objective;
 
-	void Calculate(std::vector<EigenMatrix> P, int derivative) override{
-		PYBIND11_OVERRIDE(void, Objective, Calculate, P, derivative);
+	void Calculate(std::vector<EigenMatrix> P, std::vector<int> derivatives) override{
+		PYBIND11_OVERRIDE(void, Objective, Calculate, P, derivatives);
 	}
 
 	std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix> X) const override{

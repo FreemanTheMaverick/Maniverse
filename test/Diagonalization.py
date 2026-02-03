@@ -15,9 +15,9 @@ class Obj(mv.Objective):
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
 
 	def Calculate(self, X, derivatives):
+		n = self.n = X[0][:, 0]
+		C = self.C = X[1]
 		if 0 in derivatives:
-			n = self.n = X[0][:, 0]
-			C = self.C = X[1]
 			self.Value = np.linalg.norm( C * n @ C.T - self.A ) ** 2
 		if 1 in derivatives:
 			Gn = 2 * ( n - np.diag( C.T @ self.A @ C ) )
