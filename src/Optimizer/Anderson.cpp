@@ -59,7 +59,7 @@ bool Anderson(
 		const auto iter_start = __now__;
 
 		EigenMatrix oldRmat = M.TransportTangent(Rmat, S);
-		M.Func->Calculate(P, 1);
+		M.Func->Calculate(P, {0, 1});
 		actual_delta_L = M.Func->Value - oldL;
 		oldL = M.Func->Value;
 		if (output) std::printf("Target = %.10f\n", M.Func->Value);

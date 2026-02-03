@@ -15,15 +15,17 @@ class Obj(mv.Objective):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
 
-	def Calculate(self, X, _):
-		U = self.U = X[0]
-		s = self.s = X[1][:, 0]
-		V = self.V = X[2]
-		self.Value = np.linalg.norm( U * s @ V.T - self.A )**2
-		GU = 2 * ( U * s ** 2 - self.A @ V * s )
-		Gs = 2 * ( s - np.diag( U.T @ self.A @ V ) )
-		GV = 2 * ( V * s ** 2 - self.A.T @ U * s )
-		self.Gradient = [ GU, Gs, GV ]
+	def Calculate(self, X, derivatives):
+		if 0 in derivatives:
+			U = self.U = X[0]
+			s = self.s = X[1][:, 0]
+			V = self.V = X[2]
+			self.Value = np.linalg.norm( U * s @ V.T - self.A )**2
+		if 1 in derivatives:
+			GU = 2 * ( U * s ** 2 - self.A @ V * s )
+			Gs = 2 * ( s - np.diag( U.T @ self.A @ V ) )
+			GV = 2 * ( V * s ** 2 - self.A.T @ U * s )
+			self.Gradient = [ GU, Gs, GV ]
 
 	def Hessian(self, K):
 		U = self.U

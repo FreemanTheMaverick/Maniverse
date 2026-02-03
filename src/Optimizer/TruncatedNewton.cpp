@@ -167,7 +167,7 @@ bool TruncatedNewton(
 			}
 
 			// Evaluating the objective function
-			M.Func->Calculate(P, 2);
+			M.Func->Calculate(P, {0});
 
 			// Rating the new step
 			actual_delta_L = M.Func->Value - oldL;
@@ -189,6 +189,9 @@ bool TruncatedNewton(
 				std::printf("---------------------------------------------------------------\n");
 			}
 		}
+
+		// Evaluating the Euclidean derivatives
+		M.Func->Calculate(P, {1, 2});
 
 		// Updating the new step
 		oldL = M.Func->Value;

@@ -74,6 +74,7 @@ bool LBFGS(
 		Snorm = std::sqrt(M.Inner(S, S));
 		Pmat = M.Retract(S);
 		DecoupleBlock(Pmat, P, M.BlockParameters);
+		M.Func->Calculate(P, {1});
 
 		// Transporting previous vectors I
 		if ( (int)Rhos.size() == max_mem ){

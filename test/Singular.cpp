@@ -33,15 +33,19 @@ class ObjSingular: public mv::Objective{ public:
 		std::memcpy(A.data(), &data, 10 * 6 * 8);
 	};
 
-	void Calculate(std::vector<Eigen::MatrixXd> X, int /*derivative*/) override{
-		U = X[0];
-		s = X[1];
-		V = X[2];
-		Value = ( U * s.asDiagonal() * V.transpose() - A ).squaredNorm();
-		const Eigen::MatrixXd GU = 2 * ( U * s.asDiagonal() * s.asDiagonal() - A * V * s.asDiagonal() );
-		const Eigen::MatrixXd Gs = 2 * ( s - ( U.transpose() * A * V ).diagonal() );
-		const Eigen::MatrixXd GV = 2 * ( V * s.asDiagonal() * s.asDiagonal() - A.transpose() * U * s.asDiagonal() );
-		Gradient = { GU, Gs, GV };
+	void Calculate(std::vector<Eigen::MatrixXd> X, std::vector<int> derivatives) override{
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			U = X[0];
+			s = X[1];
+			V = X[2];
+			Value = ( U * s.asDiagonal() * V.transpose() - A ).squaredNorm();
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			const Eigen::MatrixXd GU = 2 * ( U * s.asDiagonal() * s.asDiagonal() - A * V * s.asDiagonal() );
+			const Eigen::MatrixXd Gs = 2 * ( s - ( U.transpose() * A * V ).diagonal() );
+			const Eigen::MatrixXd GV = 2 * ( V * s.asDiagonal() * s.asDiagonal() - A.transpose() * U * s.asDiagonal() );
+			Gradient = { GU, Gs, GV };
+		}
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> K) const override{

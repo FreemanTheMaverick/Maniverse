@@ -55,7 +55,7 @@ class Manifold{ public:
 };
 
 class Objective{ public:
-	virtual void Calculate(std::vector<EigenMatrix> P, int derivative);
+	virtual void Calculate(std::vector<EigenMatrix> P, std::vector<int> derivative);
 	double Value = 0;
 	std::vector<EigenMatrix> Gradient = {};
 	virtual std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix> X) const;

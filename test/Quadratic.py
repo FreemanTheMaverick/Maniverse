@@ -17,10 +17,14 @@ class UnpreconObj(mv.Objective):
 			for j in range(10):
 				if i != j:
 					self.A[i, j] *= 0.01
+		self.Ax = np.zeros([10, 1]) # Temporary variable to reuse
 
-	def Calculate(self, x, _):
-		self.Value = np.sum( x[0] * ( self.A @ x[0] ) )
-		self.Gradient = [ 2 * self.A @ x[0] ]
+	def Calculate(self, x, derivatives):
+		if 0 in derivatives:
+			self.Ax = self.A @ x[0]
+			self.Value = np.sum( x[0] * self.Ax )
+		if 1 in derivatives:
+			self.Gradient = [ 2 * self.Ax ]
 
 	def Hessian(self, v):
 		return [ 2 * self.A @ v[0] ]
@@ -42,9 +46,10 @@ class PreconObj(UnpreconObj):
 		return [ self.Asqrt @ V[0] ]
 
 class AndersonObj(UnpreconObj):
-	def Calculate(self, x, _):
-		super().Calculate(x, _)
-		self.Gradient = [ - 2 * self.A @ x[0] ]
+	def Calculate(self, x, derivatives):
+		super().Calculate(x, derivatives)
+		if 1 in derivatives:
+			self.Gradient = [ - 2 * self.A @ x[0] ]
 
 class TestQuadratic(ut.TestCase):
 	def __init__(self, *args):
