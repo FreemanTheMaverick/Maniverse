@@ -57,11 +57,14 @@ class Manifold{ public:
 class Objective{ public:
 	virtual void Calculate(std::vector<EigenMatrix> P, std::vector<int> derivative);
 	double Value = 0;
-	std::vector<EigenMatrix> Gradient = {};
+	std::vector<EigenMatrix> Gradient;
 	virtual std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix> X) const;
 	virtual std::vector<EigenMatrix> Preconditioner(std::vector<EigenMatrix> X) const;
 	virtual std::vector<EigenMatrix> PreconditionerSqrt(std::vector<EigenMatrix> X) const;
 	virtual std::vector<EigenMatrix> PreconditionerInvSqrt(std::vector<EigenMatrix> X) const;
+	std::vector<double> Lambda;
+	std::vector<double> Constraint_Value;
+	std::vector<std::vector<EigenMatrix>> Constraint_Gradient;
 };
 
 class Iterate{ public:
