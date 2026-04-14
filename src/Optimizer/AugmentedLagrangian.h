@@ -22,23 +22,19 @@
 namespace Maniverse{
 
 #ifdef __PYTHON__
-#define FuncType pybind11::function
-#define FuncDef func
-#define FuncArgs pybind11::args args, pybind11::kwargs kwargs
-#define FuncFirstArg args[0].cast<Iterate&>()
-#define FuncCall pybind11::bool_(func(*args, **kwargs))
-#else 
-#define FuncType auto&&
-#define FuncDef func = std::forward<decltype(func)>(func)
-#define FuncArgs auto&&... args
-#define FuncFirstArg std::get<0>(std::forward_as_tuple(args...))
-#define FuncCall func(std::forward<decltype(args)>(args)...)
-#endif
-
+pybind11::function AugmentedLagrangian(
+		double init_rho, double theta_rho, double theta_sigma,
+		std::vector<double> tol, int max_iter, int output){ return pybind11::cpp_function([init_rho, theta_rho, theta_sigma, tol, max_iter, output](pybind11::function func) -> pybind11::cpp_function{ return pybind11::cpp_function([init_rho, theta_rho, theta_sigma, tol, max_iter, output, func](pybind11::args args, pybind11::kwargs kwargs) -> bool{
+#else
 auto AugmentedLagrangian(
 		double init_rho, double theta_rho, double theta_sigma,
-		std::vector<double> tol, int max_iter, int output){ return [init_rho, theta_rho, theta_sigma, tol, max_iter, output](FuncType func){ return [init_rho, theta_rho, theta_sigma, tol, max_iter, output, FuncDef](FuncArgs) -> bool{
-	Iterate& M = FuncFirstArg;
+		std::vector<double> tol, int max_iter, int output){ return [init_rho, theta_rho, theta_sigma, tol, max_iter, output](auto&& func){ return [init_rho, theta_rho, theta_sigma, tol, max_iter, output, func = std::forward<decltype(func)>(func)](auto&&... args) -> bool{
+#endif
+	#ifdef __PYTHON__
+	Iterate& M = args[0].cast<Iterate&>();
+	#else
+	Iterate& M = std::get<0>(std::forward_as_tuple(args...));
+	#endif
 	const int ncons = (int)M.Func->Lambda.size();
 	if ( output ){
 		std::printf("***************************** Augmented Lagrangian *****************************\n\n");
@@ -80,7 +76,11 @@ auto AugmentedLagrangian(
 			std::memcpy(Lambda.data(), tmp.data(), ncons * 8);
 			Rho = init_rho;
 		}else{
-			const bool inner_converged = FuncCall;
+			#ifdef __PYTHON__
+			const bool inner_converged = pybind11::bool_(func(*args, **kwargs));
+			#else
+			const bool inner_converged = func(std::forward<decltype(args)>(args)...);
+			#endif
 			if ( ! inner_converged ) throw std::runtime_error("Internal optimization did not converge!");
 		}
 
@@ -92,7 +92,7 @@ auto AugmentedLagrangian(
 		if ( iiter == 0 ) goto NotConverged;
 		for ( int i = 0 ; i < ncons; i++ ) if ( std::abs(Violation[i]) > tol[i] ) goto NotConverged;
 		if ( output ) std::printf("Converged!\n");
-		return 1;
+		return true;
 
 		NotConverged:
 		if ( output ) std::printf("Not converged yet!\n");
@@ -107,14 +107,11 @@ auto AugmentedLagrangian(
 		}
 		last_max_vio = max_vio;
 	}
-	return 0;
+	return false;
+#ifdef __PYTHON__
+});});}
+#else
 };};}
-
-#undef FuncType
-#undef FuncDef
-#undef FuncArgs
-#undef FuncReturn
-#undef FuncFirstArg
-#undef FuncCall
+#endif
 
 }

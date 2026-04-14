@@ -33,9 +33,9 @@ class ObjRayleigh: public mv::Objective{ public:
 	};
 
 	void Calculate(std::vector<Eigen::MatrixXd> C_, std::vector<int> derivatives) override{
+		C = C_[0];
+		Cnorm2 = C.norm() * C.norm();
 		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
-			C = C_[0];
-			Cnorm2 = C.norm() * C.norm();
 			Value =
 				C.cwiseProduct( A * C ).sum()
 				+ Lambda[0] * ( Cnorm2 - 1 )
@@ -58,7 +58,7 @@ class ObjRayleigh: public mv::Objective{ public:
 			2 * A * V
 			+ Lambda[0] * 2 * V
 			+ Rho * ( Cnorm2 - 1 ) * 2 * V
-			+ Rho * 2 * 2 * C.cwiseProduct(V).sum() * C
+			+ Rho * 2 * C.cwiseProduct(V).sum() * 2 * C
 		};
 	};
 };

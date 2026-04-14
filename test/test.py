@@ -6,5 +6,6 @@ from Projection import *
 from Quadratic import *
 from Rayleigh import *
 from Singular import *
+from RayleighLagrange import *
 
 ut.main()
