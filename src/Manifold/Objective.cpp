@@ -69,7 +69,11 @@ void Init_Objective(pybind11::module_& m){
 		.def("Hessian", &Objective::Hessian)
 		.def("Preconditioner", &Objective::Preconditioner)
 		.def("PreconditionerSqrt", &Objective::PreconditionerSqrt)
-		.def("PreconditionerInvSqrt", &Objective::PreconditionerInvSqrt);
+		.def("PreconditionerInvSqrt", &Objective::PreconditionerInvSqrt)
+		.def_readwrite("Lambda", &Objective::Lambda)
+		.def_readwrite("Rho", &Objective::Rho)
+		.def_readwrite("Constraint_Value", &Objective::Constraint_Value)
+		.def_readwrite("Constraint_Gradient", &Objective::Constraint_Gradient);
 }
 #endif
 
