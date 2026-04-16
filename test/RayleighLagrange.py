@@ -12,8 +12,6 @@ class Obj(mv.Objective):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
-		Eval, Evec = np.linalg.eigh(self.A)
-		self.A = Evec * np.abs(Eval) @ Evec.T
 		self.C = np.zeros([10, 1])
 		self.Cnorm2 = 0
 		self.Lambda = [0]

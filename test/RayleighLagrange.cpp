@@ -27,8 +27,6 @@ class ObjRayleigh: public mv::Objective{ public:
 			#include "Sym10.txt"
 		};
 		std::memcpy(A.data(), &data, 10 * 10 * 8);
-		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(A * A);
-		A = es.operatorSqrt();
 		Lambda.resize(1);
 	};
 
