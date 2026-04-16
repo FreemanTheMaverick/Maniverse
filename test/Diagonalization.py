@@ -47,7 +47,7 @@ class TestDiagonalization(ut.TestCase):
 		self.TrustRegion = mv.TrustRegion()
 
 	def testTruncatedNewton(self):
-		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1], True)
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.0001, 28, 0
@@ -56,7 +56,7 @@ class TestDiagonalization(ut.TestCase):
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
 
 	def testLBFGS(self):
-		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1], True)
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
 		converged = mv.LBFGS(
 				M, self.Tolerance,
 				100, 110, 0.1, 0.75, 5, 0

@@ -76,7 +76,7 @@ class TestProjection{ public:
 	};
 
 	void testTruncatedNewton(){
-		mv::Iterate M(Obj, {Manifold.Share()}, true);
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
 				0.001, 9, 1
@@ -85,7 +85,7 @@ class TestProjection{ public:
 	};
 
 	void testLBFGS(){
-		mv::Iterate M(Obj, {Manifold.Share()}, true);
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				20, 19, 0.1, 0.75, 5, 1
@@ -94,7 +94,7 @@ class TestProjection{ public:
 	};
 
 	void testAnderson(){
-		mv::Iterate M(AndersonObj, {Manifold.Share()}, true);
+		mv::Iterate M(AndersonObj, {Manifold.Share()});
 		const bool converged = mv::Anderson(
 				M, Tolerance,
 				0.2, 6, 28, 1

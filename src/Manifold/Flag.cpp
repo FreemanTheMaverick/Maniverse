@@ -76,6 +76,10 @@ EigenMatrix Flag::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) co
 	}else return this->TangentProjection(HeX);
 }
 
+std::unique_ptr<Manifold> Flag::Clone() const{
+	return std::make_unique<Flag>(*this);
+}
+
 std::shared_ptr<Manifold> Flag::Share() const{
 	return std::make_shared<Flag>(*this);
 }

@@ -54,7 +54,7 @@ class TestRayleigh(ut.TestCase):
 		self.Solution = Evec[:, 0]
 
 	def testTruncatedNewton(self):
-		M = mv.Iterate(self.Obj, {self.Manifold}, True)
+		M = mv.Iterate(self.Obj, {self.Manifold})
 		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 0)(mv.TruncatedNewton)(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 10, 0
@@ -63,7 +63,7 @@ class TestRayleigh(ut.TestCase):
 		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
 
 	def testLBFGS(self):
-		M = mv.Iterate(self.Obj, {self.Manifold}, True)
+		M = mv.Iterate(self.Obj, {self.Manifold})
 		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 0)(mv.LBFGS)(
 				M, self.Tolerance,
 				10, 20, 0.1, 0.75, 7, 0

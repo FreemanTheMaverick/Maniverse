@@ -5,6 +5,7 @@
 #endif
 #include <Eigen/Dense>
 #include <typeinfo>
+#include <vector>
 #include <memory>
 
 #include "../Macro.h"
@@ -13,12 +14,11 @@
 
 namespace Maniverse{
 
-Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free){
+Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms){
 	this->Func = &func;
 
 	const int nMs = (int)Ms.size();
-	this->Ms.clear();
-	for ( int iM = 0; iM < nMs; iM++ ) this->Ms.push_back(Ms[iM]);
+	this->Ms = Ms;
 
 	this->TotalSize = 0;
 	for ( int iM = 0; iM < nMs; iM++ ){
@@ -37,18 +37,13 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, boo
 		SetBlock(Gradient, iM, this->BlockParameters) = Ms[iM]->Gr;
 	}
 
-	this->MatrixFree = matrix_free;
-}
-
-Iterate::Iterate(const Iterate& another_iterate){
-	this->Func = another_iterate.Func;
-	for ( auto& M : another_iterate.Ms ) this->Ms.push_back(M);
-	this->Point = another_iterate.Point;
-	this->Gradient = another_iterate.Gradient;
-	this->MatrixFree = another_iterate.MatrixFree;
-	this->BasisSet = another_iterate.BasisSet;
-	this->HessianMatrix = another_iterate.HessianMatrix;
-	this->BlockParameters = another_iterate.BlockParameters;
+	for ( int icons = 0; icons < (int)this->Func->Lambda.size(); icons++ ){
+		this->Constraints.push_back({});
+		this->Constraint_Gradient.push_back(Eigen::VectorXd::Zero(this->TotalSize));
+		for ( int jM = 0; jM < nMs; jM++ ){
+			this->Constraints[icons].push_back(Ms[jM]->Clone());
+		}
+	}
 }
 
 std::string Iterate::getName() const{
@@ -129,6 +124,11 @@ void Iterate::setPoint(std::vector<EigenMatrix> ps, bool purify){
 		this->Ms[iM]->setPoint(ps[iM], purify);
 		SetBlock(Point, iM, this->BlockParameters) = this->Ms[iM]->P;
 	}
+	for ( int icons = 0; icons < (int)this->Constraints.size(); icons++ ){
+		for ( int jM = 0; jM < (int)this->Ms.size(); jM++ ){
+			this->Constraints[icons][jM]->setPoint(ps[jM], purify);
+		}
+	}
 }
 
 void Iterate::setGradient(){
@@ -136,6 +136,14 @@ void Iterate::setGradient(){
 		this->Ms[iM]->Ge = this->Func->Gradient[iM];
 		this->Ms[iM]->getGradient();
 		SetBlock(Gradient, iM, this->BlockParameters) = this->Ms[iM]->Gr;
+	}
+	for ( int icons = 0; icons < (int)this->Constraints.size(); icons++ ){
+		for ( int jM = 0; jM < (int)this->Ms.size(); jM++ ){
+			this->Constraints[icons][jM]->Ge = this->Func->Constraint_Gradient[icons][jM];
+			this->Constraints[icons][jM]->getGradient();
+			EigenVector& cons_grad_i = this->Constraint_Gradient[icons];
+			SetBlock(cons_grad_i, jM, this->BlockParameters) = this->Constraints[icons][jM]->Gr;
+		}
 	}
 }
 
@@ -217,10 +225,11 @@ void Init_Iterate(pybind11::module_& m){
 		.def("Preconditioner", &Iterate::Preconditioner)
 		.def("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
 		.def("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
-		.def_readwrite("MatrixFree", &Iterate::MatrixFree)
+		.def_readonly("Constraints", &Iterate::Constraints)
+		.def_readwrite("Constraint_Gradient", &Iterate::Constraint_Gradient)
+		.def_readwrite("TotalSize", &Iterate::TotalSize)
 		.def_readwrite("BlockParameters", &Iterate::BlockParameters)
-		.def(pybind11::init<Objective&, std::vector<std::shared_ptr<Manifold>>, bool>())
-		.def(pybind11::init<const Iterate&>())
+		.def(pybind11::init<Objective&, std::vector<std::shared_ptr<Manifold>>>())
 		.def("getName", &Iterate::getName)
 		.def("getDimension", &Iterate::getDimension)
 		.def("Inner", &Iterate::Inner)

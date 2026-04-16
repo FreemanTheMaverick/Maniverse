@@ -95,6 +95,10 @@ EigenMatrix Simplex::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten)
 	else return (EigenMatrix)(M * HeX); // Not sure about this one.
 }
 
+std::unique_ptr<Manifold> Simplex::Clone() const{
+	return std::make_unique<Simplex>(*this);
+}
+
 std::shared_ptr<Manifold> Simplex::Share() const{
 	return std::make_shared<Simplex>(*this);
 }

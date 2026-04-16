@@ -51,6 +51,7 @@ class Manifold{ public:
 	virtual EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const;
 
 	virtual ~Manifold() = default;
+	virtual std::unique_ptr<Manifold> Clone() const;
 	virtual std::shared_ptr<Manifold> Share() const;
 };
 
@@ -78,15 +79,13 @@ class Iterate{ public:
 	EigenVector PreconditionerSqrt(EigenVector X) const;
 	EigenVector PreconditionerInvSqrt(EigenVector X) const;
 
-	int TotalSize;
-	bool MatrixFree;
-	std::vector<EigenMatrix> BasisSet;
-	std::vector<std::tuple<double, EigenMatrix>> HessianMatrix;
+	std::vector<std::vector<std::unique_ptr<Manifold>>> Constraints;
+	std::vector<EigenVector> Constraint_Gradient;
 
+	int TotalSize;
 	std::vector<std::tuple<int, int, int>> BlockParameters;
 
-	Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms, bool matrix_free);
-	Iterate(const Iterate& another_iterate);
+	Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms);
 
 	std::string getName() const;
 	int getDimension() const;
@@ -105,9 +104,6 @@ class Iterate{ public:
 
 	std::vector<EigenMatrix> getPoint() const;
 	std::vector<EigenMatrix> getGradient() const;
-	
-	void getBasisSet();
-	void getHessianMatrix();
 };
 
 #define GetBlock(mat, iM, BlockParameters)\

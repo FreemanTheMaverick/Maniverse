@@ -85,7 +85,7 @@ class TestRayleigh{ public:
 	};
 
 	void testTruncatedNewton(){
-		mv::Iterate M(Obj, {Manifold.Share()}, true);
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::TruncatedNewton)(
 				M, TrustRegion, Tolerance,
 				0.001, 10, 1
@@ -94,7 +94,7 @@ class TestRayleigh{ public:
 	};
 
 	void testLBFGS(){
-		mv::Iterate M(Obj, {Manifold.Share()}, true);
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::LBFGS)(
 				M, Tolerance,
 				10, 20, 0.1, 0.75, 7, 1
