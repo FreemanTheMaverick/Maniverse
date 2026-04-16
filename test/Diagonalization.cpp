@@ -74,7 +74,7 @@ class TestDiagonalization{ public:
 	mv::TrustRegion TrustRegion = mv::TrustRegion();
 
 	void testTruncatedNewton(){
-		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()}, true);
+		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
 				0.0001, 28, 1
@@ -83,7 +83,7 @@ class TestDiagonalization{ public:
 	};
 
 	void testLBFGS(){
-		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()}, true);
+		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				100, 110, 0.1, 0.75, 5, 1

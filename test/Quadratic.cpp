@@ -96,7 +96,7 @@ class TestQuadratic{ public:
 	};
 
 	void testUnpreconTruncatedNewton(){
-		mv::Iterate M(UnpreconObj, {Manifold.Share()}, true);
+		mv::Iterate M(UnpreconObj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
 				0.001, 21, 1
@@ -105,7 +105,7 @@ class TestQuadratic{ public:
 	};
 
 	void testPreconTruncatedNewton(){
-		mv::Iterate M(PreconObj, {Manifold.Share()}, true);
+		mv::Iterate M(PreconObj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
 				0.001, 19, 1
@@ -114,7 +114,7 @@ class TestQuadratic{ public:
 	};
 
 	void testUnpreconLBFGS(){
-		mv::Iterate M(UnpreconObj, {Manifold.Share()}, true);
+		mv::Iterate M(UnpreconObj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				20, 11, 0.1, 0.75, 5, 1
@@ -123,7 +123,7 @@ class TestQuadratic{ public:
 	};
 
 	void testPreconLBFGS(){
-		mv::Iterate M(PreconObj, {Manifold.Share()}, true);
+		mv::Iterate M(PreconObj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				20, 7, 0.1, 0.75, 5, 1
@@ -132,7 +132,7 @@ class TestQuadratic{ public:
 	};
 
 	void testAnderson(){
-		mv::Iterate M(AndersonObj, {Manifold.Share()}, true);
+		mv::Iterate M(AndersonObj, {Manifold.Share()});
 		const bool converged = mv::Anderson(
 				M, Tolerance,
 				0.2, 6, 12, 1

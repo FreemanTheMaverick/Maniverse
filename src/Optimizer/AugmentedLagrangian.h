@@ -37,7 +37,7 @@ auto AugmentedLagrangian(
 	#endif
 	std::vector<double>& Lambda = M.Func->Lambda;
 	std::vector<double>& Violation = M.Func->Constraint_Value;
-	const int ncons = Lambda.size();
+	const int ncons = (int)Lambda.size();
 	if ( output ){
 		std::printf("***************************** Augmented Lagrangian *****************************\n\n");
 		std::printf("Number of constraints: %d\n", ncons);
@@ -54,16 +54,11 @@ auto AugmentedLagrangian(
 	if ( output ) std::printf("First run for the initial multipliers ...\n");
 	M.Func->Calculate(M.getPoint(), {0, 1});
 	M.setGradient();
-	const std::vector<Eigen::MatrixXd> Ge = M.Func->Gradient;
 	const Eigen::VectorXd Gf = M.Gradient;
 	Eigen::MatrixXd Gg = Eigen::MatrixXd::Zero(Gf.size(), ncons);
 	for ( int i = 0; i < ncons; i++ ){
-		M.Func->Gradient = M.Func->Constraint_Gradient[i];
-		M.setGradient();
-		Gg.col(i) = M.Gradient;
+		Gg.col(i) = M.Constraint_Gradient[i];
 	}
-	M.Func->Gradient = Ge;
-	M.Gradient = Gf;
 	const Eigen::VectorXd tmp = - Gg.colPivHouseholderQr().solve(Gf);
 
 	std::memcpy(Lambda.data(), tmp.data(), ncons * 8);

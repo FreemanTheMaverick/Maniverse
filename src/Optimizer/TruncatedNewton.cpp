@@ -115,7 +115,6 @@ bool TruncatedNewton(
 		std::printf("****************************** Truncated Newton *******************************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
-		std::printf("Matrix free: %s\n", __True_False__(M.MatrixFree));
 		std::printf("Maximum number of iterations: %d\n", max_iter);
 		std::printf("Trust region settings:\n");
 		std::printf("| Initial radius: %f\n", tr.R0);
@@ -235,7 +234,6 @@ bool TruncatedNewton(
 #ifdef __PYTHON__
 void Init_TruncatedNewton(pybind11::module_& m){
 	pybind11::class_<TruncatedConjugateGradient>(m, "TruncatedConjugateGradient")
-		.def_readwrite("M", &TruncatedConjugateGradient::M)
 		.def_readwrite("Verbose", &TruncatedConjugateGradient::Verbose)
 		.def_readwrite("ShowTarget", &TruncatedConjugateGradient::ShowTarget)
 		.def_readwrite("Radius", &TruncatedConjugateGradient::Radius)

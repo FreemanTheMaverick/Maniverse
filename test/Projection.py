@@ -41,7 +41,7 @@ class TestProjection(ut.TestCase):
 		self.TrustRegion = mv.TrustRegion()
 
 	def testTruncatedNewton(self):
-		M = mv.Iterate(self.Obj, [self.Manifold], True)
+		M = mv.Iterate(self.Obj, [self.Manifold])
 		converged = mv.TruncatedNewton(
 				M, self.TrustRegion, self.Tolerance,
 				0.001, 9, 0
@@ -50,7 +50,7 @@ class TestProjection(ut.TestCase):
 		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
 
 	def testLBFGS(self):
-		M = mv.Iterate(self.Obj, [self.Manifold], True)
+		M = mv.Iterate(self.Obj, [self.Manifold])
 		converged = mv.LBFGS(
 				M, self.Tolerance,
 				20, 19, 0.1, 0.75, 5, 0
@@ -59,7 +59,7 @@ class TestProjection(ut.TestCase):
 		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
 
 	def testAnderson(self):
-		M = mv.Iterate(self.AndersonObj, [self.Manifold], True)
+		M = mv.Iterate(self.AndersonObj, [self.Manifold])
 		converged = mv.Anderson(
 				M, self.Tolerance,
 				0.2, 6, 28, 0

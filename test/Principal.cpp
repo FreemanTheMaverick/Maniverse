@@ -63,7 +63,7 @@ class TestPrincipal{ public:
 	};
 
 	void testTruncatedNewton(){
-		mv::Iterate M(Obj, {Manifold.Share()}, true);
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
 				M, TrustRegion, Tolerance,
 				0.001, 13, 1
@@ -72,7 +72,7 @@ class TestPrincipal{ public:
 	};
 
 	void testLBFGS(){
-		mv::Iterate M(Obj, {Manifold.Share()}, true);
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				10, 46, 0.1, 0.75, 5, 1
