@@ -3,13 +3,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Core>
-#include <unsupported/Eigen/MatrixFunctions>
-#include <cmath>
+#include <vector>
 #include <tuple>
 #include <memory>
-
-#include "../Macro.h"
 
 #include "Flag.h"
 
@@ -30,7 +28,7 @@ void Flag::setBlockParameters(std::vector<int> sizes){
 	this->Name += "; " + std::to_string(this->P.rows()) + ")";
 }
 
-Flag::Flag(EigenMatrix p, std::string geodesic): Stiefel(p, geodesic){} // Be sure to Flag::setBlockParameters after construction.
+Flag::Flag(Eigen::MatrixXd p, std::string geodesic): Stiefel(p, geodesic){} // Be sure to Flag::setBlockParameters after construction.
 
 int Flag::getDimension() const{
 	const int N = this->P.rows();
@@ -44,7 +42,7 @@ int Flag::getDimension() const{
 	return ndim;
 }
 
-static EigenMatrix symf(std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix A){
+static Eigen::MatrixXd symf(std::vector<std::tuple<int, int>> BlockParameters, Eigen::MatrixXd A){
 	// https://doi.org/10.1007/s10957-023-02242-z
 	for ( int i = 0; i < (int)BlockParameters.size(); i++ ){
 		for ( int j = 0; j < i; j++ ){
@@ -55,23 +53,23 @@ static EigenMatrix symf(std::vector<std::tuple<int, int>> BlockParameters, Eigen
 	return A;
 }
 
-static EigenMatrix FlagTangentProjection(EigenMatrix P, std::vector<std::tuple<int, int>> BlockParameters, EigenMatrix X){
+static Eigen::MatrixXd FlagTangentProjection(Eigen::MatrixXd P, std::vector<std::tuple<int, int>> BlockParameters, Eigen::MatrixXd X){
 	// https://doi.org/10.1007/s10957-023-02242-z
 	return X - P * symf(BlockParameters, P.transpose() * X);
 }
 
-EigenMatrix Flag::TangentProjection(EigenMatrix X) const{
+Eigen::MatrixXd Flag::TangentProjection(Eigen::MatrixXd X) const{
 	return FlagTangentProjection(this->P, this->BlockParameters, X);
 }
 
-EigenMatrix Flag::TangentPurification(EigenMatrix X) const{
+Eigen::MatrixXd Flag::TangentPurification(Eigen::MatrixXd X) const{
 	return FlagTangentProjection(this->P, this->BlockParameters, X);
 }
 
-EigenMatrix Flag::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const{
+Eigen::MatrixXd Flag::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
 	// https://doi.org/10.1007/s10957-023-02242-z
 	if ( weingarten ){
-		const EigenMatrix tmp = symf(this->BlockParameters, this->P.transpose() * this->Ge);
+		const Eigen::MatrixXd tmp = symf(this->BlockParameters, this->P.transpose() * this->Ge);
 		return this->TangentProjection(HeX - X * tmp);
 	}else return this->TangentProjection(HeX);
 }
@@ -87,7 +85,7 @@ std::shared_ptr<Manifold> Flag::Share() const{
 #ifdef __PYTHON__
 void Init_Flag(pybind11::module_& m){
 	pybind11::classh<Flag, Stiefel>(m, "Flag")
-		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR")
+		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR")
 		.def("setBlockParameters", &Flag::setBlockParameters);
 }
 #endif

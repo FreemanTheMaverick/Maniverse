@@ -1,19 +1,17 @@
 #ifdef __PYTHON__
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
-#include <Eigen/Dense>
-#include <cmath>
-#include <memory>
 
-#include "../Macro.h"
+#include <Eigen/Dense>
+#include <string>
+#include <memory>
 
 #include "Euclidean.h"
 
 namespace Maniverse{
 
-Euclidean::Euclidean(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
+Euclidean::Euclidean(Eigen::MatrixXd p, std::string geodesic): Manifold(p, geodesic){
 	__Check_Geodesic__("EXACT")
 	this->Name = "Euclidean(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
 }
@@ -22,37 +20,37 @@ int Euclidean::getDimension() const{
 	return this->P.size();
 }
 
-double Euclidean::Inner(EigenMatrix X, EigenMatrix Y) const{
-	return (X.cwiseProduct(Y)).sum();
+double Euclidean::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
+	return X.cwiseProduct(Y).sum();
 }
 
-EigenMatrix Euclidean::Retract(EigenMatrix X) const{
+Eigen::MatrixXd Euclidean::Retract(Eigen::MatrixXd X) const{
 	return this->P + X;
 }
 
-EigenMatrix Euclidean::InverseRetract(Manifold& N) const{
+Eigen::MatrixXd Euclidean::InverseRetract(Manifold& N) const{
 	__Check_Log_Map__
 	return N.P - this->P;
 }
 
-EigenMatrix Euclidean::TransportTangent(EigenMatrix X, EigenMatrix /*Y*/) const{
+Eigen::MatrixXd Euclidean::TransportTangent(Eigen::MatrixXd X, Eigen::MatrixXd /*Y*/) const{
 	return X;
 }
 
-EigenMatrix Euclidean::TransportManifold(EigenMatrix X, Manifold& N) const{
+Eigen::MatrixXd Euclidean::TransportManifold(Eigen::MatrixXd X, Manifold& N) const{
 	__Check_Log_Map__
 	return X;
 }
 
-EigenMatrix Euclidean::TangentProjection(EigenMatrix A) const{
+Eigen::MatrixXd Euclidean::TangentProjection(Eigen::MatrixXd A) const{
 	return A;
 }
 
-EigenMatrix Euclidean::TangentPurification(EigenMatrix A) const{
+Eigen::MatrixXd Euclidean::TangentPurification(Eigen::MatrixXd A) const{
 	return A;
 }
 
-void Euclidean::setPoint(EigenMatrix p, bool /*purify*/){
+void Euclidean::setPoint(Eigen::MatrixXd p, bool /*purify*/){
 	this->P = p;
 }
 
@@ -60,7 +58,7 @@ void Euclidean::getGradient(){
 	this->Gr = this->Ge;
 }
 
-EigenMatrix Euclidean::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd Euclidean::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
 	return HeX;
 }
 
@@ -75,7 +73,7 @@ std::shared_ptr<Manifold> Euclidean::Share() const{
 #ifdef __PYTHON__
 void Init_Euclidean(pybind11::module_& m){
 	pybind11::classh<Euclidean, Manifold>(m, "Euclidean")
-		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
+		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
 

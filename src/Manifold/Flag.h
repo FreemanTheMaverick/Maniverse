@@ -1,5 +1,11 @@
 #pragma once
 
+#include <Eigen/Dense>
+#include <vector>
+#include <tuple>
+#include <string>
+#include <memory>
+
 #include "Stiefel.h"
 
 namespace Maniverse{
@@ -8,14 +14,14 @@ class Flag: public Stiefel{ public:
 	std::vector<std::tuple<int, int>> BlockParameters;
 	void setBlockParameters(std::vector<int>);
 
-	Flag(EigenMatrix p, std::string geodesic = "POLAR");
+	Flag(Eigen::MatrixXd p, std::string geodesic = "POLAR");
 
 	int getDimension() const override;
 
-	EigenMatrix TangentProjection(EigenMatrix A) const override;
-	EigenMatrix TangentPurification(EigenMatrix A) const override;
+	Eigen::MatrixXd TangentProjection(Eigen::MatrixXd A) const override;
+	Eigen::MatrixXd TangentPurification(Eigen::MatrixXd A) const override;
 
-	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override;
+	Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const override;
 
 	std::unique_ptr<Manifold> Clone() const override;
 	std::shared_ptr<Manifold> Share() const override;

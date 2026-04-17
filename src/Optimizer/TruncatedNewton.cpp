@@ -3,17 +3,16 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
 #include <cmath>
 #include <tuple>
-#include <map>
 #include <cstdio>
 #include <chrono>
-#include <string>
-#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+
 #include "TrustRegion.h"
 #include "TruncatedNewton.h"
 
@@ -28,18 +27,18 @@ void TruncatedConjugateGradient::Run(){
 	}
 
 	this->Sequence.clear(); this->Sequence.reserve(20);
-	EigenMatrix v = EigenZero(G.rows(), G.cols());
-	EigenMatrix r = - G;
-	EigenMatrix z = this->M->Preconditioner(r);
-	EigenMatrix p = z;
+	Eigen::MatrixXd v = Eigen::MatrixXd::Zero(G.rows(), G.cols());
+	Eigen::MatrixXd r = - G;
+	Eigen::MatrixXd z = this->M->Preconditioner(r);
+	Eigen::MatrixXd p = z;
 	double vnorm = 0;
 	double vplusnorm = 0;
 	double r2 = this->M->Inner(r, z);
 	double L = 0;
 	const auto start = __now__;
 
-	EigenMatrix Hp = EigenZero(G.rows(), G.cols());
-	EigenMatrix vplus = EigenZero(G.rows(), G.cols());
+	Eigen::MatrixXd Hp = Eigen::MatrixXd::Zero(G.rows(), G.cols());
+	Eigen::MatrixXd vplus = Eigen::MatrixXd::Zero(G.rows(), G.cols());
 
 	for ( int iiter = 0; iiter < this->M->getDimension(); iiter++ ){
 		if (this->Verbose) std::printf("| %4d |", iiter);
@@ -78,7 +77,7 @@ void TruncatedConjugateGradient::Run(){
 		this->Sequence.push_back(std::make_tuple(vnorm, v, p));
 		const double r2old = r2;
 		r -= alpha * Hp;
-		const EigenMatrix z = this->M->TangentPurification(this->M->Preconditioner(r));
+		const Eigen::MatrixXd z = this->M->TangentPurification(this->M->Preconditioner(r));
 		r2 = this->M->Inner(r, z);
 		const double beta = r2 / r2old;
 		p = z + beta * p;
@@ -86,15 +85,15 @@ void TruncatedConjugateGradient::Run(){
 	if (this->Verbose) std::printf("Dimension completed!\n");
 }
 
-std::tuple<double, EigenMatrix> TruncatedConjugateGradient::Find(){
+std::tuple<double, Eigen::MatrixXd> TruncatedConjugateGradient::Find(){
 	for ( int i = 0; i < (int)this->Sequence.size(); i++ ) if ( std::get<0>(this->Sequence[i]) > this->Radius ){
-		const EigenMatrix v = std::get<1>(this->Sequence[i]);
-		const EigenMatrix p = std::get<2>(this->Sequence[i]);
+		const Eigen::MatrixXd v = std::get<1>(this->Sequence[i]);
+		const Eigen::MatrixXd p = std::get<2>(this->Sequence[i]);
 		const double A = this->M->Inner(p, p);
 		const double B = this->M->Inner(v, p) * 2.;
 		const double C = this->M->Inner(v, v) - this->Radius * this->Radius;
 		const double t = ( std::sqrt( B * B - 4. * A * C ) - B ) / 2. / A;
-		const EigenMatrix vnew = v + t * p;
+		const Eigen::MatrixXd vnew = v + t * p;
 		return std::make_tuple(this->Radius, vnew);
 	}
 	return std::make_tuple(
@@ -135,11 +134,11 @@ bool TruncatedNewton(
 
 	TruncatedConjugateGradient tcg{&M, output > 0, 1};
 
-	EigenMatrix Pmat = M.Point;
-	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
+	Eigen::MatrixXd Pmat = M.Point;
+	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
 	double Snorm = 0;
 	double Gnorm = 0;
-	std::vector<EigenMatrix> P = M.getPoint();
+	std::vector<Eigen::MatrixXd> P = M.getPoint();
 
 	bool converged = 0;
 	for ( int iiter = 0; ( iiter < max_iter ) && ( ! converged ); iiter++ ){

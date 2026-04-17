@@ -3,18 +3,17 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
 #include <cmath>
 #include <tuple>
 #include <deque>
 #include <cstdio>
 #include <chrono>
-#include <string>
-#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
-#include "LBFGS.h"
+
 #include "LineSearch.h"
 
 namespace Maniverse{
@@ -45,13 +44,13 @@ bool LBFGS(
 	double oldL = 0;
 	double actual_delta_L = 0;
 
-	EigenMatrix Pmat = M.Point;
-	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
+	Eigen::MatrixXd Pmat = M.Point;
+	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
 	double Snorm = 0;
-	std::vector<EigenMatrix> P = M.getPoint();
+	std::vector<Eigen::MatrixXd> P = M.getPoint();
 
-	std::deque<EigenMatrix> Ss;
-	std::deque<EigenMatrix> Gs;
+	std::deque<Eigen::MatrixXd> Ss;
+	std::deque<Eigen::MatrixXd> Gs;
 	std::deque<double> Rhos;
 	double gamma = 1;
 
@@ -111,8 +110,8 @@ bool LBFGS(
 		}
 
 		// Transporting previous vectors II
-		std::vector<EigenMatrix> preconSs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
-		std::vector<EigenMatrix> preconYs(Ss.size(), EigenZero(Pmat.rows(), Pmat.cols()));
+		std::vector<Eigen::MatrixXd> preconSs(Ss.size(), Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols()));
+		std::vector<Eigen::MatrixXd> preconYs(Ss.size(), Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols()));
 		if ( iiter > 0 ){
 			for ( int i = 0; i < (int)Ss.size(); i++ ){
 				preconSs[i] = M.PreconditionerInvSqrt(Ss[i]);
@@ -127,7 +126,7 @@ bool LBFGS(
 
 		// Obtaining the next step via L-BFGS
 		if ( ! converged ){
-			EigenMatrix Q = M.PreconditionerSqrt(M.Gradient);
+			Eigen::MatrixXd Q = M.PreconditionerSqrt(M.Gradient);
 			const int mem = (int)Ss.size();
 			if ( output > 0 ) std::printf("Current memory size: %d\n", mem);
 			std::vector<double> Ksis(mem);
@@ -135,12 +134,12 @@ bool LBFGS(
 				Ksis[i] = Rhos[i] * M.Inner(preconSs[i], Q);
 				Q -= Ksis[i] * preconYs[i];
 			}
-			EigenMatrix R = gamma * Q;
+			Eigen::MatrixXd R = gamma * Q;
 			for ( int i = 0; i < mem; i++ ){
 				const double omega = Rhos[i] * M.Inner(preconYs[i], R);
 				R += preconSs[i] * ( Ksis[i] - omega );
 			}
-			EigenMatrix Eta = - M.PreconditionerSqrt(R);
+			Eigen::MatrixXd Eta = - M.PreconditionerSqrt(R);
 			S = Eta;
 		}
 

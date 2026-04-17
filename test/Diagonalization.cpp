@@ -1,9 +1,6 @@
 #include <Eigen/Dense>
 #include <cmath>
-#include <string>
-#include <algorithm>
 #include <vector>
-#include <memory>
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>

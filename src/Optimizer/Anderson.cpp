@@ -3,17 +3,18 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
 #include <cmath>
 #include <tuple>
+#include <vector>
 #include <deque>
 #include <cstdio>
 #include <chrono>
-#include <string>
-#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+
 #include "Anderson.h"
 
 namespace Maniverse{
@@ -43,14 +44,14 @@ bool Anderson(
 	double oldL = 0;
 	double actual_delta_L = 0;
 
-	std::vector<EigenMatrix> P = M.getPoint();
-	std::vector<EigenMatrix> R = M.getPoint();
-	EigenMatrix Pmat = M.Point;
-	EigenMatrix S = EigenZero(Pmat.rows(), Pmat.cols());
-	EigenMatrix Rmat = EigenZero(Pmat.rows(), Pmat.cols());
+	std::vector<Eigen::MatrixXd> P = M.getPoint();
+	std::vector<Eigen::MatrixXd> R = M.getPoint();
+	Eigen::MatrixXd Pmat = M.Point;
+	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
+	Eigen::MatrixXd Rmat = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
 
-	std::deque<EigenMatrix> Ss;
-	std::deque<EigenMatrix> Ys;
+	std::deque<Eigen::MatrixXd> Ss;
+	std::deque<Eigen::MatrixXd> Ys;
 
 	bool converged = 0;
 
@@ -58,7 +59,7 @@ bool Anderson(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		EigenMatrix oldRmat = M.TransportTangent(Rmat, S);
+		Eigen::MatrixXd oldRmat = M.TransportTangent(Rmat, S);
 		M.Func->Calculate(P, {0, 1});
 		actual_delta_L = M.Func->Value - oldL;
 		oldL = M.Func->Value;
@@ -104,14 +105,14 @@ bool Anderson(
 		if ( size > 0 ){
 			// Solving for the extrapolation vector
 			// https://dx.doi.org/10.13471/j.cnki.acta.snus.2023A035
-			EigenMatrix YtY = EigenZero(size, size);
+			Eigen::MatrixXd YtY = Eigen::MatrixXd::Zero(size, size);
 			for ( int i = 0; i < size; i++ ) for ( int j = i; j < size; j++ ){
 				YtY(i, j) = YtY(j, i) = Ys[i].cwiseProduct(Ys[j]).sum();
 			}
-			const EigenMatrix YtYinv = YtY.ldlt().solve(EigenOne(size, size));
-			EigenMatrix YtR = EigenZero(size, 1);
+			const Eigen::MatrixXd YtYinv = YtY.ldlt().solve(Eigen::MatrixXd::Identity(size, size));
+			Eigen::MatrixXd YtR = Eigen::MatrixXd::Zero(size, 1);
 			for ( int i = 0; i < size; i++ ) YtR(i, 0) = Ys[i].cwiseProduct(Rmat).sum();
-			const EigenMatrix Gamma = YtYinv * YtR;
+			const Eigen::MatrixXd Gamma = YtYinv * YtR;
 			if (output){
 				std::printf("Extrapolation coefficients:");
 				for ( int i = 0; i < size; i++ ) std::printf(" %f", Gamma(i));
@@ -119,13 +120,13 @@ bool Anderson(
 			}
 
 			// Obtaining the next step
-			EigenMatrix Rmat_bar = Rmat;
+			Eigen::MatrixXd Rmat_bar = Rmat;
 			for ( int i = 0; i < size; i++ ) Rmat_bar -= Ys[i] * Gamma(i, 0);
 			S = beta * Rmat_bar;
 			for ( int i = 0; i < size; i++ ) S -= Ss[i] * Gamma(i, 0);
 		}else S = Rmat;
 
-		const EigenMatrix Pmat = M.Retract(S);
+		const Eigen::MatrixXd Pmat = M.Retract(S);
 		DecoupleBlock(Pmat, P, M.BlockParameters);
 
 		// Elapsed time

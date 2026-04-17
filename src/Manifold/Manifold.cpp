@@ -3,8 +3,9 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
-#include <typeinfo>
+#include <string>
 #include <memory>
 
 #include "../Macro.h"
@@ -13,12 +14,12 @@
 
 namespace Maniverse{
 
-Manifold::Manifold(EigenMatrix p, std::string geodesic){
+Manifold::Manifold(Eigen::MatrixXd p, std::string geodesic){
 	this->P.resize(p.rows(), p.cols());
 	this->Ge.resize(p.rows(), p.cols());
 	this->Gr.resize(p.rows(), p.cols());
 	this->P = p;
-	for ( char& geodesic_char : geodesic ) geodesic_char = (char)std::toupper(geodesic_char);\
+	for ( char& geodesic_char : geodesic ) geodesic_char = (char)std::toupper(geodesic_char);
 	this->Geodesic = geodesic;
 }
 
@@ -27,42 +28,42 @@ int Manifold::getDimension() const{
 	return 0;
 }
 
-double Manifold::Inner(EigenMatrix X, EigenMatrix Y) const{
+double Manifold::Inner(Eigen::MatrixXd /*X*/, Eigen::MatrixXd /*Y*/) const{
 	__Not_Implemented__
-	return X.rows() * Y.cols() * 0; // Avoiding the unused-variable warning
+	return 0;
 }
 
-EigenMatrix Manifold::Retract(EigenMatrix /*X*/) const{
+Eigen::MatrixXd Manifold::Retract(Eigen::MatrixXd /*X*/) const{
 	__Not_Implemented__
-	return EigenZero(0, 0);
+	return Eigen::MatrixXd::Zero(0, 0);
 }
 
-EigenMatrix Manifold::InverseRetract(Manifold& /*N*/) const{
+Eigen::MatrixXd Manifold::InverseRetract(Manifold& /*N*/) const{
 	__Not_Implemented__
-	return EigenZero(0, 0);
+	return Eigen::MatrixXd::Zero(0, 0);
 }
 
-EigenMatrix Manifold::TangentProjection(EigenMatrix /*A*/) const{
+Eigen::MatrixXd Manifold::TangentProjection(Eigen::MatrixXd /*A*/) const{
 	__Not_Implemented__
-	return EigenZero(0, 0);
+	return Eigen::MatrixXd::Zero(0, 0);
 }
 
-EigenMatrix Manifold::TangentPurification(EigenMatrix /*A*/) const{
+Eigen::MatrixXd Manifold::TangentPurification(Eigen::MatrixXd /*A*/) const{
 	__Not_Implemented__
-	return EigenZero(0, 0);
+	return Eigen::MatrixXd::Zero(0, 0);
 }
 
-EigenMatrix Manifold::TransportTangent(EigenMatrix /*X*/, EigenMatrix /*Y*/) const{
+Eigen::MatrixXd Manifold::TransportTangent(Eigen::MatrixXd /*X*/, Eigen::MatrixXd /*Y*/) const{
 	__Not_Implemented__
-	return EigenZero(0, 0);
+	return Eigen::MatrixXd::Zero(0, 0);
 }
 
-EigenMatrix Manifold::TransportManifold(EigenMatrix /*X*/, Manifold& /*N*/) const{
+Eigen::MatrixXd Manifold::TransportManifold(Eigen::MatrixXd /*X*/, Manifold& /*N*/) const{
 	__Not_Implemented__
-	return EigenZero(0, 0);
+	return Eigen::MatrixXd::Zero(0, 0);
 }
 
-void Manifold::setPoint(EigenMatrix /*p*/, bool /*purify*/){
+void Manifold::setPoint(Eigen::MatrixXd /*p*/, bool /*purify*/){
 	__Not_Implemented__
 }
 
@@ -70,7 +71,7 @@ void Manifold::getGradient(){
 	__Not_Implemented__
 }
 
-EigenMatrix Manifold::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd Manifold::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
 	__Not_Implemented__
 	return HeX;
 }
@@ -92,40 +93,40 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 	int getDimension() const override{
 		PYBIND11_OVERRIDE(int, Manifold, getDimension);
 	}
-	double Inner(EigenMatrix X, EigenMatrix Y) const override{
+	double Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const override{
 		PYBIND11_OVERRIDE(double, Manifold, Inner, X, Y);
 	}
 
-	EigenMatrix Retract(EigenMatrix X) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, Retract, X);
+	Eigen::MatrixXd Retract(Eigen::MatrixXd X) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, Retract, X);
 	}
-	EigenMatrix InverseRetract(Manifold& N) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, InverseRetract, N);
-	}
-
-	EigenMatrix TangentProjection(EigenMatrix A) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TangentProjection, A);
-	}
-	EigenMatrix TangentPurification(EigenMatrix A) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TangentPurification, A);
+	Eigen::MatrixXd InverseRetract(Manifold& N) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, InverseRetract, N);
 	}
 
-	EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TransportTangent, X, Y);
+	Eigen::MatrixXd TangentProjection(Eigen::MatrixXd A) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, TangentProjection, A);
 	}
-	EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, TransportManifold, X, N);
+	Eigen::MatrixXd TangentPurification(Eigen::MatrixXd A) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, TangentPurification, A);
 	}
 
-	void setPoint(EigenMatrix p, bool purify) override{
+	Eigen::MatrixXd TransportTangent(Eigen::MatrixXd X, Eigen::MatrixXd Y) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, TransportTangent, X, Y);
+	}
+	Eigen::MatrixXd TransportManifold(Eigen::MatrixXd X, Manifold& N) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, TransportManifold, X, N);
+	}
+
+	void setPoint(Eigen::MatrixXd p, bool purify) override{
 		PYBIND11_OVERRIDE(void, Manifold, setPoint, p, purify);
 	}
 
 	void getGradient() override{
 		PYBIND11_OVERRIDE(void, Manifold, getGradient);
 	}
-	EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const override{
-		PYBIND11_OVERRIDE(EigenMatrix, Manifold, getHessian, HeX, X, weingarten);
+	Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, getHessian, HeX, X, weingarten);
 	}
 
 	std::unique_ptr<Manifold> Clone() const override{
@@ -144,7 +145,7 @@ void Init_Manifold(pybind11::module_& m){
 		.def_readwrite("P", &Manifold::P)
 		.def_readwrite("Ge", &Manifold::Ge)
 		.def_readwrite("Gr", &Manifold::Gr)
-		.def(pybind11::init<EigenMatrix, std::string>())
+		.def(pybind11::init<Eigen::MatrixXd, std::string>())
 		.def("getDimension", &Manifold::getDimension)
 		.def("Inner", &Manifold::Inner)
 		.def("Retract", &Manifold::Retract)
