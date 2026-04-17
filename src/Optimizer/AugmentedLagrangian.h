@@ -9,11 +9,8 @@
 
 #include <Eigen/Dense>
 #include <vector>
-#include <deque>
-#include <memory>
 
 #ifdef __PYTHON__
-#include "../Macro.h"
 #include "../Manifold/Manifold.h"
 #else
 #include <Maniverse/Manifold/Manifold.h>

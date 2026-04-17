@@ -3,25 +3,20 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
 #include <cmath>
 #include <vector>
-#include <tuple>
 #include <cstdio>
 #include <chrono>
-#include <cassert>
-#include <string>
-#include <tuple>
-#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
-#include "LineSearch.h"
 
 namespace Maniverse{
 
 bool ArmijoBacktracking(
-		Iterate& M, EigenMatrix& S,
+		Iterate& M, Eigen::MatrixXd& S,
 		double c1, double tau, int max_iter,
 		int output){
 
@@ -37,10 +32,10 @@ bool ArmijoBacktracking(
 	const double Snorm = std::sqrt(M.Inner(S, S));
 
 	double alpha = 1;
-	std::vector<EigenMatrix> P = M.getPoint();
+	std::vector<Eigen::MatrixXd> P = M.getPoint();
 	for ( int iiter = 0; iiter < max_iter; iiter++ ){
 		const auto start = __now__;
-		const EigenMatrix Pmat = M.Retract(alpha * S);
+		const Eigen::MatrixXd Pmat = M.Retract(alpha * S);
 		DecoupleBlock(Pmat, P, M.BlockParameters);
 		M.Func->Calculate(P, {0});
 

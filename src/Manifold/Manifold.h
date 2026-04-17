@@ -1,5 +1,12 @@
 #pragma once
 
+#include <Eigen/Dense>
+#include <typeinfo>
+#include <string>
+#include <vector>
+#include <tuple>
+#include <memory>
+
 namespace Maniverse{
 
 #define __Check_Log_Map__\
@@ -25,30 +32,30 @@ class Manifold{ public:
 	std::string Name;
 	std::string Geodesic;
 
-	EigenMatrix P;
-	EigenMatrix Ge;
-	EigenMatrix Gr;
+	Eigen::MatrixXd P;
+	Eigen::MatrixXd Ge;
+	Eigen::MatrixXd Gr;
 
-	std::vector<EigenMatrix> BasisSet;
+	std::vector<Eigen::MatrixXd> BasisSet;
 
-	Manifold(EigenMatrix p, std::string geodesic);
+	Manifold(Eigen::MatrixXd p, std::string geodesic);
 	virtual int getDimension() const;
-	virtual double Inner(EigenMatrix X, EigenMatrix Y) const;
+	virtual double Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const;
 	void getBasisSet();
 	void getHessianMatrix();
 
-	virtual EigenMatrix Retract(EigenMatrix X) const;
-	virtual EigenMatrix InverseRetract(Manifold& N) const;
-	virtual EigenMatrix TransportTangent(EigenMatrix X, EigenMatrix Y) const;
-	virtual EigenMatrix TransportManifold(EigenMatrix X, Manifold& N) const;
+	virtual Eigen::MatrixXd Retract(Eigen::MatrixXd X) const;
+	virtual Eigen::MatrixXd InverseRetract(Manifold& N) const;
+	virtual Eigen::MatrixXd TransportTangent(Eigen::MatrixXd X, Eigen::MatrixXd Y) const;
+	virtual Eigen::MatrixXd TransportManifold(Eigen::MatrixXd X, Manifold& N) const;
 
-	virtual EigenMatrix TangentProjection(EigenMatrix A) const;
-	virtual EigenMatrix TangentPurification(EigenMatrix A) const;
+	virtual Eigen::MatrixXd TangentProjection(Eigen::MatrixXd A) const;
+	virtual Eigen::MatrixXd TangentPurification(Eigen::MatrixXd A) const;
 
-	virtual void setPoint(EigenMatrix p, bool purify);
+	virtual void setPoint(Eigen::MatrixXd p, bool purify);
 
 	virtual void getGradient();
-	virtual EigenMatrix getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const;
+	virtual Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const;
 
 	virtual ~Manifold() = default;
 	virtual std::unique_ptr<Manifold> Clone() const;
@@ -56,31 +63,31 @@ class Manifold{ public:
 };
 
 class Objective{ public:
-	virtual void Calculate(std::vector<EigenMatrix> P, std::vector<int> derivative);
+	virtual void Calculate(std::vector<Eigen::MatrixXd> P, std::vector<int> derivative);
 	double Value = 0;
-	std::vector<EigenMatrix> Gradient;
-	virtual std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix> X) const;
-	virtual std::vector<EigenMatrix> Preconditioner(std::vector<EigenMatrix> X) const;
-	virtual std::vector<EigenMatrix> PreconditionerSqrt(std::vector<EigenMatrix> X) const;
-	virtual std::vector<EigenMatrix> PreconditionerInvSqrt(std::vector<EigenMatrix> X) const;
+	std::vector<Eigen::MatrixXd> Gradient;
+	virtual std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> X) const;
+	virtual std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> X) const;
+	virtual std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const;
+	virtual std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const;
 	std::vector<double> Lambda;
 	double Rho;
 	std::vector<double> Constraint_Value;
-	std::vector<std::vector<EigenMatrix>> Constraint_Gradient;
+	std::vector<std::vector<Eigen::MatrixXd>> Constraint_Gradient;
 };
 
 class Iterate{ public:
 	std::vector<std::shared_ptr<Manifold>> Ms;
 	Objective* Func;
-	EigenVector Point;
-	EigenVector Gradient;
-	EigenVector Hessian(EigenVector X) const;
-	EigenVector Preconditioner(EigenVector X) const;
-	EigenVector PreconditionerSqrt(EigenVector X) const;
-	EigenVector PreconditionerInvSqrt(EigenVector X) const;
+	Eigen::VectorXd Point;
+	Eigen::VectorXd Gradient;
+	Eigen::VectorXd Hessian(Eigen::VectorXd X) const;
+	Eigen::VectorXd Preconditioner(Eigen::VectorXd X) const;
+	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd X) const;
+	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd X) const;
 
 	std::vector<std::vector<std::unique_ptr<Manifold>>> Constraints;
-	std::vector<EigenVector> Constraint_Gradient;
+	std::vector<Eigen::VectorXd> Constraint_Gradient;
 
 	int TotalSize;
 	std::vector<std::tuple<int, int, int>> BlockParameters;
@@ -89,32 +96,32 @@ class Iterate{ public:
 
 	std::string getName() const;
 	int getDimension() const;
-	double Inner(EigenVector X, EigenVector Y) const;
+	double Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const;
 
-	EigenVector Retract(EigenVector X) const;
-	EigenVector InverseRetract(Iterate& N) const;
-	EigenVector TransportTangent(EigenVector X, EigenVector Y) const;
-	EigenVector TransportManifold(EigenVector A, Iterate& N) const;
+	Eigen::VectorXd Retract(Eigen::VectorXd X) const;
+	Eigen::VectorXd InverseRetract(Iterate& N) const;
+	Eigen::VectorXd TransportTangent(Eigen::VectorXd X, Eigen::VectorXd Y) const;
+	Eigen::VectorXd TransportManifold(Eigen::VectorXd A, Iterate& N) const;
 
-	EigenVector TangentProjection(EigenVector A) const;
-	EigenVector TangentPurification(EigenVector A) const;
+	Eigen::VectorXd TangentProjection(Eigen::VectorXd A) const;
+	Eigen::VectorXd TangentPurification(Eigen::VectorXd A) const;
  
-	void setPoint(std::vector<EigenMatrix> ps, bool purify);
+	void setPoint(std::vector<Eigen::MatrixXd> ps, bool purify);
 	void setGradient();
 
-	std::vector<EigenMatrix> getPoint() const;
-	std::vector<EigenMatrix> getGradient() const;
+	std::vector<Eigen::MatrixXd> getPoint() const;
+	std::vector<Eigen::MatrixXd> getGradient() const;
 };
 
 #define GetBlock(mat, iM, BlockParameters)\
-	Eigen::Map<const EigenMatrix>(\
+	Eigen::Map<const Eigen::MatrixXd>(\
 			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
 			std::get<2>(BlockParameters[iM])\
 	)
 
 #define SetBlock(mat, iM, BlockParameters)\
-	Eigen::Map<EigenMatrix> _##mat##_##iM##_(\
+	Eigen::Map<Eigen::MatrixXd> _##mat##_##iM##_(\
 			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
 			std::get<2>(BlockParameters[iM])\

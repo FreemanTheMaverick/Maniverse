@@ -3,20 +3,16 @@
 #include <pybind11/eigen.h>
 #include <pybind11/functional.h>
 #endif
+
 #include <Eigen/Dense>
 #include <cmath>
-#include <vector>
-#include <tuple>
 #include <functional>
 #include <cstdio>
 #include <chrono>
-#include <cassert>
-#include <string>
-#include <tuple>
-#include <memory>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+
 #include "TrustRegion.h"
 
 namespace Maniverse{

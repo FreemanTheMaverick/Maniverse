@@ -1,25 +1,22 @@
 #ifdef __PYTHON__
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
-#include <cmath>
 #include <string>
 #include <memory>
-
-#include "../Macro.h"
 
 #include "TransRotInvPointCloud.h"
 
 namespace Maniverse{
 
-static int getRank(EigenMatrix p){
-	Eigen::FullPivLU<EigenMatrix> lu(p);
+static int getRank(Eigen::MatrixXd p){
+	Eigen::FullPivLU<Eigen::MatrixXd> lu(p);
 	return lu.rank();
 }
 
-TransRotInvPointCloud::TransRotInvPointCloud(EigenMatrix p, std::string geodesic): Euclidean(p, geodesic){
+TransRotInvPointCloud::TransRotInvPointCloud(Eigen::MatrixXd p, std::string geodesic): Euclidean(p, geodesic){
 	const int rank = getRank(p);
 	if ( rank != p.cols() ) throw std::runtime_error("The matrix is column-rank-deficient!");
 	this->Name = "Translation-rotation-invariant-point-cloud(" + std::to_string(p.rows()) + ", " + std::to_string(p.cols()) + ")";
@@ -32,36 +29,36 @@ int TransRotInvPointCloud::getDimension() const{
 	return nrows * ncols - ncols - ncols * ( ncols - 1 ) / 2;
 }
 
-static EigenMatrix Procrustes(EigenMatrix P, EigenMatrix Q, EigenMatrix X){
-	const EigenMatrix Qinv = Q.completeOrthogonalDecomposition().pseudoInverse();
-	Eigen::JacobiSVD<EigenMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd(Qinv * P);
-	const EigenMatrix Rotation = svd.matrixU() * svd.matrixV().transpose();
+static Eigen::MatrixXd Procrustes(Eigen::MatrixXd P, Eigen::MatrixXd Q, Eigen::MatrixXd X){
+	const Eigen::MatrixXd Qinv = Q.completeOrthogonalDecomposition().pseudoInverse();
+	Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeFullU | Eigen::ComputeFullV> svd(Qinv * P);
+	const Eigen::MatrixXd Rotation = svd.matrixU() * svd.matrixV().transpose();
 	return X * Rotation;
 }
 
-static EigenMatrix Centering(EigenMatrix Y){
+static Eigen::MatrixXd Centering(Eigen::MatrixXd Y){
 	for ( int i = 0; i < Y.cols(); i++)
 		Y.col(i) = ( Y.col(i).array() - Y.col(i).mean() ).matrix();
 	return Y;
 }
 
-static EigenMatrix CloudTangentProjection(EigenMatrix p, EigenMatrix Y){
+static Eigen::MatrixXd CloudTangentProjection(Eigen::MatrixXd p, Eigen::MatrixXd Y){
 
 	Y = Centering(Y);
 
 	// Y = P Omega
 	const int rank = p.cols();
 	const int nconstraints = ( rank + 1 ) * rank / 2;
-	EigenMatrix Left = EigenZero(rank * rank + nconstraints, rank * rank + nconstraints);
-	EigenVector Right = EigenZero(rank * rank + nconstraints, 1);
+	Eigen::MatrixXd Left = Eigen::MatrixXd::Zero(rank * rank + nconstraints, rank * rank + nconstraints);
+	Eigen::VectorXd Right = Eigen::VectorXd::Zero(rank * rank + nconstraints);
 	
 	// PT * P
-	const EigenMatrix PtP = p.transpose() * p;
+	const Eigen::MatrixXd PtP = p.transpose() * p;
 	for ( int i = 0; i < rank * rank; i += rank )
 		Left.block(i, i, rank, rank) = PtP;
 
 	// Constraints for a vectorized skew-symmetric matrix
-	EigenMatrix C = EigenZero(nconstraints, rank * rank);
+	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(nconstraints, rank * rank);
 	int iconstraint = 0;
 	for ( int a = 0; a < rank * rank; a += rank + 1, iconstraint++ ){ // Diagonal elements
 		C(iconstraint, a) = 1;
@@ -78,35 +75,35 @@ static EigenMatrix CloudTangentProjection(EigenMatrix p, EigenMatrix Y){
 	Right.head(rank * rank) = ( p.transpose() * Y ).reshaped(rank * rank, 1);
 
 	// Vertical component
-	const EigenVector x = Left.colPivHouseholderQr().solve(Right);
-	const EigenMatrix Omega = x.head(rank * rank).reshaped(rank, rank);
+	const Eigen::VectorXd x = Left.colPivHouseholderQr().solve(Right);
+	const Eigen::MatrixXd Omega = x.head(rank * rank).reshaped(rank, rank);
 
 	// Horizontal component
 	return Y - p * Omega;
 }
 
 
-EigenMatrix TransRotInvPointCloud::InverseRetract(Manifold& N) const{
+Eigen::MatrixXd TransRotInvPointCloud::InverseRetract(Manifold& N) const{
 	__Check_Log_Map__
 	return CloudTangentProjection(this->P, N.P);
 }
 
-EigenMatrix TransRotInvPointCloud::TangentProjection(EigenMatrix A) const{
+Eigen::MatrixXd TransRotInvPointCloud::TangentProjection(Eigen::MatrixXd A) const{
 	return CloudTangentProjection(this->P, A);
 }
 
-EigenMatrix TransRotInvPointCloud::TangentPurification(EigenMatrix A) const{
+Eigen::MatrixXd TransRotInvPointCloud::TangentPurification(Eigen::MatrixXd A) const{
 	return Centering(A);
 }
 
-EigenMatrix TransRotInvPointCloud::TransportManifold(EigenMatrix X, Manifold& N) const{
+Eigen::MatrixXd TransRotInvPointCloud::TransportManifold(Eigen::MatrixXd X, Manifold& N) const{
 	__Check_Vec_Transport__
-	const EigenMatrix q = N.P;
-	const EigenMatrix rotatedX = Procrustes(q, this->P, X);
+	const Eigen::MatrixXd q = N.P;
+	const Eigen::MatrixXd rotatedX = Procrustes(q, this->P, X);
 	return CloudTangentProjection(q, rotatedX);
 }
 
-void TransRotInvPointCloud::setPoint(EigenMatrix p, bool purify){
+void TransRotInvPointCloud::setPoint(Eigen::MatrixXd p, bool purify){
 	const int rank = getRank(p);
 	if ( rank == p.cols() )
 		throw std::runtime_error("The matrix is column-rank-deficient!");
@@ -118,7 +115,7 @@ void TransRotInvPointCloud::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-EigenMatrix TransRotInvPointCloud::getHessian(EigenMatrix HeX, EigenMatrix /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd TransRotInvPointCloud::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
 	return this->TangentProjection(HeX);
 }
 
@@ -133,7 +130,7 @@ std::shared_ptr<Manifold> TransRotInvPointCloud::Share() const{
 #ifdef __PYTHON__
 void Init_TransRotInvPointCloud(pybind11::module_& m){
 	pybind11::classh<TransRotInvPointCloud, Manifold>(m, "TransRotInvPointCloud")
-		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
+		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
 

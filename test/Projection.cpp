@@ -1,9 +1,6 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/MatrixFunctions>
-#include <cmath>
-#include <string>
 #include <vector>
-#include <memory>
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>

@@ -3,9 +3,8 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
-#include <typeinfo>
-#include <memory>
 #include <vector>
 
 #include "../Macro.h"
@@ -14,24 +13,24 @@
 
 namespace Maniverse{
 
-void Objective::Calculate(std::vector<EigenMatrix> /*P*/, std::vector<int> /*derivatives*/){
+void Objective::Calculate(std::vector<Eigen::MatrixXd> /*P*/, std::vector<int> /*derivatives*/){
 	__Not_Implemented__
 }
 
-std::vector<EigenMatrix> Objective::Hessian(std::vector<EigenMatrix> X) const{
+std::vector<Eigen::MatrixXd> Objective::Hessian(std::vector<Eigen::MatrixXd> X) const{
 	__Not_Implemented__
-	return std::vector<EigenMatrix>{X};
+	return std::vector<Eigen::MatrixXd>{X};
 }
 
-std::vector<EigenMatrix> Objective::Preconditioner(std::vector<EigenMatrix> X) const{
+std::vector<Eigen::MatrixXd> Objective::Preconditioner(std::vector<Eigen::MatrixXd> X) const{
 	return X;
 }
 
-std::vector<EigenMatrix> Objective::PreconditionerSqrt(std::vector<EigenMatrix> X) const{
+std::vector<Eigen::MatrixXd> Objective::PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const{
 	return X;
 }
 
-std::vector<EigenMatrix> Objective::PreconditionerInvSqrt(std::vector<EigenMatrix> X) const{
+std::vector<Eigen::MatrixXd> Objective::PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const{
 	return X;
 }
 
@@ -39,24 +38,24 @@ std::vector<EigenMatrix> Objective::PreconditionerInvSqrt(std::vector<EigenMatri
 class PyObjective : public Objective, pybind11::trampoline_self_life_support{ public:
 	using Objective::Objective;
 
-	void Calculate(std::vector<EigenMatrix> P, std::vector<int> derivatives) override{
+	void Calculate(std::vector<Eigen::MatrixXd> P, std::vector<int> derivatives) override{
 		PYBIND11_OVERRIDE(void, Objective, Calculate, P, derivatives);
 	}
 
-	std::vector<EigenMatrix> Hessian(std::vector<EigenMatrix> X) const override{
-		PYBIND11_OVERRIDE(std::vector<EigenMatrix>, Objective, Hessian, X);
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> X) const override{
+		PYBIND11_OVERRIDE(std::vector<Eigen::MatrixXd>, Objective, Hessian, X);
 	}
 
-	std::vector<EigenMatrix> Preconditioner(std::vector<EigenMatrix> X) const override{
-		PYBIND11_OVERRIDE(std::vector<EigenMatrix>, Objective, Preconditioner, X);
+	std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> X) const override{
+		PYBIND11_OVERRIDE(std::vector<Eigen::MatrixXd>, Objective, Preconditioner, X);
 	}
 
-	std::vector<EigenMatrix> PreconditionerSqrt(std::vector<EigenMatrix> X) const override{
-		PYBIND11_OVERRIDE(std::vector<EigenMatrix>, Objective, PreconditionerSqrt, X);
+	std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const override{
+		PYBIND11_OVERRIDE(std::vector<Eigen::MatrixXd>, Objective, PreconditionerSqrt, X);
 	}
 
-	std::vector<EigenMatrix> PreconditionerInvSqrt(std::vector<EigenMatrix> X) const override{
-		PYBIND11_OVERRIDE(std::vector<EigenMatrix>, Objective, PreconditionerInvSqrt, X);
+	std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const override{
+		PYBIND11_OVERRIDE(std::vector<Eigen::MatrixXd>, Objective, PreconditionerInvSqrt, X);
 	}
 };
 

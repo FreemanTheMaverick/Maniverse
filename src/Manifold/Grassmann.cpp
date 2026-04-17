@@ -3,23 +3,23 @@
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
 #endif
+
 #include <Eigen/Dense>
 #include <cmath>
 #include <tuple>
+#include <string>
 #include <memory>
-
-#include "../Macro.h"
 
 #include "Grassmann.h"
 
 namespace Maniverse{
 
-EigenMatrix RealSkewExpm(EigenMatrix A){
-	Eigen::RealSchur<EigenMatrix> schur(A);
-	const EigenMatrix Q = schur.matrixU();
-	const EigenMatrix T = schur.matrixT();
+Eigen::MatrixXd RealSkewExpm(Eigen::MatrixXd A){
+	Eigen::RealSchur<Eigen::MatrixXd> schur(A);
+	const Eigen::MatrixXd Q = schur.matrixU();
+	const Eigen::MatrixXd T = schur.matrixT();
 	const int n = T.cols();
-	EigenMatrix expT = EigenZero(n, n);
+	Eigen::MatrixXd expT = Eigen::MatrixXd::Zero(n, n);
 	int i = 0;
 	while ( i < n ){
 		const double a = ( i == n - 1 ) ? 0 : T(i, i + 1);
@@ -35,16 +35,16 @@ EigenMatrix RealSkewExpm(EigenMatrix A){
 			i += 2;
 		}
 	}
-	const EigenMatrix expA = Q * expT * Q.transpose();
+	const Eigen::MatrixXd expA = Q * expT * Q.transpose();
 	return expA;
 }
 
-Grassmann::Grassmann(EigenMatrix p, std::string geodesic): Manifold(p, geodesic){
+Grassmann::Grassmann(Eigen::MatrixXd p, std::string geodesic): Manifold(p, geodesic){
 	__Check_Geodesic__("EXACT")
-	Eigen::SelfAdjointEigenSolver<EigenMatrix> eigensolver;
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver;
 	eigensolver.compute(p);
-	const EigenVector eigenvalues = eigensolver.eigenvalues();
-	const EigenMatrix eigenvectors = eigensolver.eigenvectors();
+	const Eigen::VectorXd eigenvalues = eigensolver.eigenvalues();
+	const Eigen::MatrixXd eigenvectors = eigensolver.eigenvectors();
 	int rank = 0;
 	for ( int i = 0; i < p.rows(); i++ )
 		if ( eigenvalues(i) > 0.5 ) rank++;
@@ -59,78 +59,78 @@ int Grassmann::getDimension() const{
 	return rank * ( this->P.rows() - rank );
 }
 
-double Grassmann::Inner(EigenMatrix X, EigenMatrix Y) const{
-	return Dot(X, Y);
+double Grassmann::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
+	return X.cwiseProduct(Y).sum();
 }
 
-EigenMatrix Grassmann::Retract(EigenMatrix X) const{
-	const EigenMatrix Xp = X * this->P - this->P * X;
-	const EigenMatrix pX = - Xp;
-	const EigenMatrix expXp = RealSkewExpm(Xp);
-	const EigenMatrix exppX = RealSkewExpm(pX);
+Eigen::MatrixXd Grassmann::Retract(Eigen::MatrixXd X) const{
+	const Eigen::MatrixXd Xp = X * this->P - this->P * X;
+	const Eigen::MatrixXd pX = - Xp;
+	const Eigen::MatrixXd expXp = RealSkewExpm(Xp);
+	const Eigen::MatrixXd exppX = RealSkewExpm(pX);
 	return expXp * this->P * exppX;
 }
 
-EigenMatrix Grassmann::InverseRetract(Manifold& N) const{
+Eigen::MatrixXd Grassmann::InverseRetract(Manifold& N) const{
 	for ( auto& [cached_NP, cached_Log] : this->LogCache )
 		if ( N.P.isApprox(cached_NP) ) return cached_Log;
 	__Check_Log_Map__
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
-	const EigenMatrix U = this->Projector;
-	const EigenMatrix Y = N_.Projector;
-	Eigen::JacobiSVD<EigenMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd;
+	const Eigen::MatrixXd U = this->Projector;
+	const Eigen::MatrixXd Y = N_.Projector;
+	Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeFullU | Eigen::ComputeFullV> svd;
 	svd.compute(Y.transpose() * U);
-	const EigenMatrix Ystar = Y * svd.matrixU() * svd.matrixV().transpose();
-	svd.compute( (EigenOne(U.rows(), U.rows()) - U * U.transpose() ) * Ystar);
-	const EigenArray Sigma = svd.singularValues().array().asin();
-	EigenMatrix SIGMA = EigenZero(U.rows(), U.cols());
+	const Eigen::MatrixXd Ystar = Y * svd.matrixU() * svd.matrixV().transpose();
+	svd.compute( (Eigen::MatrixXd::Identity(U.rows(), U.rows()) - U * U.transpose() ) * Ystar);
+	const Eigen::ArrayXd Sigma = svd.singularValues().array().asin();
+	Eigen::MatrixXd SIGMA = Eigen::MatrixXd::Zero(U.rows(), U.cols());
 	for ( int i = 0; i < Sigma.size(); i++ ) SIGMA(i, i) = Sigma[i];
-	const EigenMatrix Delta = svd.matrixU() * SIGMA * svd.matrixV().transpose();
-	const EigenMatrix Log = Delta * U.transpose() + U * Delta.transpose();
-	const EigenMatrix result = this->TangentPurification(Log);
+	const Eigen::MatrixXd Delta = svd.matrixU() * SIGMA * svd.matrixV().transpose();
+	const Eigen::MatrixXd Log = Delta * U.transpose() + U * Delta.transpose();
+	const Eigen::MatrixXd result = this->TangentPurification(Log);
 	this->LogCache.push_back(std::make_tuple(N_.P, result));
 	return result;
 }
 
-EigenMatrix Grassmann::TangentProjection(EigenMatrix X) const{
+Eigen::MatrixXd Grassmann::TangentProjection(Eigen::MatrixXd X) const{
 	// X must be symmetric.
 	// https://sites.uclouvain.be/absil/2013.01
-	const EigenMatrix adPX = this->P * X - X * this->P;
+	const Eigen::MatrixXd adPX = this->P * X - X * this->P;
 	return this->P * adPX - adPX * this->P;
 }
 
-EigenMatrix Grassmann::TangentPurification(EigenMatrix A) const{
-	const EigenMatrix symA = 0.5 * ( A + A.transpose() );
-	const EigenMatrix pureA = symA - this->P * symA * this->P;
+Eigen::MatrixXd Grassmann::TangentPurification(Eigen::MatrixXd A) const{
+	const Eigen::MatrixXd symA = 0.5 * ( A + A.transpose() );
+	const Eigen::MatrixXd pureA = symA - this->P * symA * this->P;
 	return 0.5 * ( pureA + pureA.transpose() );
 }
 
-EigenMatrix Grassmann::TransportTangent(EigenMatrix X, EigenMatrix Y) const{
+Eigen::MatrixXd Grassmann::TransportTangent(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	// X - Vector to transport from P
 	// Y - Destination on the tangent space of P
 	for ( auto& [cached_Y, cached_expdp, cached_exppd]: this->TransportTangentCache )
 		if ( Y.isApprox(cached_Y) ) return cached_expdp * X * cached_exppd;
-	const EigenMatrix dp = Y * this->P - this->P * Y;
-	const EigenMatrix pd = - dp;
-	const EigenMatrix expdp = RealSkewExpm(dp);
-	const EigenMatrix exppd = RealSkewExpm(pd);
+	const Eigen::MatrixXd dp = Y * this->P - this->P * Y;
+	const Eigen::MatrixXd pd = - dp;
+	const Eigen::MatrixXd expdp = RealSkewExpm(dp);
+	const Eigen::MatrixXd exppd = RealSkewExpm(pd);
 	this->TransportTangentCache.push_back(std::make_tuple(Y, expdp, exppd));
 	return expdp * X * exppd;
 }
 
-EigenMatrix Grassmann::TransportManifold(EigenMatrix X, Manifold& N) const{
+Eigen::MatrixXd Grassmann::TransportManifold(Eigen::MatrixXd X, Manifold& N) const{
 	// X - Vector to transport from P
 	__Check_Vec_Transport__
 	Grassmann& N_ = dynamic_cast<Grassmann&>(N);
-	const EigenMatrix Y = this->InverseRetract(N_);
+	const Eigen::MatrixXd Y = this->InverseRetract(N_);
 	return this->TransportTangent(X, Y);
 }
 
-void Grassmann::setPoint(EigenMatrix p, bool purify){
+void Grassmann::setPoint(Eigen::MatrixXd p, bool purify){
 	this->P = p;
-	Eigen::SelfAdjointEigenSolver<EigenMatrix> eigensolver;
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigensolver;
 	eigensolver.compute(p);
-	const EigenMatrix eigenvectors = eigensolver.eigenvectors();
+	const Eigen::MatrixXd eigenvectors = eigensolver.eigenvectors();
 	const int ncols = this->Projector.cols();
 	this->Projector = eigenvectors.rightCols(ncols);
 	this->LogCache.clear();
@@ -142,16 +142,16 @@ void Grassmann::getGradient(){
 	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
 }
 
-EigenMatrix Grassmann::getHessian(EigenMatrix HeX, EigenMatrix X, bool weingarten) const{
+Eigen::MatrixXd Grassmann::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
 	// https://arxiv.org/abs/0709.2205
-	const EigenMatrix PHeX = P * HeX;
-	const EigenMatrix partA = PHeX - PHeX.transpose();
+	const Eigen::MatrixXd PHeX = P * HeX;
+	const Eigen::MatrixXd partA = PHeX - PHeX.transpose();
 	if ( weingarten ){
-		const EigenMatrix GeX = Ge * X;
-		const EigenMatrix partB = GeX - GeX.transpose();
-		const EigenMatrix sum = partA - partB;
-		return (EigenMatrix)(2 * P * sum);
-	}else return (EigenMatrix)(2 * P * partA);
+		const Eigen::MatrixXd GeX = Ge * X;
+		const Eigen::MatrixXd partB = GeX - GeX.transpose();
+		const Eigen::MatrixXd sum = partA - partB;
+		return (Eigen::MatrixXd)(2 * P * sum);
+	}else return (Eigen::MatrixXd)(2 * P * partA);
 }
 
 std::unique_ptr<Manifold> Grassmann::Clone() const{
@@ -165,7 +165,7 @@ std::shared_ptr<Manifold> Grassmann::Share() const{
 #ifdef __PYTHON__
 void Init_Grassmann(pybind11::module_& m){
 	pybind11::classh<Grassmann, Manifold>(m, "Grassmann")
-		.def(pybind11::init<EigenMatrix, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
+		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "EXACT");
 }
 #endif
 

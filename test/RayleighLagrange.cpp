@@ -1,8 +1,6 @@
 #include <Eigen/Dense>
 #include <cmath>
-#include <string>
 #include <vector>
-#include <memory>
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Optimizer/AugmentedLagrangian.h>
@@ -69,14 +67,14 @@ class ObjRayleigh: public mv::Objective{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
-class TestRayleigh{ public:
+class TestRayleighLagrange{ public:
 	ObjRayleigh Obj = ObjRayleigh();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Identity(10, 1));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Zero(10, 1);
 
-	TestRayleigh(){
+	TestRayleighLagrange(){
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
 		es.compute(Obj.A);
 		const Eigen::MatrixXd Evec = es.eigenvectors();
@@ -104,6 +102,6 @@ class TestRayleigh{ public:
 };
 
 int main(){
-	TestRayleigh().testTruncatedNewton();
-	TestRayleigh().testLBFGS();
+	TestRayleighLagrange().testTruncatedNewton();
+	TestRayleighLagrange().testLBFGS();
 }
