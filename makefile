@@ -43,8 +43,6 @@ all: $(OBJECTS) | $(INCDIR) $(LIBDIR)
 	@echo "The lib files libmaniverse.a and libmaniverse.so are put in $(LIBDIR)/."
 	mkdir -p $(INCDIR)/Maniverse/
 	cd $(SRCDIR) && find . -name "*h" ! -name "Py*" ! -name "Macro.h" -exec cp --parents {} ../$(INCDIR)/Maniverse/ \;
-	sed -i "s/EigenMatrix/Eigen::MatrixXd/g" $(INCDIR)/Maniverse/*/*.h
-	sed -i "s/EigenVector/Eigen::VectorXd/g" $(INCDIR)/Maniverse/*/*.h
 	@echo "The headers are put in $(INCDIR)/."
 
 # Pattern rule to compile .cpp files from SRCDIR into .o files in OBJDIR
