@@ -70,8 +70,8 @@ class TestDiagonalization(ut.TestCase):
 		M.setPoint([self.Solution0, self.Solution1], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0.1, 0)
-		for i in range(int(len(Evals) * 0.8), len(Evals)):
+		Evals, Evecs = mv.Lanczos(M, M.getDimension() - 9, 1e-6, 0) # The hessian seems rank-deficient by 9. Request for <(n-9) eigenpairs reduces accuracy dramatically. Request for >(n-9) eigenpairs renders unphysical negative eigenvalues, instead of trivial zero eigenvalues. What a strange universe we are living in!
+		for i in range(len(Evals)):
 			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
