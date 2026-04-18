@@ -6,6 +6,7 @@
 #include <Maniverse/Optimizer/AugmentedLagrangian.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
+#include <Maniverse/Diagonalizer/Lanczos.h>
 
 // Rayleigh quotient
 // Finding the smallest eigenvalue of A
@@ -67,12 +68,22 @@ class ObjRayleigh: public mv::Objective{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
+#define __Check_Curvature__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
+		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		if ( residual > 1e-5 ) goto IncorrectCurvature;\
+	}\
+	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
+	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
+
 class TestRayleighLagrange{ public:
 	ObjRayleigh Obj = ObjRayleigh();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Identity(10, 1));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Zero(10, 1);
+	double Lambda = 0;
 
 	TestRayleighLagrange(){
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
@@ -80,6 +91,7 @@ class TestRayleighLagrange{ public:
 		const Eigen::MatrixXd Evec = es.eigenvectors();
 		Manifold = mv::Euclidean( ( Evec.col(0) + Evec.col(1) ) / std::sqrt(2) );
 		Solution = Evec.col(0);
+		Lambda = - es.eigenvalues()(0);
 	};
 
 	void testTruncatedNewton(){
@@ -99,9 +111,20 @@ class TestRayleighLagrange{ public:
 		);
 		__Check_Result__
 	};
+
+	void testLanczos(){
+		Obj.Lambda = { Lambda };
+		mv::Iterate M(Obj, {Manifold.Share()});
+		M.setPoint({Solution}, 1);
+		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 0.001, 1);
+		__Check_Curvature__
+	};
 };
 
 int main(){
 	TestRayleighLagrange().testTruncatedNewton();
 	TestRayleighLagrange().testLBFGS();
+	TestRayleighLagrange().testLanczos();
 }

@@ -51,14 +51,7 @@ auto AugmentedLagrangian(
 	if ( output ) std::printf("First run for the initial multipliers ...\n");
 	M.Func->Calculate(M.getPoint(), {0, 1});
 	M.setGradient();
-	const Eigen::VectorXd Gf = M.Gradient;
-	Eigen::MatrixXd Gg = Eigen::MatrixXd::Zero(Gf.size(), ncons);
-	for ( int i = 0; i < ncons; i++ ){
-		Gg.col(i) = M.Constraint_Gradient[i];
-	}
-	const Eigen::VectorXd tmp = - Gg.colPivHouseholderQr().solve(Gf);
-
-	std::memcpy(Lambda.data(), tmp.data(), ncons * 8);
+	Lambda = M.getEffectiveLambda();
 	Rho = init_rho;
 
 	for ( int iiter = 0; iiter < max_iter; iiter++ ){

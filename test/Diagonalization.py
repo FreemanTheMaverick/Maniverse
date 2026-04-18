@@ -71,7 +71,7 @@ class TestDiagonalization(ut.TestCase):
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0.1, 0)
-		for i in range(int(np.floor(M.getDimension() * 0.8)), M.getDimension()):
+		for i in range(int(len(Evals) * 0.8), len(Evals)):
 			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 

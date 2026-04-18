@@ -172,21 +172,30 @@ Eigen::VectorXd Iterate::Hessian(Eigen::VectorXd Xmat) const{
 	return HrXmat;
 }
 
+std::vector<double> Iterate::getEffectiveLambda() const{
+	const int ncons = this->Func->Lambda.size();
+	Eigen::VectorXd Gf = this->Gradient;
+	Eigen::MatrixXd Gg = Eigen::MatrixXd::Zero(Gf.size(), ncons);
+	for ( int i = 0; i < ncons; i++ ){
+		Gf -= this->Func->Lambda[i] * this->Constraint_Gradient[i];
+		Gg.col(i) = this->Constraint_Gradient[i];
+	}
+	const Eigen::VectorXd lambda = - Gg.colPivHouseholderQr().solve(Gf);
+	return std::vector<double>(lambda.data(), lambda.data() + ncons);
+}
+
 Eigen::VectorXd Iterate::ConstraintProjection(Eigen::VectorXd Xmat) const{
 	for ( const Eigen::VectorXd& cons_grad : this->Constraint_Gradient ){
-		Xmat -= this->Inner(Xmat, cons_grad) * cons_grad;
+		Xmat -= this->Inner(Xmat, cons_grad) * cons_grad / this->Inner(cons_grad, cons_grad);
 	}
 	return Xmat;
 }
 
 Eigen::VectorXd Iterate::ConstraintProjectedHessian(Eigen::VectorXd Xmat) const{
 	// Xmat must observe the constraints.
-	const std::vector<double> Lambda = this->Func->Lambda;
 	const double Rho = this->Func->Rho;
-	for ( double& lambda : this->Func->Lambda ) lambda = 0;
 	this->Func->Rho = 0;
 	const Eigen::VectorXd HXmat = this->ConstraintProjection(this->Hessian(Xmat));
-	this->Func->Lambda = Lambda;
 	this->Func->Rho = Rho;
 	return HXmat;
 }
@@ -262,7 +271,8 @@ void Init_Iterate(pybind11::module_& m){
 		.def("setPoint", &Iterate::setPoint)
 		.def("setGradient", &Iterate::setGradient)
 		.def("getPoint", &Iterate::getPoint)
-		.def("getGradient", &Iterate::getGradient);
+		.def("getGradient", &Iterate::getGradient)
+		.def("getEffectiveLambda", &Iterate::getEffectiveLambda);
 }
 #endif
 
