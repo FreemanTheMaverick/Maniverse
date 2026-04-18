@@ -6,6 +6,7 @@
 #include <Maniverse/Manifold/Orthogonal.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
+#include <Maniverse/Diagonalizer/Lanczos.h>
 
 // Symmetric diagonalization
 // Finding the eigenvalues and eigenvectors of a symmetric A
@@ -63,12 +64,29 @@ class ObjDiagonalization: public mv::Objective{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
+#define __Check_Curvature__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	for ( int i = M.getDimension() * 0.8; i < M.getDimension(); i++ ){\
+		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		if ( residual > 1e-5 ) goto IncorrectCurvature;\
+	}\
+	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
+	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
+
 class TestDiagonalization{ public:
 	ObjDiagonalization Obj = ObjDiagonalization();
 	mv::Euclidean Manifold0 = mv::Euclidean(Eigen::MatrixXd::Zero(10, 1));
 	mv::Orthogonal Manifold1 = mv::Orthogonal(Eigen::MatrixXd::Identity(10, 10));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	mv::TrustRegion TrustRegion = mv::TrustRegion();
+	Eigen::MatrixXd Solution0 = Eigen::MatrixXd::Zero(10, 1);
+	Eigen::MatrixXd Solution1 = Eigen::MatrixXd::Zero(10, 10);
+
+	TestDiagonalization(){
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(Obj.A);
+		Solution0 = es.eigenvalues();
+		Solution1 = es.eigenvectors();
+	};
 
 	void testTruncatedNewton(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
@@ -87,9 +105,19 @@ class TestDiagonalization{ public:
 		);
 		__Check_Result__
 	};
+
+	void testLanczos(){
+		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
+		M.setPoint({Solution0, Solution1}, 1);
+		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0.1, 1);
+		__Check_Curvature__
+	};
 };
 
 int main(){
 	TestDiagonalization().testTruncatedNewton();
 	TestDiagonalization().testLBFGS();
+	TestDiagonalization().testLanczos();
 }

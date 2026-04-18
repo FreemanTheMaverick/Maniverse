@@ -82,6 +82,7 @@ class Iterate{ public:
 	Eigen::VectorXd Point;
 	Eigen::VectorXd Gradient;
 	Eigen::VectorXd Hessian(Eigen::VectorXd X) const;
+	Eigen::VectorXd ConstraintProjectedHessian(Eigen::VectorXd X) const;
 	Eigen::VectorXd Preconditioner(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd X) const;
@@ -105,6 +106,7 @@ class Iterate{ public:
 
 	Eigen::VectorXd TangentProjection(Eigen::VectorXd A) const;
 	Eigen::VectorXd TangentPurification(Eigen::VectorXd A) const;
+	Eigen::VectorXd ConstraintProjection(Eigen::VectorXd A) const;
  
 	void setPoint(std::vector<Eigen::MatrixXd> ps, bool purify);
 	void setGradient();

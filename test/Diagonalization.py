@@ -45,6 +45,7 @@ class TestDiagonalization(ut.TestCase):
 		self.Manifold1 = mv.Orthogonal(np.eye(10))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.TrustRegion = mv.TrustRegion()
+		self.Solution0, self.Solution1 = np.linalg.eigh(self.Obj.A)
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
@@ -64,6 +65,17 @@ class TestDiagonalization(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
 
+	def testLanczos(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		M.setPoint([self.Solution0, self.Solution1], 1)
+		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient()
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0.1, 0)
+		for i in range(int(np.floor(M.getDimension() * 0.8)), M.getDimension()):
+			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			assert residual < 1e-5
+
 if __name__ == "__main__":
 	TestDiagonalization().testTruncatedNewton()
 	TestDiagonalization().testLBFGS()
+	TestDiagonalization().testLanczos()
