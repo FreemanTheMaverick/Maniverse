@@ -66,7 +66,7 @@ class ObjDiagonalization: public mv::Objective{ public:
 
 #define __Check_Curvature__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
-	for ( int i = M.getDimension() * 0.8; i < M.getDimension(); i++ ){\
+	for ( int i = Evecs.size() * 0.8; i < (int)Evecs.size(); i++ ){\
 		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
 		if ( residual > 1e-5 ) goto IncorrectCurvature;\
 	}\
@@ -111,7 +111,7 @@ class TestDiagonalization{ public:
 		M.setPoint({Solution0, Solution1}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0.1, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1e-6, 1);
 		__Check_Curvature__
 	};
 };

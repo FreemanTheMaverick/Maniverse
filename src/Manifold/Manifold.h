@@ -87,6 +87,7 @@ class Iterate{ public:
 	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd X) const;
 
+	std::vector<double> getEffectiveLambda() const;
 	std::vector<std::vector<std::unique_ptr<Manifold>>> Constraints;
 	std::vector<Eigen::VectorXd> Constraint_Gradient;
 

@@ -43,15 +43,16 @@ class Obj(mv.Objective):
 				+ self.Rho * 2 * np.sum( self.C * V ) * 2 * self.C
 		]
 
-class TestRayleigh(ut.TestCase):
+class TestRayleighLagrange(ut.TestCase):
 	def __init__(self, *args):
 		super().__init__(*args)
 		self.Obj = Obj()
-		_, Evec = np.linalg.eigh(self.Obj.A)
+		Eval, Evec = np.linalg.eigh(self.Obj.A)
 		self.Manifold = mv.Euclidean( ( Evec[:, 0] + Evec[:, 1] ) / np.sqrt(2) )
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.TrustRegion = mv.TrustRegion()
 		self.Solution = Evec[:, 0]
+		self.Lambda = - Eval[0]
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, {self.Manifold})
@@ -71,6 +72,18 @@ class TestRayleigh(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
 
+	def testLanczos(self):
+		self.Obj.Lambda = [ self.Lambda ]
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		M.setPoint([self.Solution], 1);
+		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient();
+		Evals, Evecs = mv.Lanczos(M, M.getDimension() - 1, 0.001, 0)
+		for i in range(M.getDimension() - 1):
+			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			assert residual < 1e-5
+
 if __name__ == "__main__":
-	TestRayleigh().testTruncatedNewton()
-	TestRayleigh().testLBFGS()
+	TestRayleighLagrange().testTruncatedNewton()
+	TestRayleighLagrange().testLBFGS()
+	TestRayleighLagrange().testLanczos()
