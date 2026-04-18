@@ -172,6 +172,25 @@ Eigen::VectorXd Iterate::Hessian(Eigen::VectorXd Xmat) const{
 	return HrXmat;
 }
 
+Eigen::VectorXd Iterate::ConstraintProjection(Eigen::VectorXd Xmat) const{
+	for ( const Eigen::VectorXd& cons_grad : this->Constraint_Gradient ){
+		Xmat -= this->Inner(Xmat, cons_grad) * cons_grad;
+	}
+	return Xmat;
+}
+
+Eigen::VectorXd Iterate::ConstraintProjectedHessian(Eigen::VectorXd Xmat) const{
+	// Xmat must observe the constraints.
+	const std::vector<double> Lambda = this->Func->Lambda;
+	const double Rho = this->Func->Rho;
+	for ( double& lambda : this->Func->Lambda ) lambda = 0;
+	this->Func->Rho = 0;
+	const Eigen::VectorXd HXmat = this->ConstraintProjection(this->Hessian(Xmat));
+	this->Func->Lambda = Lambda;
+	this->Func->Rho = Rho;
+	return HXmat;
+}
+
 Eigen::VectorXd Iterate::Preconditioner(Eigen::VectorXd Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<Eigen::MatrixXd> X(nMs);
@@ -218,9 +237,11 @@ Eigen::VectorXd Iterate::PreconditionerInvSqrt(Eigen::VectorXd Xmat) const{
 void Init_Iterate(pybind11::module_& m){
 	pybind11::classh<Iterate>(m, "Iterate")
 		.def_readonly("Ms", &Iterate::Ms)
+		.def_readwrite("Func", &Iterate::Func)
 		.def_readwrite("Point", &Iterate::Point)
 		.def_readwrite("Gradient", &Iterate::Gradient)
 		.def("Hessian", &Iterate::Hessian)
+		.def("ConstraintProjectedHessian", &Iterate::ConstraintProjectedHessian)
 		.def("Preconditioner", &Iterate::Preconditioner)
 		.def("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
 		.def("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
@@ -236,9 +257,12 @@ void Init_Iterate(pybind11::module_& m){
 		.def("InverseRetract", &Iterate::InverseRetract)
 		.def("TangentProjection", &Iterate::TangentProjection)
 		.def("TangentPurification", &Iterate::TangentPurification)
+		.def("ConstraintProjection", &Iterate::ConstraintProjection)
 		.def("TransportManifold", &Iterate::TransportManifold)
 		.def("setPoint", &Iterate::setPoint)
-		.def("setGradient", &Iterate::setGradient);
+		.def("setGradient", &Iterate::setGradient)
+		.def("getPoint", &Iterate::getPoint)
+		.def("getGradient", &Iterate::getGradient);
 }
 #endif
 

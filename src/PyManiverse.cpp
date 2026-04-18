@@ -7,12 +7,14 @@ namespace Maniverse{
 #define PyManiverseOut
 #include "Manifold/PyManifold.h"
 #include "Optimizer/PyOptimizer.h"
+#include "Diagonalizer/PyDiagonalizer.h"
 #undef PyManiverseOut
 
 #define PyManiverseIn
 PYBIND11_MODULE(Maniverse, m){
 	#include "Manifold/PyManifold.h"
 	#include "Optimizer/PyOptimizer.h"
+	#include "Diagonalizer/PyDiagonalizer.h"
 }
 #undef PyManiverseIn
 
