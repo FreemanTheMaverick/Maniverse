@@ -111,7 +111,7 @@ class TestDiagonalization{ public:
 		M.setPoint({Solution0, Solution1}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1e-6, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 9, 1e-6, 1); // The hessian seems rank-deficient by 9. Request for <(n-9) eigenpairs reduces accuracy dramatically. Request for >(n-9) eigenpairs renders unphysical negative eigenvalues, instead of trivial zero eigenvalues. What a strange universe we are living in!
 		__Check_Curvature__
 	};
 };
