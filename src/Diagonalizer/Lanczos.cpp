@@ -42,7 +42,7 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 			beta = T(j, j - 1) = T(j - 1, j) = std::sqrt(M.Inner(w, w));
 			if (output) std::printf("Beta = %f\n", beta);
 			if ( beta < 1e-10 ){
-				if (output) std::printf("Early stop due to the small Beta. This may indicates degeneracy in the eigenpairs.\n");
+				if (output) std::printf("Early stop due to the small Beta. This may indicate degeneracy in the eigenpairs.\n");
 				m = j;
 				goto ShowTime;
 			}
