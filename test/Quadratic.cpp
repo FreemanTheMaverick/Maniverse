@@ -5,6 +5,7 @@
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
+#include <Maniverse/Diagonalizer/Lanczos.h>
 
 // Quadratic minimization
 // Finding the bottom of a quadratic form
@@ -78,6 +79,15 @@ class AndersonObjQuadratic: public UnpreconObjQuadratic{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
+#define __Check_Stability__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
+		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		if ( residual > 1e-5 ) goto IncorrectCurvature;\
+	}\
+	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
+	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
+
 class TestQuadratic{ public:
 	UnpreconObjQuadratic UnpreconObj = UnpreconObjQuadratic();
 	PreconObjQuadratic PreconObj = PreconObjQuadratic();
@@ -136,6 +146,15 @@ class TestQuadratic{ public:
 		);
 		__Check_Result__
 	};
+
+	void testLanczos(){
+		mv::Iterate M(UnpreconObj, {Manifold.Share()});
+		M.setPoint({Eigen::MatrixXd::Zero(10, 1)}, 1);
+		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1);
+		__Check_Stability__
+	};
 };
 
 int main(){
@@ -144,4 +163,5 @@ int main(){
 	TestQuadratic().testUnpreconLBFGS();
 	TestQuadratic().testPreconLBFGS();
 	TestQuadratic().testAnderson();
+	TestQuadratic().testLanczos();
 }

@@ -46,10 +46,10 @@ class ObjPrincipal: public mv::Objective{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
-#define __Check_Curvature__\
+#define __Check_Stability__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
-		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
 		if ( residual > 1e-5 ) goto IncorrectCurvature;\
 	}\
 	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
@@ -93,7 +93,7 @@ class TestPrincipal{ public:
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1);
-		__Check_Curvature__
+		__Check_Stability__
 	};
 };
 

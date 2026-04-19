@@ -56,6 +56,9 @@ class TestSingular(ut.TestCase):
 		self.Manifold2 = mv.Orthogonal(np.eye(6))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.TrustRegion = mv.TrustRegion()
+		self.Solution0, self.Solution1, self.Solution2 = np.linalg.svd(self.Obj.A, full_matrices=False)
+		self.Solution1.reshape([6, 1])
+		self.Solution2 = self.Solution2.T
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
@@ -75,6 +78,17 @@ class TestSingular(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
 
+	def testLanczos(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
+		M.setPoint([self.Solution0, self.Solution1, self.Solution2], 1)
+		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient()
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0);
+		for i in range(len(Evals)):
+			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			assert residual < 1e-5
+
 if __name__ == "__main__":
 	TestSingular().testTruncatedNewton()
 	TestSingular().testLBFGS()
+	TestSingular().testLanczos()
