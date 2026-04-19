@@ -55,7 +55,7 @@ class TestPrincipal(ut.TestCase):
 		M.setPoint([self.Solution], 1);
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient();
-		Evals, Evecs = mv.Lanczos(M, M.getDimension() + 1, 1e-6, 0) # This one mysterious extra dimension makes the eigenpairs as accurate as 10^-15. Without it the accuracy drops to 10^-4. Oddly enough!
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5

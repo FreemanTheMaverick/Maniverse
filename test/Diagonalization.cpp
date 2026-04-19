@@ -66,7 +66,7 @@ class ObjDiagonalization: public mv::Objective{ public:
 
 #define __Check_Curvature__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
-	for ( int i = Evecs.size() * 0.8; i < (int)Evecs.size(); i++ ){\
+	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
 		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
 		if ( residual > 1e-5 ) goto IncorrectCurvature;\
 	}\
@@ -111,7 +111,7 @@ class TestDiagonalization{ public:
 		M.setPoint({Solution0, Solution1}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 9, 1e-6, 1); // The hessian seems rank-deficient by 9. Request for <(n-9) eigenpairs reduces accuracy dramatically. Request for >(n-9) eigenpairs renders unphysical negative eigenvalues, instead of trivial zero eigenvalues. What a strange universe we are living in!
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1);
 		__Check_Curvature__
 	};
 };
