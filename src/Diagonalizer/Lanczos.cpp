@@ -10,7 +10,6 @@
 #include <random>
 #include <cstdio>
 #include <chrono>
-#include<iostream>
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
