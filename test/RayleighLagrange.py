@@ -78,7 +78,7 @@ class TestRayleighLagrange(ut.TestCase):
 		M.setPoint([self.Solution], 1);
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient();
-		Evals, Evecs = mv.Lanczos(M, M.getDimension() - 1, 1e-6, 0)
+		Evals, Evecs = mv.Lanczos(M, M.getDimension() - 1, 0)
 		for i in range(M.getDimension() - 1):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5

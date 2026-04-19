@@ -118,7 +118,7 @@ class TestRayleighLagrange{ public:
 		M.setPoint({Solution}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 1e-6, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 1);
 		__Check_Curvature__
 	};
 };
