@@ -6,6 +6,7 @@
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
+#include <Maniverse/Diagonalizer/Lanczos.h>
 
 // Orthogonal projection
 // Finding the Stiefel matrix closest to the given matrix A
@@ -56,6 +57,15 @@ class AndersonObjProjection: public ObjProjection{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
+#define __Check_Stability__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
+		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		if ( residual > 1e-5 ) goto IncorrectCurvature;\
+	}\
+	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
+	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
+
 class TestProjection{ public:
 	ObjProjection Obj = ObjProjection();
 	AndersonObjProjection AndersonObj = AndersonObjProjection();
@@ -98,10 +108,20 @@ class TestProjection{ public:
 		);
 		__Check_Result__
 	};
+
+	void testLanczos(){
+		mv::Iterate M(Obj, {Manifold.Share()});
+		M.setPoint({Solution}, 1);
+		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1);
+		__Check_Stability__
+	};
 };
 
 int main(){
 	TestProjection().testTruncatedNewton();
 	TestProjection().testLBFGS();
 	TestProjection().testAnderson();
+	TestProjection().testLanczos();
 }

@@ -6,6 +6,7 @@
 #include <Maniverse/Manifold/Orthogonal.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
+#include <Maniverse/Diagonalizer/Lanczos.h>
 
 // Thin singular value decomposition
 // Finding the singular values and vectors of a rectangular A
@@ -74,6 +75,15 @@ class ObjSingular: public mv::Objective{ public:
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
 
+#define __Check_Stability__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
+		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		if ( residual > 1e-5 ) goto IncorrectCurvature;\
+	}\
+	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
+	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
+
 class TestSingular{ public:
 	ObjSingular Obj = ObjSingular();
 	mv::Stiefel Manifold0 = mv::Stiefel(Eigen::MatrixXd::Identity(10, 6));
@@ -81,6 +91,16 @@ class TestSingular{ public:
 	mv::Orthogonal Manifold2 = mv::Orthogonal(Eigen::MatrixXd::Identity(6, 6));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	mv::TrustRegion TrustRegion = mv::TrustRegion();
+	Eigen::MatrixXd Solution0 = Eigen::MatrixXd::Identity(10, 6);
+	Eigen::MatrixXd Solution1 = Eigen::MatrixXd::Zero(6, 1);
+	Eigen::MatrixXd Solution2 = Eigen::MatrixXd::Identity(6, 6);
+
+	TestSingular(){
+		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeFullV> svd(Obj.A);
+		Solution0 = svd.matrixU();
+		Solution1 = svd.singularValues();
+		Solution2 = svd.matrixV();
+	}
 
 	void testTruncatedNewton(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
@@ -99,9 +119,19 @@ class TestSingular{ public:
 		);
 		__Check_Result__
 	};
+
+	void testLanczos(){
+		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
+		M.setPoint({Solution0, Solution1, Solution2}, 1);
+		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1);
+		__Check_Stability__
+	};
 };
 
 int main(){
 	TestSingular().testTruncatedNewton();
 	TestSingular().testLBFGS();
+	TestSingular().testLanczos();
 }

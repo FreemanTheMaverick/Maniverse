@@ -106,6 +106,15 @@ class TestQuadratic(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
+	def testLanczos(self):
+		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
+		M.setPoint([np.zeros([10, 1])], 1);
+		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient();
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
+		for i in range(len(Evecs)):
+			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			assert residual < 1e-5
 
 if __name__ == "__main__":
 	TestQuadratic().testUnpreconTruncatedNewton()
@@ -113,3 +122,4 @@ if __name__ == "__main__":
 	TestQuadratic().testUnpreconLBFGS()
 	TestQuadratic().testPreconLBFGS()
 	TestQuadratic().testAnderson()
+	TestQuadratic().testLanczos()
