@@ -5,7 +5,7 @@
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -88,11 +88,11 @@ class TestDiagonalization{ public:
 		Solution1 = es.eigenvectors();
 	};
 
-	void testTruncatedNewton(){
+	void testNewton(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 24, 1
 		);
 		__Check_Result__
@@ -118,7 +118,7 @@ class TestDiagonalization{ public:
 };
 
 int main(){
-	TestDiagonalization().testTruncatedNewton();
+	TestDiagonalization().testNewton();
 	TestDiagonalization().testLBFGS();
 	TestDiagonalization().testLanczos();
 }

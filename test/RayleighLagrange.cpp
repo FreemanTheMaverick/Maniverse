@@ -5,7 +5,7 @@
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Optimizer/AugmentedLagrangian.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -94,11 +94,11 @@ class TestRayleighLagrange{ public:
 		Lambda = - es.eigenvalues()(0);
 	};
 
-	void testTruncatedNewton(){
+	void testNewton(){
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(Obj, {Manifold.Share()});
-		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::TruncatedNewton)(
+		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::Newton)(
 				M, tr, cg, Tolerance, 10, 1
 		);
 		__Check_Result__
@@ -125,7 +125,7 @@ class TestRayleighLagrange{ public:
 };
 
 int main(){
-	TestRayleighLagrange().testTruncatedNewton();
+	TestRayleighLagrange().testNewton();
 	TestRayleighLagrange().testLBFGS();
 	TestRayleighLagrange().testLanczos();
 }

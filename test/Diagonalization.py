@@ -47,11 +47,11 @@ class TestDiagonalization(ut.TestCase):
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution0, self.Solution1 = np.linalg.eigh(self.Obj.A)
 
-	def testTruncatedNewton(self):
+	def testNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.TruncatedNewton(
+		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 24, 0
 		)
 		assert converged
@@ -77,6 +77,6 @@ class TestDiagonalization(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestDiagonalization().testTruncatedNewton()
+	TestDiagonalization().testNewton()
 	TestDiagonalization().testLBFGS()
 	TestDiagonalization().testLanczos()

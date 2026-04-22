@@ -3,7 +3,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -102,21 +102,21 @@ class TestQuadratic{ public:
 		Manifold = mv::Euclidean(from0to9);
 	};
 
-	void testUnpreconTruncatedNewton(){
+	void testUnpreconNewton(){
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(UnpreconObj, {Manifold.Share()});
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 20, 1
 		);
 		__Check_Result__
 	};
 
-	void testPreconTruncatedNewton(){
+	void testPreconNewton(){
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(PreconObj, {Manifold.Share()});
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 19, 1
 		);
 		__Check_Result__
@@ -160,8 +160,8 @@ class TestQuadratic{ public:
 };
 
 int main(){
-	TestQuadratic().testUnpreconTruncatedNewton();
-	TestQuadratic().testPreconTruncatedNewton();
+	TestQuadratic().testUnpreconNewton();
+	TestQuadratic().testPreconNewton();
 	TestQuadratic().testUnpreconLBFGS();
 	TestQuadratic().testPreconLBFGS();
 	TestQuadratic().testAnderson();

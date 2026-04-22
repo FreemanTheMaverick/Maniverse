@@ -4,7 +4,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -71,11 +71,11 @@ class TestRayleigh{ public:
 		Solution = Evec.col(0);
 	};
 
-	void testTruncatedNewton(){
+	void testNewton(){
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(Obj, {Manifold.Share()});
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 3, 1
 		);
 		__Check_Result__
@@ -101,7 +101,7 @@ class TestRayleigh{ public:
 };
 
 int main(){
-	TestRayleigh().testTruncatedNewton();
+	TestRayleigh().testNewton();
 	TestRayleigh().testLBFGS();
 	TestRayleigh().testLanczos();
 }

@@ -10,7 +10,7 @@
 
 namespace Maniverse{
 
-bool TruncatedNewton(
+bool Newton(
 		Iterate& M,
 		TrustRegion& tr,
 		LinearSolver& ls,

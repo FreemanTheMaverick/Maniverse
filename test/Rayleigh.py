@@ -31,11 +31,11 @@ class TestRayleigh(ut.TestCase):
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution = Evec[:, 0]
 
-	def testTruncatedNewton(self):
+	def testNewton(self):
 		M = mv.Iterate(self.Obj, {self.Manifold})
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.TruncatedNewton(
+		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 3, 0
 		)
 		assert converged
@@ -61,6 +61,6 @@ class TestRayleigh(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestRayleigh().testTruncatedNewton()
+	TestRayleigh().testNewton()
 	TestRayleigh().testLBFGS()
 	TestRayleigh().testLanczos()

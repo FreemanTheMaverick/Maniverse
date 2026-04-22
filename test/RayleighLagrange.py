@@ -53,11 +53,11 @@ class TestRayleighLagrange(ut.TestCase):
 		self.Solution = Evec[:, 0]
 		self.Lambda = - Eval[0]
 
-	def testTruncatedNewton(self):
+	def testNewton(self):
 		M = mv.Iterate(self.Obj, {self.Manifold})
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 4, 0)(mv.TruncatedNewton)(
+		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 4, 0)(mv.Newton)(
 				M, tr, cg, self.Tolerance, 10, 0
 		)
 		assert converged
@@ -84,6 +84,6 @@ class TestRayleighLagrange(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestRayleighLagrange().testTruncatedNewton()
+	TestRayleighLagrange().testNewton()
 	TestRayleighLagrange().testLBFGS()
 	TestRayleighLagrange().testLanczos()
