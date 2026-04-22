@@ -60,11 +60,11 @@ class TestSingular(ut.TestCase):
 		self.Solution1.reshape([6, 1])
 		self.Solution2 = self.Solution2.T
 
-	def testTruncatedNewton(self):
+	def testNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.TruncatedNewton(
+		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 24, 0
 		)
 		assert converged
@@ -90,6 +90,6 @@ class TestSingular(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestSingular().testTruncatedNewton()
+	TestSingular().testNewton()
 	TestSingular().testLBFGS()
 	TestSingular().testLanczos()

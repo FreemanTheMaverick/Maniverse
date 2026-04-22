@@ -15,11 +15,11 @@
 #include "../LinearSolver/LinearSolver.h"
 
 #include "TrustRegion.h"
-#include "TruncatedNewton.h"
+#include "Newton.h"
 
 namespace Maniverse{
 
-bool TruncatedNewton(
+bool Newton(
 		Iterate& M,
 		TrustRegion& tr,
 		LinearSolver& ls,
@@ -28,7 +28,7 @@ bool TruncatedNewton(
 
 	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
-		std::printf("****************************** Truncated Newton *******************************\n\n");
+		std::printf("******************************* Newton's method ********************************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Maximum number of iterations: %d\n", max_iter);
@@ -146,8 +146,8 @@ bool TruncatedNewton(
 }
 
 #ifdef __PYTHON__
-void Init_TruncatedNewton(pybind11::module_& m){
-	m.def("TruncatedNewton", &TruncatedNewton);
+void Init_Newton(pybind11::module_& m){
+	m.def("Newton", &Newton);
 }
 #endif
 

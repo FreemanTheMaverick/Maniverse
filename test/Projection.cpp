@@ -4,7 +4,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -82,11 +82,11 @@ class TestProjection{ public:
 		Solution = U * V.transpose();
 	};
 
-	void testTruncatedNewton(){
+	void testNewton(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 0);
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 9, 1
 		);
 		__Check_Result__
@@ -121,7 +121,7 @@ class TestProjection{ public:
 };
 
 int main(){
-	TestProjection().testTruncatedNewton();
+	TestProjection().testNewton();
 	TestProjection().testLBFGS();
 	TestProjection().testAnderson();
 	TestProjection().testLanczos();

@@ -39,11 +39,11 @@ class TestProjection(ut.TestCase):
 		self.Solution = U @ Vt
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 
-	def testTruncatedNewton(self):
+	def testNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.TruncatedNewton(
+		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 9, 0
 		)
 		assert converged
@@ -78,7 +78,7 @@ class TestProjection(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestProjection().testTruncatedNewton()
+	TestProjection().testNewton()
 	TestProjection().testLBFGS()
 	TestProjection().testAnderson()
 	TestProjection().testLanczos()

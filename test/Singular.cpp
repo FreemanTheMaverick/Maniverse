@@ -5,7 +5,7 @@
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -102,11 +102,11 @@ class TestSingular{ public:
 		Solution2 = svd.matrixV();
 	}
 
-	void testTruncatedNewton(){
+	void testNewton(){
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 21, 1
 		);
 		__Check_Result__
@@ -132,7 +132,7 @@ class TestSingular{ public:
 };
 
 int main(){
-	TestSingular().testTruncatedNewton();
+	TestSingular().testNewton();
 	TestSingular().testLBFGS();
 	TestSingular().testLanczos();
 }

@@ -60,21 +60,21 @@ class TestQuadratic(ut.TestCase):
 		self.Manifold = mv.Euclidean(range(10))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 
-	def testUnpreconTruncatedNewton(self):
+	def testUnpreconNewton(self):
 		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.TruncatedNewton(
+		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 21, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
-	def testPreconTruncatedNewton(self):
+	def testPreconNewton(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
-		converged = mv.TruncatedNewton(
+		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 19, 0
 		)
 		assert converged
@@ -118,8 +118,8 @@ class TestQuadratic(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestQuadratic().testUnpreconTruncatedNewton()
-	TestQuadratic().testPreconTruncatedNewton()
+	TestQuadratic().testUnpreconNewton()
+	TestQuadratic().testPreconNewton()
 	TestQuadratic().testUnpreconLBFGS()
 	TestQuadratic().testPreconLBFGS()
 	TestQuadratic().testAnderson()

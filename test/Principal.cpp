@@ -3,7 +3,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Flag.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -69,11 +69,11 @@ class TestPrincipal{ public:
 		Solution = es.eigenvectors().rightCols(5);
 	};
 
-	void testTruncatedNewton(){
+	void testNewton(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
-		const bool converged = mv::TruncatedNewton(
+		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 8, 1
 		);
 		__Check_Result__
@@ -99,7 +99,7 @@ class TestPrincipal{ public:
 };
 
 int main(){
-	TestPrincipal().testTruncatedNewton();
+	TestPrincipal().testNewton();
 	TestPrincipal().testLBFGS();
 	TestPrincipal().testLanczos();
 }
