@@ -32,14 +32,15 @@ class Obj(mv.Objective):
 		s = self.s
 		V = self.V
 		delta_U, delta_s, delta_V = K
+		delta_s = delta_s[:, 0]
 		HUU = 2 * delta_U * s ** 2
-		HUs = 4 * U * s * delta_s[:, 0] - 2 * self.A @ V * delta_s[:, 0]
+		HUs = 4 * U * s * delta_s - 2 * self.A @ V * delta_s
 		HUV = - 2 * self.A @ delta_V * s
 		HsU = - 2 * np.diag( delta_U.T @ self.A @ V )
-		Hss = 2 * delta_s[:, 0]
+		Hss = 2 * delta_s
 		HsV = - 2 * np.diag( U.T @ self.A @ delta_V )
 		HVU = - 2 * self.A.T @ delta_U * s
-		HVs = 4 * V * s * delta_s[:, 0] - 2 * self.A.T @ U * delta_s[:, 0]
+		HVs = 4 * V * s * delta_s - 2 * self.A.T @ U * delta_s
 		HVV = 2 * delta_V * s ** 2
 		return [
 					HUU + HUs + HUV,
@@ -55,16 +56,16 @@ class TestSingular(ut.TestCase):
 		self.Manifold1 = mv.Euclidean(np.zeros(6))
 		self.Manifold2 = mv.Orthogonal(np.eye(6))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
-		self.TrustRegion = mv.TrustRegion()
 		self.Solution0, self.Solution1, self.Solution2 = np.linalg.svd(self.Obj.A, full_matrices=False)
 		self.Solution1.reshape([6, 1])
 		self.Solution2 = self.Solution2.T
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
 		converged = mv.TruncatedNewton(
-				M, self.TrustRegion, self.Tolerance,
-				0.001, 24, 0
+				M, tr, cg, self.Tolerance, 24, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
@@ -83,7 +84,7 @@ class TestSingular(ut.TestCase):
 		M.setPoint([self.Solution0, self.Solution1, self.Solution2], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0);
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
 		for i in range(len(Evals)):
 			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5

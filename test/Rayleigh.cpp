@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -60,7 +61,6 @@ class TestRayleigh{ public:
 	ObjRayleigh Obj = ObjRayleigh();
 	mv::Stiefel Manifold = mv::Stiefel(Eigen::MatrixXd::Identity(10, 1));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Zero(10, 1);
 
 	TestRayleigh(){
@@ -72,10 +72,11 @@ class TestRayleigh{ public:
 	};
 
 	void testTruncatedNewton(){
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.001, 3, 1
+				M, tr, cg, Tolerance, 3, 1
 		);
 		__Check_Result__
 	};

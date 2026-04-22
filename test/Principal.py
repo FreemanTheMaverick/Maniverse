@@ -29,14 +29,14 @@ class TestPrincipal(ut.TestCase):
 		self.Manifold = mv.Flag(np.eye(10)[:, :5]) # Initial guess
 		self.Manifold.setBlockParameters([5])
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
-		self.TrustRegion = mv.TrustRegion()
 		self.Solution = np.linalg.eigh(self.Obj.A)[1][:, 5:]
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
 		converged = mv.TruncatedNewton(
-				M, self.TrustRegion, self.Tolerance,
-				0.001, 8, 0
+				M, tr, cg, self.Tolerance, 8, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
@@ -52,9 +52,9 @@ class TestPrincipal(ut.TestCase):
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
-		M.setPoint([self.Solution], 1);
+		M.setPoint([self.Solution], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
-		M.setGradient();
+		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )

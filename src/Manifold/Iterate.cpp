@@ -40,7 +40,7 @@ Iterate::Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms){
 		this->Constraints.push_back({});
 		this->Constraint_Gradient.push_back(Eigen::VectorXd::Zero(this->TotalSize));
 		for ( int jM = 0; jM < nMs; jM++ ){
-			this->Constraints[icons].push_back(Ms[jM]->Clone());
+			this->Constraints[icons].push_back(Ms[jM]->Share());
 		}
 	}
 }
@@ -245,7 +245,7 @@ Eigen::VectorXd Iterate::PreconditionerInvSqrt(Eigen::VectorXd Xmat) const{
 #ifdef __PYTHON__
 void Init_Iterate(pybind11::module_& m){
 	pybind11::classh<Iterate>(m, "Iterate")
-		.def_readonly("Ms", &Iterate::Ms)
+		.def_readwrite("Ms", &Iterate::Ms)
 		.def_readwrite("Func", &Iterate::Func)
 		.def_readwrite("Point", &Iterate::Point)
 		.def_readwrite("Gradient", &Iterate::Gradient)
@@ -254,7 +254,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def("Preconditioner", &Iterate::Preconditioner)
 		.def("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
 		.def("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
-		.def_readonly("Constraints", &Iterate::Constraints)
+		.def_readwrite("Constraints", &Iterate::Constraints)
 		.def_readwrite("Constraint_Gradient", &Iterate::Constraint_Gradient)
 		.def_readwrite("TotalSize", &Iterate::TotalSize)
 		.def_readwrite("BlockParameters", &Iterate::BlockParameters)

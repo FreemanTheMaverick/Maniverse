@@ -17,18 +17,18 @@ class LinearSolver{ public:
 	std::function<Eigen::VectorXd (Eigen::VectorXd)> P;
 	int FuncFreq;
 	bool FrownNPC;
-	bool Verbose;
 	std::tuple<double, double> Tolerance;
+	bool Verbose;
 	std::vector<std::tuple<Eigen::VectorXd, Eigen::VectorXd>> Sequence;
 
 	LinearSolver(
 			int FuncFreq,
 			bool FrownNPC,
-			bool Verbose,
-			std::tuple<double, double> Tolerance
+			std::tuple<double, double> Tolerance,
+			bool Verbose
 	):
 		FuncFreq(FuncFreq), FrownNPC(FrownNPC),
-		Verbose(Verbose), Tolerance(Tolerance)
+		Tolerance(Tolerance), Verbose(Verbose)
 	{};
 
 	std::tuple<Eigen::VectorXd, Eigen::VectorXd> SteihaugToint(Eigen::VectorXd v, Eigen::VectorXd p, double R);

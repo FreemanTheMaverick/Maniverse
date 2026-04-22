@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
@@ -94,7 +95,6 @@ class TestQuadratic{ public:
 	AndersonObjQuadratic AndersonObj = AndersonObjQuadratic();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Zero(10, 1));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 
 	TestQuadratic(){
 		Eigen::MatrixXd from0to9(10, 1);
@@ -103,19 +103,21 @@ class TestQuadratic{ public:
 	};
 
 	void testUnpreconTruncatedNewton(){
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(UnpreconObj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.001, 21, 1
+				M, tr, cg, Tolerance, 20, 1
 		);
 		__Check_Result__
 	};
 
 	void testPreconTruncatedNewton(){
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(PreconObj, {Manifold.Share()});
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.001, 19, 1
+				M, tr, cg, Tolerance, 19, 1
 		);
 		__Check_Result__
 	};

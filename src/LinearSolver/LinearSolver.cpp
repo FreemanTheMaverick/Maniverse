@@ -25,7 +25,7 @@ std::tuple<Eigen::VectorXd, Eigen::VectorXd> LinearSolver::SteihaugToint(Eigen::
 Eigen::VectorXd LinearSolver::Find(double R){
 	for ( int i = 0; i < (int)Sequence.size(); i++ ) if ( M->Inner(std::get<0>(Sequence[i]), std::get<0>(Sequence[i])) > R ){
 		const auto& [v, p] = Sequence[i];
-		const auto [vnew, _] = SteihaugToint(v, p, R);
+		const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(v, p, R));
 		return vnew;
 	}
 	return std::get<0>(this->Sequence.back());
@@ -36,13 +36,13 @@ class PyLinearSolver : public LinearSolver, pybind11::trampoline_self_life_suppo
 	using LinearSolver::LinearSolver;
 
 	void Calculate(double R) override{
-		PYBIND11_OVERRIDE(void, LinearSolver, Calculate, R);
+		PYBIND11_OVERRIDE_PURE(void, LinearSolver, Calculate, R);
 	}
-}
+};
 
 void Init_LinearSolver(pybind11::module_& m){
 	pybind11::classh<LinearSolver, PyLinearSolver>(m, "LinearSolver")
-		.def_readonly("Iterate", &LinearSolver::Iterate)
+		.def_readwrite("M", &LinearSolver::M)
 		.def_readwrite("A", &LinearSolver::A)
 		.def_readwrite("b", &LinearSolver::b)
 		.def_readwrite("P", &LinearSolver::P)
@@ -51,10 +51,8 @@ void Init_LinearSolver(pybind11::module_& m){
 		.def_readwrite("Verbose", &LinearSolver::Verbose)
 		.def_readwrite("Tolerance", &LinearSolver::Tolerance)
 		.def_readwrite("Sequence", &LinearSolver::Sequence)
-		.def(pybind11::init<>())
 		.def(pybind11::init<
-				int, bool, bool, std::tuple<double, double>,
-				std::vector<std::tuple<Eigen::VectorXd, Eigen::VectorXd>>
+				int, bool, std::tuple<double, double>, bool
 		>()).def("SteihaugToint", &LinearSolver::SteihaugToint)
 		.def("Calculate", &LinearSolver::Calculate)
 		.def("Find", &LinearSolver::Find);
