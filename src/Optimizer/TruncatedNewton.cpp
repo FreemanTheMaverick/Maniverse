@@ -12,102 +12,19 @@
 
 #include "../Macro.h"
 #include "../Manifold/Manifold.h"
+#include "../LinearSolver/LinearSolver.h"
 
 #include "TrustRegion.h"
 #include "TruncatedNewton.h"
 
 namespace Maniverse{
 
-#define G M->Gradient
-
-void TruncatedConjugateGradient::Run(){
-	if (this->Verbose){
-		std::printf("Using truncated conjugated gradient optimizer on the tangent space of %s manifold\n", this->M->getName().c_str());
-		std::printf("| Itn. |       Target        |   T. C.  |  Grad.  |  V. U.  |  Time  |\n");
-	}
-
-	this->Sequence.clear(); this->Sequence.reserve(20);
-	Eigen::MatrixXd v = Eigen::MatrixXd::Zero(G.rows(), G.cols());
-	Eigen::MatrixXd r = - G;
-	Eigen::MatrixXd z = this->M->Preconditioner(r);
-	Eigen::MatrixXd p = z;
-	double vnorm = 0;
-	double vplusnorm = 0;
-	double r2 = this->M->Inner(r, z);
-	double L = 0;
-	const auto start = __now__;
-
-	Eigen::MatrixXd Hp = Eigen::MatrixXd::Zero(G.rows(), G.cols());
-	Eigen::MatrixXd vplus = Eigen::MatrixXd::Zero(G.rows(), G.cols());
-
-	for ( int iiter = 0; iiter < this->M->getDimension(); iiter++ ){
-		if (this->Verbose) std::printf("| %4d |", iiter);
-		Hp = this->M->TangentPurification(this->M->Hessian(p));
-		const double pHp = this->M->Inner(p, Hp);
-		const double Llast = L;
-		if (this->ShowTarget) L = 0.5 * this->M->Inner(this->M->Hessian(v), v) + this->M->Inner(G, v);
-		else L = std::nan("");
-		const double deltaL = L - Llast;
-		if (this->Verbose) std::printf("  %17.10f  | % 5.1E | %5.1E |", L, deltaL, std::sqrt(r2));
-
-		const double alpha = r2 / pHp;
-		vplus = this->M->TangentPurification(v + alpha * p);
-		vplusnorm = std::sqrt(this->M->Inner(vplus, vplus));
-		vnorm = std::sqrt(this->M->Inner(v, v));
-		const double step = std::abs(alpha) * std::sqrt(this->M->Inner(p, p));
-		if (this->Verbose) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
-		if ( iiter > 0 && this->Tolerance(deltaL, L, std::sqrt(r2), step) ){
-			if (this->Verbose) std::printf("Tolerance met!\n");
-			this->Sequence.push_back(std::make_tuple(vnorm, v, p));
-			return;
-		}
-
-		if ( pHp <= 0 || vplusnorm >= this->Radius ){
-			const double A = this->M->Inner(p, p);
-			const double B = this->M->Inner(v, p) * 2.;
-			const double C = vnorm * vnorm - this->Radius * this->Radius;
-			const double t = ( std::sqrt( B * B - 4. * A * C ) - B ) / 2. / A;
-			if (this->Verbose && pHp <= 0) std::printf("Non-positive curvature!\n");
-			if (this->Verbose && vplusnorm >= this->Radius) std::printf("Out of trust region!\n");
-			this->Sequence.push_back(std::make_tuple(this->Radius, v + t * p, p));
-			return;
-		}
-		v = vplus;
-		vnorm = vplusnorm;
-		this->Sequence.push_back(std::make_tuple(vnorm, v, p));
-		const double r2old = r2;
-		r -= alpha * Hp;
-		const Eigen::MatrixXd z = this->M->TangentPurification(this->M->Preconditioner(r));
-		r2 = this->M->Inner(r, z);
-		const double beta = r2 / r2old;
-		p = z + beta * p;
-	}
-	if (this->Verbose) std::printf("Dimension completed!\n");
-}
-
-std::tuple<double, Eigen::MatrixXd> TruncatedConjugateGradient::Find(){
-	for ( int i = 0; i < (int)this->Sequence.size(); i++ ) if ( std::get<0>(this->Sequence[i]) > this->Radius ){
-		const Eigen::MatrixXd v = std::get<1>(this->Sequence[i]);
-		const Eigen::MatrixXd p = std::get<2>(this->Sequence[i]);
-		const double A = this->M->Inner(p, p);
-		const double B = this->M->Inner(v, p) * 2.;
-		const double C = this->M->Inner(v, v) - this->Radius * this->Radius;
-		const double t = ( std::sqrt( B * B - 4. * A * C ) - B ) / 2. / A;
-		const Eigen::MatrixXd vnew = v + t * p;
-		return std::make_tuple(this->Radius, vnew);
-	}
-	return std::make_tuple(
-			std::get<0>(this->Sequence.back()),
-			std::get<1>(this->Sequence.back())
-	);
-}
-
 bool TruncatedNewton(
 		Iterate& M,
 		TrustRegion& tr,
+		LinearSolver& ls,
 		std::tuple<double, double, double> tol,
-		double tcg_tol, int max_iter,
-		int output){
+		int max_iter, int output){
 
 	auto [tol0, tol1, tol2] = tol;
 	if (output > 0){
@@ -132,8 +49,6 @@ bool TruncatedNewton(
 	double predicted_delta_L = 0;
 	double actual_delta_L = 0;
 
-	TruncatedConjugateGradient tcg{&M, output > 0, 1};
-
 	Eigen::MatrixXd Pmat = M.Point;
 	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
 	double Snorm = 0;
@@ -153,8 +68,8 @@ bool TruncatedNewton(
 		for ( int trial = 0; ! accepted; trial++ ){
 
 			// Obtaining the next step within the trust region
-			tcg.Radius = R;
-			if ( iiter > 0 ) std::tie(Snorm, S) = tcg.Find();
+			if ( iiter > 0 ) S = ls.Find(R);
+			Snorm = M.Inner(S, S);
 			Pmat = M.Retract(S);
 			DecoupleBlock(Pmat, P, M.BlockParameters);
 			if ( iiter > 0 ) predicted_delta_L = M.Inner(M.Gradient + 0.5 * M.Hessian(S), S);
@@ -216,11 +131,11 @@ bool TruncatedNewton(
 		// Preparing hessian and storing this step
 		if ( ! converged ){
 			// Truncated conjugate gradient
-			tcg.Tolerance = [tcg_tol](double deltaL, double L, double /*rnorm*/, double /*step*/){
-				return std::abs(deltaL / L) < tcg_tol;
-			};
-			tcg.Radius = R;
-			tcg.Run();
+			ls.M = &M;
+			ls.A = [&M](Eigen::VectorXd X){ return M.Hessian(X); };
+			ls.b = - M.Gradient;
+			ls.P = [&M](Eigen::VectorXd X){ return M.Preconditioner(X); };
+			ls.Calculate(R);
 		}
 
 		// Elapsed time
@@ -232,16 +147,6 @@ bool TruncatedNewton(
 
 #ifdef __PYTHON__
 void Init_TruncatedNewton(pybind11::module_& m){
-	pybind11::class_<TruncatedConjugateGradient>(m, "TruncatedConjugateGradient")
-		.def_readwrite("Verbose", &TruncatedConjugateGradient::Verbose)
-		.def_readwrite("ShowTarget", &TruncatedConjugateGradient::ShowTarget)
-		.def_readwrite("Radius", &TruncatedConjugateGradient::Radius)
-		.def_readwrite("Tolerance", &TruncatedConjugateGradient::Tolerance)
-		.def_readwrite("Sequence", &TruncatedConjugateGradient::Sequence)
-		.def(pybind11::init<>())
-		.def(pybind11::init<Iterate*, bool, bool>())
-		.def("Run", &TruncatedConjugateGradient::Run)
-		.def("Find", &TruncatedConjugateGradient::Find);
 	m.def("TruncatedNewton", &TruncatedNewton);
 }
 #endif

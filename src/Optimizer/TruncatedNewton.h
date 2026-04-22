@@ -4,32 +4,18 @@
 #include <tuple>
 
 #include "../Manifold/Manifold.h"
+#include "../LinearSolver/LinearSolver.h"
 
 #include "TrustRegion.h"
 
 namespace Maniverse{
 
-class TruncatedConjugateGradient{ public:
-	Iterate* M; // For inner product and tangent projection.
-	bool Verbose;
-	bool ShowTarget;
-	double Radius;
-	std::function<bool (double, double, double, double)> Tolerance;
-	std::vector<std::tuple<double, Eigen::MatrixXd, Eigen::MatrixXd>> Sequence; // Step size, S, P.
-	TruncatedConjugateGradient(){};
-	TruncatedConjugateGradient(
-			Iterate* m, bool verbose, bool showtarget
-	): M(m), Verbose(verbose), ShowTarget(showtarget){};
-	void Run();
-	std::tuple<double, Eigen::MatrixXd> Find(); // Step size, S.
-};
-
 bool TruncatedNewton(
 		Iterate& M,
 		TrustRegion& tr,
+		LinearSolver& ls,
 		std::tuple<double, double, double> tol,
-		double tcg_tol, int max_iter,
-		int output
+		int max_iter, int output
 );
 
 }
