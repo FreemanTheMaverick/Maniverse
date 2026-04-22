@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
@@ -71,7 +72,6 @@ class TestProjection{ public:
 	AndersonObjProjection AndersonObj = AndersonObjProjection();
 	mv::Stiefel Manifold = mv::Stiefel(Eigen::MatrixXd::Identity(10, 6));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 6);
 
 	TestProjection(){
@@ -84,9 +84,10 @@ class TestProjection{ public:
 
 	void testTruncatedNewton(){
 		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 0);
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.001, 9, 1
+				M, tr, cg, Tolerance, 9, 1
 		);
 		__Check_Result__
 	};

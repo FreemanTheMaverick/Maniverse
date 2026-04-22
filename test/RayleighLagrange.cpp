@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Optimizer/AugmentedLagrangian.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -81,7 +82,6 @@ class TestRayleighLagrange{ public:
 	ObjRayleigh Obj = ObjRayleigh();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Identity(10, 1));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Zero(10, 1);
 	double Lambda = 0;
 
@@ -95,10 +95,11 @@ class TestRayleighLagrange{ public:
 	};
 
 	void testTruncatedNewton(){
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::TruncatedNewton)(
-				M, TrustRegion, Tolerance,
-				0.001, 10, 1
+				M, tr, cg, Tolerance, 10, 1
 		);
 		__Check_Result__
 	};

@@ -2,6 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <Maniverse/Manifold/Flag.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -59,7 +60,6 @@ class TestPrincipal{ public:
 	ObjPrincipal Obj = ObjPrincipal();
 	mv::Flag Manifold = mv::Flag(Eigen::MatrixXd::Identity(10, 5));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 5);
 
 	TestPrincipal(){
@@ -71,9 +71,10 @@ class TestPrincipal{ public:
 
 	void testTruncatedNewton(){
 		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.001, 8, 1
+				M, tr, cg, Tolerance, 8, 1
 		);
 		__Check_Result__
 	};

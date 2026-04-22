@@ -27,10 +27,11 @@ class Obj(mv.Objective):
 	def Hessian(self, V):
 		n = self.n
 		C = self.C
-		delta_n, delta_C = V
+		delta_n = V[0][:, 0]
+		delta_C = V[1]
 		Hnn = 2 * delta_n
 		HnC = - 4 * np.diag( C.T @ self.A @ delta_C )
-		HCn = 8 * C * n * delta_n[:, 0] - 4 * self.A @ C * delta_n[:, 0]
+		HCn = 8 * C * n * delta_n - 4 * self.A @ C * delta_n
 		HCC = 4 * ( delta_C * n ** 2 - self.A @ delta_C * n )
 		return [
 					Hnn + HnC,
@@ -44,14 +45,14 @@ class TestDiagonalization(ut.TestCase):
 		self.Manifold0 = mv.Euclidean(np.zeros(10))
 		self.Manifold1 = mv.Orthogonal(np.eye(10))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
-		self.TrustRegion = mv.TrustRegion()
 		self.Solution0, self.Solution1 = np.linalg.eigh(self.Obj.A)
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
 		converged = mv.TruncatedNewton(
-				M, self.TrustRegion, self.Tolerance,
-				0.0001, 28, 0
+				M, tr, cg, self.Tolerance, 24, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
@@ -70,7 +71,7 @@ class TestDiagonalization(ut.TestCase):
 		M.setPoint([self.Solution0, self.Solution1], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0);
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
 		for i in range(len(Evals)):
 			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5

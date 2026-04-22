@@ -38,13 +38,13 @@ class TestProjection(ut.TestCase):
 		self.Manifold = mv.Stiefel( U @ Vt @ expm( self.Obj.A[4:, :] - self.Obj.A[4:, :].T ) )
 		self.Solution = U @ Vt
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
-		self.TrustRegion = mv.TrustRegion()
 
 	def testTruncatedNewton(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
 		converged = mv.TruncatedNewton(
-				M, self.TrustRegion, self.Tolerance,
-				0.001, 9, 0
+				M, tr, cg, self.Tolerance, 9, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
@@ -69,9 +69,9 @@ class TestProjection(ut.TestCase):
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
-		M.setPoint([self.Solution], 1);
+		M.setPoint([self.Solution], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
-		M.setGradient();
+		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )

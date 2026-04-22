@@ -56,7 +56,7 @@ void ConjugateGradient::Calculate(double R){
 		vplusnorm = std::sqrt(M->Inner(vplus, vplus));
 		const double step = std::abs(alpha) * std::sqrt(M->Inner(p, p));
 		if (Verbose) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
-		if ( iiter > 0 && ( std::abs((L - Llast)/L) / FuncFreq < std::get<0>(Tolerance) || std::sqrt(r2) < std::get<1>(Tolerance) ) ){
+		if ( iiter > 0 && ( std::abs((L - Llast)/L) / FuncFreq < std::get<0>(Tolerance) || std::sqrt(r2) / std::sqrt(M->Inner(b, b)) < std::get<1>(Tolerance) ) ){
 			if (Verbose) std::printf("Tolerance met!\n");
 			Sequence.push_back(std::make_tuple(v, p));
 			return;
@@ -83,9 +83,9 @@ void ConjugateGradient::Calculate(double R){
 
 #ifdef __PYTHON__
 void Init_ConjugateGradient(pybind11::module_& m){
-	pybind11::classh<ConjugateGradient, LinearSolver>(m, "ConjugateGradient").
+	pybind11::classh<ConjugateGradient, LinearSolver>(m, "ConjugateGradient")
 		.def(pybind11::init<
-				int, bool, bool, std::tuple<double, double>
+				int, bool, std::tuple<double, double>, bool
 		>());
 }
 #endif

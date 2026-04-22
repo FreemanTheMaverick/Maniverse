@@ -4,8 +4,8 @@
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
-#include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -91,9 +91,9 @@ class TestDiagonalization{ public:
 	void testTruncatedNewton(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, 1, {1e-4, 1e-12});
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		const bool converged = mv::TruncatedNewton(
-				M, tr, cg, Tolerance, 28, 1
+				M, tr, cg, Tolerance, 24, 1
 		);
 		__Check_Result__
 	};

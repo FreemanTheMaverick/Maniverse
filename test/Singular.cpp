@@ -4,6 +4,7 @@
 #include <Maniverse/Manifold/Stiefel.h>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -90,7 +91,6 @@ class TestSingular{ public:
 	mv::Euclidean Manifold1 = mv::Euclidean(Eigen::MatrixXd::Zero(6, 1));
 	mv::Orthogonal Manifold2 = mv::Orthogonal(Eigen::MatrixXd::Identity(6, 6));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution0 = Eigen::MatrixXd::Identity(10, 6);
 	Eigen::MatrixXd Solution1 = Eigen::MatrixXd::Zero(6, 1);
 	Eigen::MatrixXd Solution2 = Eigen::MatrixXd::Identity(6, 6);
@@ -103,10 +103,11 @@ class TestSingular{ public:
 	}
 
 	void testTruncatedNewton(){
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.001, 24, 1
+				M, tr, cg, Tolerance, 21, 1
 		);
 		__Check_Result__
 	};
