@@ -5,6 +5,7 @@
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
 #include <Maniverse/Optimizer/TruncatedNewton.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
@@ -78,7 +79,6 @@ class TestDiagonalization{ public:
 	mv::Euclidean Manifold0 = mv::Euclidean(Eigen::MatrixXd::Zero(10, 1));
 	mv::Orthogonal Manifold1 = mv::Orthogonal(Eigen::MatrixXd::Identity(10, 10));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
-	mv::TrustRegion TrustRegion = mv::TrustRegion();
 	Eigen::MatrixXd Solution0 = Eigen::MatrixXd::Zero(10, 1);
 	Eigen::MatrixXd Solution1 = Eigen::MatrixXd::Zero(10, 10);
 
@@ -90,9 +90,10 @@ class TestDiagonalization{ public:
 
 	void testTruncatedNewton(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(3, 1, 1, {1e-4, 1e-12});
 		const bool converged = mv::TruncatedNewton(
-				M, TrustRegion, Tolerance,
-				0.0001, 28, 1
+				M, tr, cg, Tolerance, 28, 1
 		);
 		__Check_Result__
 	};
