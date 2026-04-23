@@ -84,6 +84,7 @@ class Iterate{ public:
 	Eigen::VectorXd Hessian(Eigen::VectorXd X) const;
 	Eigen::VectorXd ConstraintProjectedHessian(Eigen::VectorXd X) const;
 	Eigen::VectorXd Preconditioner(Eigen::VectorXd X) const;
+	Eigen::VectorXd ConstraintProjectedPreconditioner(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd X) const;
 
