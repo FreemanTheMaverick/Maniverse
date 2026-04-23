@@ -112,7 +112,7 @@ class TestQuadratic(ut.TestCase):
 		M.setPoint([np.zeros([10, 1])], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0)
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5

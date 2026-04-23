@@ -126,7 +126,7 @@ class TestSingular{ public:
 		M.setPoint({Solution0, Solution1, Solution2}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 1);
 		__Check_Stability__
 	};
 };

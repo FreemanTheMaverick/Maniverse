@@ -214,6 +214,15 @@ Eigen::VectorXd Iterate::Preconditioner(Eigen::VectorXd Xmat) const{
 	return PXmat;
 }
 
+Eigen::VectorXd Iterate::ConstraintProjectedPreconditioner(Eigen::VectorXd Xmat) const{
+	// Xmat must observe the constraints.
+	const double Rho = this->Func->Rho;
+	this->Func->Rho = 0;
+	const Eigen::VectorXd PXmat = this->ConstraintProjection(this->Preconditioner(Xmat));
+	this->Func->Rho = Rho;
+	return PXmat;
+}
+
 Eigen::VectorXd Iterate::PreconditionerSqrt(Eigen::VectorXd Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<Eigen::MatrixXd> X(nMs);
@@ -252,6 +261,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def("Hessian", &Iterate::Hessian)
 		.def("ConstraintProjectedHessian", &Iterate::ConstraintProjectedHessian)
 		.def("Preconditioner", &Iterate::Preconditioner)
+		.def("ConstraintProjectedPreconditioner", &Iterate::ConstraintProjectedPreconditioner)
 		.def("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
 		.def("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
 		.def_readwrite("Constraints", &Iterate::Constraints)
