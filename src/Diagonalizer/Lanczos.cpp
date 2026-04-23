@@ -18,7 +18,7 @@ namespace Maniverse{
 
 std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M, int m, int output){
 	if (output){
-		std::printf("********************** Lanczos diagonalization of hessian **********************\n\n");
+		std::printf("********************** Lanczos diagonalization **********************\n\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
 		std::printf("Number of eigenpairs attempted: %d\n", m);
@@ -31,7 +31,9 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 	V.col(0) = M.ConstraintProjection(M.TangentProjection(V.col(0)));
 	V.col(0) /= std::sqrt(M.Inner(V.col(0), V.col(0)));
 	Eigen::MatrixXd T = Eigen::MatrixXd::Zero(m, m);
-	Eigen::VectorXd w(M.TotalSize);
+	Eigen::VectorXd w = Eigen::VectorXd::Zero(M.TotalSize);
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
+	Eigen::VectorXd Evals = Eigen::VectorXd::Zero(M.TotalSize);
 	for ( int j = 0; j < m; j++ ){
 		if (output) std::printf("\nIteration %d:\n", j);
 		const auto iter_start = __now__;
@@ -53,18 +55,21 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 		alpha = T(j, j) = M.Inner( w, V.col(j) );
 		if (output) std::printf("Alpha = %f\n", alpha);
 		w -= alpha * V.col(j);
+		if (output){
+			es.compute(T.topLeftCorner(j + 1, j + 1));
+			Evals = es.eigenvalues();
+			std::printf("%d Eigenvalues found:", j + 1);
+			for ( int i = 0; i < j + 1; i++ ) std::printf(" %f", Evals[i]);
+			std::printf("\n");
+		}
 		ShowTime:
 		if (output) std::printf("Elapsed time: %f seconds for current iteration; %f seconds in total\n", __duration__(iter_start, __now__), __duration__(all_start, __now__));
 	}
-	T = T.topLeftCorner(m, m).eval();
-	V = V.leftCols(m).eval();
-	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(T);
-	Eigen::VectorXd Evals = es.eigenvalues();
-	if (output){
-		std::printf("\n%d Eigenvalues found:", m);
-		for ( int j = 0; j < m; j++ ) std::printf(" %f", Evals[j]);
-		std::printf("\n");
+	if (!output){
+		es.compute(T.topLeftCorner(m, m));
+		Evals = es.eigenvalues();
 	}
+	V = V.leftCols(m).eval();
 	Eigen::MatrixXd Evecs = V * es.eigenvectors();
 	std::vector<Eigen::VectorXd> Evecs_vec(m);
 	for ( int j = 0; j < m; j++ ) Evecs_vec[j] = Evecs.col(j);
