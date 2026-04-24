@@ -56,7 +56,7 @@ void ConjugateGradient::Calculate(double R){
 		vplusnorm = std::sqrt(M->Inner(vplus, vplus));
 		const double step = std::abs(alpha) * std::sqrt(M->Inner(p, p));
 		if (Verbose) std::printf(" %5.1E | %6.3f |\n", step, __duration__(start, __now__));
-		if ( iiter > 0 && ( std::abs((L - Llast)/L) / FuncFreq < std::get<0>(Tolerance) || std::sqrt(r2) / std::sqrt(M->Inner(b, b)) < std::get<1>(Tolerance) ) ){
+		if ( iiter > 0 && ( std::abs((L - Llast)/L) / FuncFreq < std::get<0>(Tolerance) || std::sqrt(r2 / M->Inner(b, b)) < std::get<1>(Tolerance) ) ){
 			if (Verbose) std::printf("Tolerance met!\n");
 			Sequence.push_back(std::make_tuple(v, p));
 			return;
@@ -73,7 +73,7 @@ void ConjugateGradient::Calculate(double R){
 		Sequence.push_back(std::make_tuple(v, p));
 		const double r2old = r2;
 		r -= alpha * Ap;
-		const Eigen::MatrixXd z = M->TangentPurification(P(r));
+		const Eigen::VectorXd z = M->TangentPurification(P(r));
 		r2 = M->Inner(r, z);
 		const double beta = r2 / r2old;
 		p = z + beta * p;

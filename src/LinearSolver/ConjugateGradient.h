@@ -5,7 +5,8 @@
 namespace Maniverse{
 
 class ConjugateGradient : public LinearSolver{ public:
-	using LinearSolver::LinearSolver;
+	bool FrownNPC;
+	ConjugateGradient(int FuncFreq, bool FrownNPC, std::tuple<double, double> Tolerance, bool Verbose): LinearSolver(FuncFreq, Tolerance, Verbose), FrownNPC(FrownNPC){};
 	void Calculate(double R) override;
 };
 
