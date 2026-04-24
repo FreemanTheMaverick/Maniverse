@@ -32,10 +32,8 @@ void MinRes::Calculate(double R){
 	Eigen::VectorXd z = P(r);
 	Eigen::VectorXd p = z;
 	Eigen::VectorXd s = p;
-	Eigen::VectorXd z_1 = z;
 	Eigen::VectorXd p_1 = p;
 	Eigen::VectorXd s_1 = s;
-	Eigen::VectorXd z_2 = z;
 	Eigen::VectorXd p_2 = p;
 	Eigen::VectorXd s_2 = s;
 
