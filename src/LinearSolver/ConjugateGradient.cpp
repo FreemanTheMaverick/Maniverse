@@ -84,6 +84,7 @@ void ConjugateGradient::Calculate(double R){
 #ifdef __PYTHON__
 void Init_ConjugateGradient(pybind11::module_& m){
 	pybind11::classh<ConjugateGradient, LinearSolver>(m, "ConjugateGradient")
+		.def_readwrite("FrownNPC", &ConjugateGradient::FrownNPC)
 		.def(pybind11::init<
 				int, bool, std::tuple<double, double>, bool
 		>());
