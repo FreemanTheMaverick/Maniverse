@@ -47,12 +47,11 @@ void Init_LinearSolver(pybind11::module_& m){
 		.def_readwrite("b", &LinearSolver::b)
 		.def_readwrite("P", &LinearSolver::P)
 		.def_readwrite("FuncFreq", &LinearSolver::FuncFreq)
-		.def_readwrite("FrownNPC", &LinearSolver::FrownNPC)
 		.def_readwrite("Verbose", &LinearSolver::Verbose)
 		.def_readwrite("Tolerance", &LinearSolver::Tolerance)
 		.def_readwrite("Sequence", &LinearSolver::Sequence)
 		.def(pybind11::init<
-				int, bool, std::tuple<double, double>, bool
+				int, std::tuple<double, double>, bool
 		>()).def("SteihaugToint", &LinearSolver::SteihaugToint)
 		.def("Calculate", &LinearSolver::Calculate)
 		.def("Find", &LinearSolver::Find);

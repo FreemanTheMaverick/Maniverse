@@ -7,5 +7,6 @@ from Quadratic import *
 from Rayleigh import *
 from Singular import *
 from RayleighLagrange import *
+from RayleighInterior import *
 
 ut.main()
