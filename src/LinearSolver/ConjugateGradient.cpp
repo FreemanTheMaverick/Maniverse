@@ -78,6 +78,7 @@ void ConjugateGradient::Calculate(double R){
 
 		if ( std::abs((L - Llast)/L) < std::get<0>(Tolerance) || std::sqrt(r2 / dot(b, b)) < std::get<1>(Tolerance) ){
 			if (Verbose) std::printf("Tolerance met!\n");
+			Sequence.push_back(std::make_tuple(v, Eigen::MatrixXd::Zero(total_size)));
 			return;
 		}
 
@@ -92,7 +93,6 @@ Eigen::VectorXd ConjugateGradient::Find(double R){
 		const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(dot, v, p, R));
 		return vnew;
 	}
-	const Eigen::VectorXd result = std::get<0>(this->Sequence.back());
 	return std::get<0>(this->Sequence.back());
 }
 
