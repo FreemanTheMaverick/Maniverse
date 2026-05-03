@@ -68,6 +68,7 @@ class Objective{ public:
 	std::vector<Eigen::MatrixXd> Gradient;
 	virtual std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> X) const;
 	virtual std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> X) const;
+	virtual std::vector<Eigen::MatrixXd> PreconditionerInv(std::vector<Eigen::MatrixXd> X) const;
 	virtual std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const;
 	virtual std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const;
 	std::vector<double> Lambda;
@@ -85,6 +86,8 @@ class Iterate{ public:
 	Eigen::VectorXd ConstraintProjectedHessian(Eigen::VectorXd X) const;
 	Eigen::VectorXd Preconditioner(Eigen::VectorXd X) const;
 	Eigen::VectorXd ConstraintProjectedPreconditioner(Eigen::VectorXd X) const;
+	Eigen::VectorXd PreconditionerInv(Eigen::VectorXd X) const;
+	Eigen::VectorXd ConstraintProjectedPreconditionerInv(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd X) const;
 	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd X) const;
 

@@ -5,9 +5,10 @@
 namespace Maniverse{
 
 class ConjugateGradient : public LinearSolver{ public:
-	bool FrownNPC;
-	ConjugateGradient(int FuncFreq, bool FrownNPC, std::tuple<double, double> Tolerance, bool Verbose): LinearSolver(FuncFreq, Tolerance, Verbose), FrownNPC(FrownNPC){};
+	std::vector<std::tuple<Eigen::VectorXd, Eigen::VectorXd>> Sequence;
+	using LinearSolver::LinearSolver;
 	void Calculate(double R) override;
+	Eigen::VectorXd Find(double R) override;
 };
 
 }

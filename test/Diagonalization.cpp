@@ -8,6 +8,8 @@
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
+#include <Maniverse/LinearSolver/MinRes.h>
+//#include <Maniverse/Diagonalizer/Davidson.h>
 
 // Symmetric diagonalization
 // Finding the eigenvalues and eigenvectors of a symmetric A
@@ -88,10 +90,10 @@ class TestDiagonalization{ public:
 		Solution1 = es.eigenvectors();
 	};
 
-	void testNewton(){
+	void testNewtonCG(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 24, 1
 		);
@@ -112,13 +114,26 @@ class TestDiagonalization{ public:
 		M.setPoint({Solution0, Solution1}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__
 	};
+
+	/*
+	void testDavidson(){
+		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
+		M.setPoint({Solution0, Solution1}, 1);
+		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		mv::MinRes mr(1, {1e-12, 1e-12}, 1);
+		mr.M = &M;
+		const auto [Evals, Evecs] = mv::Davidson(M, mr, 0, -114514, 1e-8, 100, 1, 0, 0, 1);
+		__Check_Stability__
+	};*/
 };
 
 int main(){
-	TestDiagonalization().testNewton();
+	TestDiagonalization().testNewtonCG();
 	TestDiagonalization().testLBFGS();
 	TestDiagonalization().testLanczos();
+	//TestDiagonalization().testDavidson();
 }

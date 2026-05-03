@@ -60,22 +60,42 @@ class TestQuadratic(ut.TestCase):
 		self.Manifold = mv.Euclidean(range(10))
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 
-	def testUnpreconNewton(self):
+	def testUnpreconNewtonCG(self):
 		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
 		tr = mv.TrustRegion()
-		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
+		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 21, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
 
-	def testPreconNewton(self):
+	def testUnpreconNewtonMR(self):
+		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 21, 0
+		)
+		assert converged
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+
+	def testPreconNewtonCG(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold])
 		tr = mv.TrustRegion()
-		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
+		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 19, 0
+		)
+		assert converged
+		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+
+	def testPreconNewtonMR(self):
+		M = mv.Iterate(self.PreconObj, [self.Manifold])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 19, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
@@ -112,14 +132,16 @@ class TestQuadratic(ut.TestCase):
 		M.setPoint([np.zeros([10, 1])], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0)
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestQuadratic().testUnpreconNewton()
-	TestQuadratic().testPreconNewton()
+	TestQuadratic().testUnpreconNewtonCG()
+	TestQuadratic().testUnpreconNewtonMR()
+	TestQuadratic().testPreconNewtonCG()
+	TestQuadratic().testPreconNewtonMR()
 	TestQuadratic().testUnpreconLBFGS()
 	TestQuadratic().testPreconLBFGS()
 	TestQuadratic().testAnderson()

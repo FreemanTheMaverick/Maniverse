@@ -82,10 +82,10 @@ class TestProjection{ public:
 		Solution = U * V.transpose();
 	};
 
-	void testNewton(){
+	void testNewtonCG(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 0);
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 9, 1
 		);
@@ -115,13 +115,13 @@ class TestProjection{ public:
 		M.setPoint({Solution}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__
 	};
 };
 
 int main(){
-	TestProjection().testNewton();
+	TestProjection().testNewtonCG();
 	TestProjection().testLBFGS();
 	TestProjection().testAnderson();
 	TestProjection().testLanczos();

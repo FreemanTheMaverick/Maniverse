@@ -31,10 +31,10 @@ class TestRayleigh(ut.TestCase):
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution = Evec[:, 0]
 
-	def testNewton(self):
+	def testNewtonCG(self):
 		M = mv.Iterate(self.Obj, {self.Manifold})
 		tr = mv.TrustRegion()
-		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
+		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 3, 0
 		)
@@ -55,12 +55,12 @@ class TestRayleigh(ut.TestCase):
 		M.setPoint([self.Solution], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0)
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestRayleigh().testNewton()
+	TestRayleigh().testNewtonCG()
 	TestRayleigh().testLBFGS()
 	TestRayleigh().testLanczos()

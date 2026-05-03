@@ -70,10 +70,10 @@ class TestRayleighInterior{ public:
 		Solution = Evec.col(1);
 	};
 
-	void testNewton(){
-		mv::TrustRegion tr;
-		mv::MinRes mr(1, {1e-4, 1e-4}, 1);
+	void testNewtonMR(){
 		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 0, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
 				M, tr, mr, Tolerance, 4, 1
 		);
@@ -85,12 +85,12 @@ class TestRayleighInterior{ public:
 		M.setPoint({Solution}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__
 	};
 };
 
 int main(){
-	TestRayleighInterior().testNewton();
+	TestRayleighInterior().testNewtonMR();
 	TestRayleighInterior().testLanczos();
 }

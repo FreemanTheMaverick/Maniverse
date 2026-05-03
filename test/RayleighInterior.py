@@ -31,10 +31,10 @@ class TestRayleighInterior(ut.TestCase):
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution = Evec[:, 1]
 
-	def testNewton(self):
+	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, {self.Manifold})
 		tr = mv.TrustRegion()
-		mr = mv.MinRes(1, (1e-4, 1e-4), 0)
+		mr = mv.MinRes(M, 0, 0, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
 				M, tr, mr, self.Tolerance, 4, 0
 		)
@@ -46,11 +46,11 @@ class TestRayleighInterior(ut.TestCase):
 		M.setPoint([self.Solution], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0)
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evecs)):
 			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestRayleighInterior().testNewton()
+	TestRayleighInterior().testNewtonCG()
 	TestRayleighInterior().testLanczos()

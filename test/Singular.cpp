@@ -102,10 +102,10 @@ class TestSingular{ public:
 		Solution2 = svd.matrixV();
 	}
 
-	void testNewton(){
-		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
+	void testNewtonCG(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);		
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 21, 1
 		);
@@ -126,13 +126,13 @@ class TestSingular{ public:
 		M.setPoint({Solution0, Solution1, Solution2}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__
 	};
 };
 
 int main(){
-	TestSingular().testNewton();
+	TestSingular().testNewtonCG();
 	TestSingular().testLBFGS();
 	TestSingular().testLanczos();
 }

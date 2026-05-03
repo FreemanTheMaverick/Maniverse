@@ -26,6 +26,10 @@ std::vector<Eigen::MatrixXd> Objective::Preconditioner(std::vector<Eigen::Matrix
 	return X;
 }
 
+std::vector<Eigen::MatrixXd> Objective::PreconditionerInv(std::vector<Eigen::MatrixXd> X) const{
+	return X;
+}
+
 std::vector<Eigen::MatrixXd> Objective::PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const{
 	return X;
 }
