@@ -47,10 +47,10 @@ class TestDiagonalization(ut.TestCase):
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution0, self.Solution1 = np.linalg.eigh(self.Obj.A)
 
-	def testNewton(self):
+	def testNewtonCG(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
 		tr = mv.TrustRegion()
-		cg = mv.ConjugateGradient(3, 1, (1e-4, 1e-4), 0)
+		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 24, 0
 		)
@@ -71,12 +71,12 @@ class TestDiagonalization(ut.TestCase):
 		M.setPoint([self.Solution0, self.Solution1], 1)
 		M.Func.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
-		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0)
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evals)):
 			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestDiagonalization().testNewton()
+	TestDiagonalization().testNewtonCG()
 	TestDiagonalization().testLBFGS()
 	TestDiagonalization().testLanczos()

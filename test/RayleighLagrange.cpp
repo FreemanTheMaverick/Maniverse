@@ -94,10 +94,10 @@ class TestRayleighLagrange{ public:
 		Lambda = - es.eigenvalues()(0);
 	};
 
-	void testNewton(){
-		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
+	void testNewtonCG(){
 		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::Newton)(
 				M, tr, cg, Tolerance, 10, 1
 		);
@@ -119,13 +119,13 @@ class TestRayleighLagrange{ public:
 		M.setPoint({Solution}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 1, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 0, 1, 1);
 		__Check_Stability__
 	};
 };
 
 int main(){
-	TestRayleighLagrange().testNewton();
+	TestRayleighLagrange().testNewtonCG();
 	TestRayleighLagrange().testLBFGS();
 	TestRayleighLagrange().testLanczos();
 }

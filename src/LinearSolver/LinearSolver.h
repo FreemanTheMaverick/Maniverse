@@ -11,27 +11,20 @@
 namespace Maniverse{
 
 class LinearSolver{ public:
-	Iterate* M;
+	std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot;
+	std::function<Eigen::VectorXd (Eigen::VectorXd)> proj;
 	std::function<Eigen::VectorXd (Eigen::VectorXd)> A;
 	Eigen::VectorXd b;
 	std::function<Eigen::VectorXd (Eigen::VectorXd)> P;
-	int FuncFreq;
+	bool FrownNPC;
 	std::tuple<double, double> Tolerance;
+	int MaxIter;
 	bool Verbose;
-	std::vector<std::tuple<Eigen::VectorXd, Eigen::VectorXd>> Sequence;
 
-	LinearSolver(
-			int FuncFreq,
-			std::tuple<double, double> Tolerance,
-			bool Verbose
-	):
-		FuncFreq(FuncFreq),
-		Tolerance(Tolerance), Verbose(Verbose){
-	};
+	LinearSolver(Iterate& M, bool Constraint, bool FrownNPC, std::tuple<double, double> Tolerance, int MaxIter, bool Verbose);
 
-	std::tuple<Eigen::VectorXd, Eigen::VectorXd> SteihaugToint(Eigen::VectorXd v, Eigen::VectorXd p, double R);
 	virtual void Calculate(double R) = 0;
-	Eigen::VectorXd Find(double R);
+	virtual Eigen::VectorXd Find(double R) = 0;
 };
 
 }

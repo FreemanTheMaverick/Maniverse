@@ -130,11 +130,8 @@ bool Newton(
 
 		// Preparing hessian and storing this step
 		if ( ! converged ){
-			// Truncated conjugate gradient
-			ls.M = &M;
-			ls.A = [&M](Eigen::VectorXd X){ return M.Hessian(X); };
+			// Linear solver
 			ls.b = - M.Gradient;
-			ls.P = [&M](Eigen::VectorXd X){ return M.Preconditioner(X); };
 			ls.Calculate(R);
 		}
 

@@ -223,6 +223,29 @@ Eigen::VectorXd Iterate::ConstraintProjectedPreconditioner(Eigen::VectorXd Xmat)
 	return PXmat;
 }
 
+Eigen::VectorXd Iterate::PreconditionerInv(Eigen::VectorXd Xmat) const{
+	const int nMs = (int)this->Ms.size();
+	std::vector<Eigen::MatrixXd> X(nMs);
+	for ( int iM = 0; iM < nMs; iM++ ) X[iM] = GetBlock(Xmat, iM, this->BlockParameters);
+
+	std::vector<Eigen::MatrixXd> PX = this->Func->PreconditionerInv(X);
+
+	Eigen::VectorXd PXmat = Eigen::VectorXd::Zero(this->TotalSize);
+	for ( int iM = 0; iM < nMs; iM++ ){
+		SetBlock(PXmat, iM, this->BlockParameters) = PX[iM];
+	}
+	return PXmat;
+}
+
+Eigen::VectorXd Iterate::ConstraintProjectedPreconditionerInv(Eigen::VectorXd Xmat) const{
+	// Xmat must observe the constraints.
+	const double Rho = this->Func->Rho;
+	this->Func->Rho = 0;
+	const Eigen::VectorXd PXmat = this->ConstraintProjection(this->PreconditionerInv(Xmat));
+	this->Func->Rho = Rho;
+	return PXmat;
+}
+
 Eigen::VectorXd Iterate::PreconditionerSqrt(Eigen::VectorXd Xmat) const{
 	const int nMs = (int)this->Ms.size();
 	std::vector<Eigen::MatrixXd> X(nMs);

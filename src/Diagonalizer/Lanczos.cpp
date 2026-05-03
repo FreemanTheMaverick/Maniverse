@@ -57,6 +57,7 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(
 			V.col(j) = y / beta;
 			const Eigen::VectorXd Av = A(V.col(j));
 			const double alpha = T(j, j) = dot( Av, V.col(j) );
+			if (output) std::printf("Alpha = %f\n", alpha);
 			t = Av - alpha * w - beta * w_last;
 			w_last = w;
 			es.compute(T.topLeftCorner(j + 1, j + 1));
@@ -77,11 +78,13 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(
 	return std::make_tuple(std::vector<double>(Evals.data(), Evals.data() + m), Evecs_vec);
 }
 
-std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M, int m, bool constraint, bool output){
+std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M, int m, bool generalized, bool constraint, bool output){
 	if (output){
 		std::printf("Configuring Lanczos diagonalization of hessian\n");
 		std::printf("Manifold: %s\n", M.getName().c_str());
 		std::printf("Dimension number: %d\n", M.getDimension());
+		if (generalized) std::printf("Generalized eigendecomposition: Yes\n");
+		else std::printf("Generalized eigendecomposition: No\n");
 		if (constraint) std::printf("Extra constraint: Yes\n");
 		else std::printf("Extra constraint: No\n");
 	}
@@ -106,13 +109,15 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 	std::uniform_real_distribution<double> dis(-3, 3);
 	Eigen::VectorXd b(M.TotalSize);
 	for ( int i = 0; i < M.TotalSize; i++ ) b(i) = dis(gen);
-	b = M.ConstraintProjection(M.TangentProjection(b));
-	b /= std::sqrt(M.Inner(b, b));
+	b = proj(b);
+	b /= std::sqrt(dot(b, b));
 
 	// Preconditioner
-	const auto P = constraint ?
-		std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjectedPreconditioner(X); }) :
-		std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); }) ;
+	const auto P = generalized ? (
+			constraint ?
+			std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjectedPreconditioner(X); }) :
+			std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); })
+		) : std::function<Eigen::VectorXd (Eigen::VectorXd)>([](Eigen::VectorXd X) -> Eigen::VectorXd{ return X; }) ;
 
 	return Lanczos(dot, proj, A, b, P, m, output);
 }
@@ -120,7 +125,7 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 #ifdef __PYTHON__
 void Init_Lanczos(pybind11::module_& m){
 	m.def("Lanczos", (std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>>(*)(std::function<double(Eigen::VectorXd,Eigen::VectorXd)>, std::function<Eigen::VectorXd(Eigen::VectorXd)>, std::function<Eigen::VectorXd(Eigen::VectorXd)>, Eigen::VectorXd, std::function<Eigen::VectorXd(Eigen::VectorXd)>, int, bool)) &Lanczos);
-	m.def("Lanczos", (std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>>(*)(Iterate&, int, bool, bool)) &Lanczos);
+	m.def("Lanczos", (std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>>(*)(Iterate&, int, bool, bool, bool)) &Lanczos);
 }
 #endif
 

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
@@ -45,10 +46,13 @@ class UnpreconObjQuadratic: public mv::Objective{ public:
 	};
 };
 
+
+typedef Eigen::DiagonalMatrix<double, -1, -1> Diagonal;
+
 class PreconObjQuadratic: public UnpreconObjQuadratic{ public:
-	Eigen::MatrixXd Ainv = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().asDiagonal();
-	Eigen::MatrixXd Asqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseSqrt().asDiagonal();
-	Eigen::MatrixXd Ainvsqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().cwiseSqrt().asDiagonal();
+	Diagonal Ainv = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().asDiagonal();
+	Diagonal Asqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseSqrt().asDiagonal();
+	Diagonal Ainvsqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().cwiseSqrt().asDiagonal();
 
 	std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> v) const override{
 		return std::vector<Eigen::MatrixXd>{ Ainv * v[0] };
@@ -102,22 +106,43 @@ class TestQuadratic{ public:
 		Manifold = mv::Euclidean(from0to9);
 	};
 
-	void testUnpreconNewton(){
-		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
+	void testUnpreconNewtonCG(){
 		mv::Iterate M(UnpreconObj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 20, 1
 		);
 		__Check_Result__
 	};
 
-	void testPreconNewton(){
+	void testUnpreconNewtonMR(){
+		mv::Iterate M(UnpreconObj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(3, 1, {1e-4, 1e-4}, 1);
+		mv::MinRes mr(M, 0, 1, {1e-8, 1e-8}, M.getDimension(), 1);
+		const bool converged = mv::Newton(
+				M, tr, mr, Tolerance, 20, 1
+		);
+		__Check_Result__
+	};
+
+
+	void testPreconNewtonCG(){
 		mv::Iterate M(PreconObj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 19, 1
+		);
+		__Check_Result__
+	};
+
+	void testPreconNewtonMR(){
+		mv::Iterate M(PreconObj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 1, {1e-8, 1e-8}, M.getDimension(), 1);
+		const bool converged = mv::Newton(
+				M, tr, mr, Tolerance, 19, 1
 		);
 		__Check_Result__
 	};
@@ -154,14 +179,16 @@ class TestQuadratic{ public:
 		M.setPoint({Eigen::MatrixXd::Zero(10, 1)}, 1);
 		M.Func->Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 1);
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__
 	};
 };
 
 int main(){
-	TestQuadratic().testUnpreconNewton();
-	TestQuadratic().testPreconNewton();
+	TestQuadratic().testUnpreconNewtonCG();
+	TestQuadratic().testUnpreconNewtonMR();
+	TestQuadratic().testPreconNewtonCG();
+	TestQuadratic().testPreconNewtonMR();
 	TestQuadratic().testUnpreconLBFGS();
 	TestQuadratic().testPreconLBFGS();
 	TestQuadratic().testAnderson();
