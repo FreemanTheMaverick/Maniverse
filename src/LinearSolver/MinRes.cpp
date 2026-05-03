@@ -126,7 +126,6 @@ Eigen::VectorXd MinRes::Find(double R){
 		const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(dot, v, p, R));
 		return vnew;
 	}
-	const Eigen::VectorXd result = std::get<0>(this->Sequence.back());
 	return std::get<0>(this->Sequence.back());
 }
 
