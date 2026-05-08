@@ -78,7 +78,7 @@ void ConjugateGradient::Calculate(double R){
 
 		if ( std::abs((L - Llast)/L) < std::get<0>(Tolerance) || std::sqrt(r2 / dot(b, b)) < std::get<1>(Tolerance) ){
 			if (Verbose) std::printf("Tolerance met!\n");
-			Sequence.push_back(std::make_tuple(v, Eigen::MatrixXd::Zero(total_size)));
+			Sequence.push_back(std::make_tuple(v, Eigen::VectorXd::Zero(total_size)));
 			return;
 		}
 
