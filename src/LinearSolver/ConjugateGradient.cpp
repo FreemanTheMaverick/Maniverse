@@ -23,7 +23,7 @@ static std::tuple<Eigen::VectorXd, Eigen::VectorXd> SteihaugToint(
 	const double B = dot(v, p) * 2;
 	const double C = dot(v, v) - R * R;
 	const double t = ( std::sqrt( B * B - 4 * A * C ) - B ) / 2 / A;
-	return std::make_tuple(v + t * p, p);
+	return std::make_tuple(v + t * p, t * p);
 }
 
 void ConjugateGradient::Calculate(double R){
@@ -73,7 +73,7 @@ void ConjugateGradient::Calculate(double R){
 			return;
 		}
 
-		Sequence.push_back(std::make_tuple(v, p));
+		Sequence.push_back(std::make_tuple(v, alpha * p));
 		v = vplus;
 
 		if ( std::abs((L - Llast)/L) < std::get<0>(Tolerance) || std::sqrt(r2 / dot(b, b)) < std::get<1>(Tolerance) ){
@@ -88,10 +88,12 @@ void ConjugateGradient::Calculate(double R){
 }
 
 Eigen::VectorXd ConjugateGradient::Find(double R){
-	for ( int i = 0; i < (int)Sequence.size(); i++ ) if ( dot(std::get<0>(Sequence[i]), std::get<0>(Sequence[i])) > R ){
-		const auto& [v, p] = Sequence[i];
-		const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(dot, v, p, R));
-		return vnew;
+	for ( int i = 0; i < (int)Sequence.size(); i++ ){
+		const auto& [vi, api] = Sequence[i];
+		if ( dot(vi + api, vi + api) > R * R + 1e-8 ){
+			const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(dot, vi, api, R));
+			return vnew;
+		}
 	}
 	return std::get<0>(this->Sequence.back());
 }
