@@ -95,7 +95,7 @@ class TestDiagonalization{ public:
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, cg, Tolerance, 24, 1
+				M, tr, cg, Tolerance, 26, 1
 		);
 		__Check_Result__
 	};

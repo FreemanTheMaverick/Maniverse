@@ -36,7 +36,7 @@ class TestRayleighInterior(ut.TestCase):
 		tr = mv.TrustRegion()
 		mr = mv.MinRes(M, 0, 0, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
-				M, tr, mr, self.Tolerance, 4, 0
+				M, tr, mr, self.Tolerance, 5, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)

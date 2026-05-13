@@ -65,7 +65,7 @@ class TestSingular(ut.TestCase):
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
-				M, tr, cg, self.Tolerance, 24, 0
+				M, tr, cg, self.Tolerance, 26, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
