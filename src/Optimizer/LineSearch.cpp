@@ -41,7 +41,7 @@ bool ArmijoBacktracking(
 
 		const double RHS = oldL + c1 * alpha * SGr;
 
-		if ( output > 0 ) std::printf("| %4d |  %5.2E | %5.2E |  %15.10f  |        % 5.2E  | %6.3f |\n", iiter, alpha, alpha * Snorm, M.Func->Value, M.Func->Value - RHS, __duration__(start, __now__));
+		if ( output > 0 ) std::printf("| %4d |  %5.2E | %5.2E |  %15.10f  |        % 5.2E  | %6.3f |\n", iiter, alpha, alpha * Snorm, M.Func->Value - oldL, M.Func->Value - RHS, __duration__(start, __now__));
 		if ( M.Func->Value <= RHS ){
 			S *= alpha;
 			return 1;
