@@ -69,7 +69,7 @@ bool Newton(
 
 			// Obtaining the next step within the trust region
 			if ( iiter > 0 ) S = ls.Find(R);
-			Snorm = M.Inner(S, S);
+			Snorm = std::sqrt(M.Inner(S, S));
 			Pmat = M.Retract(S);
 			DecoupleBlock(Pmat, P, M.BlockParameters);
 			if ( iiter > 0 ) predicted_delta_L = M.Inner(M.Gradient + 0.5 * M.Hessian(S), S);
@@ -85,7 +85,7 @@ bool Newton(
 			// Rating the new step
 			actual_delta_L = M.Func->Value - oldL;
 			const double rho = actual_delta_L / predicted_delta_L;
-			accepted = ( rho > tr.RhoThreshold || iiter == 0 || ( Gnorm < tol1 && Snorm < tol2 ) );
+			accepted = ( rho > tr.RhoThreshold || iiter == 0 || Snorm < tol2 );
 			if (output){
 				std::printf("Target = %.10f\n", M.Func->Value);
 				std::printf("Step score:\n");
@@ -118,7 +118,7 @@ bool Newton(
 		if ( Gnorm < tol1 ){
 			if ( iiter == 0 ) converged = 1;
 			else if ( std::abs(actual_delta_L) < tol0 && Snorm < tol2 ) converged = 1;
-		}
+		}else if ( iiter > 0 && ( Gnorm < tol1 * tol1 || Snorm < tol2 * tol2 ) ) converged = 1;
 		if (output){
 			std::printf("Convergence info: current / threshold / converged?\n");
 			std::printf("| Target    change: % E / %E / %s\n", actual_delta_L, tol0, __True_False__(std::abs(actual_delta_L) < tol0));
