@@ -75,7 +75,7 @@ class TestRayleighInterior{ public:
 		mv::TrustRegion tr;
 		mv::MinRes mr(M, 0, 0, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, mr, Tolerance, 4, 1
+				M, tr, mr, Tolerance, 5, 1
 		);
 		__Check_Result__
 	};
