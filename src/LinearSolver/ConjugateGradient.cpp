@@ -16,14 +16,14 @@
 
 namespace Maniverse{
 
-static std::tuple<Eigen::VectorXd, Eigen::VectorXd> SteihaugToint(
+static double SteihaugToint(
 		std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot,
 		Eigen::VectorXd v, Eigen::VectorXd p, double R){
 	const double A = dot(p, p);
 	const double B = dot(v, p) * 2;
 	const double C = dot(v, v) - R * R;
 	const double t = ( std::sqrt( B * B - 4 * A * C ) - B ) / 2 / A;
-	return std::make_tuple(v + t * p, t * p);
+	return t;
 }
 
 void ConjugateGradient::Calculate(double R){
@@ -69,7 +69,8 @@ void ConjugateGradient::Calculate(double R){
 		if ( ( FrownNPC && pAp <= 0 ) || vplusnorm >= R ){
 			if (Verbose && FrownNPC && pAp <= 0) std::printf("Non-positive curvature!\n");
 			if (Verbose && vplusnorm >= R) std::printf("Out of trust region!\n");
-			Sequence.push_back(SteihaugToint(dot, v, p, R));
+			const double t = SteihaugToint(dot, v, p, R);
+			Sequence.push_back(std::make_tuple(v, t * p));
 			return;
 		}
 
@@ -89,13 +90,14 @@ void ConjugateGradient::Calculate(double R){
 
 Eigen::VectorXd ConjugateGradient::Find(double R){
 	for ( int i = 0; i < (int)Sequence.size(); i++ ){
-		const auto& [vi, api] = Sequence[i];
-		if ( dot(vi + api, vi + api) > R * R + 1e-8 ){
-			const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(dot, vi, api, R));
-			return vnew;
+		const auto& [v, ap] = Sequence[i];
+		if ( dot(v + ap, v + ap) > R * R + 1e-8 ){
+			const double t = SteihaugToint(dot, v, ap, R);
+			return v + t * ap;
 		}
 	}
-	return std::get<0>(this->Sequence.back());
+	const auto& [v, ap] = Sequence.back();
+	return v + ap;
 }
 
 #ifdef __PYTHON__
