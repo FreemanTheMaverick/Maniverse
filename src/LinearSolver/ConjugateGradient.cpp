@@ -91,7 +91,7 @@ void ConjugateGradient::Calculate(double R){
 Eigen::VectorXd ConjugateGradient::Find(double R){
 	for ( int i = 0; i < (int)Sequence.size(); i++ ){
 		const auto& [v, ap] = Sequence[i];
-		if ( dot(v + ap, v + ap) > R * R + 1e-8 ){
+		if ( dot(v + ap, v + ap) > R * R ){
 			const double t = SteihaugToint(dot, v, ap, R);
 			return v + t * ap;
 		}
