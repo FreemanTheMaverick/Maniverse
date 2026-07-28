@@ -60,20 +60,39 @@ bool LBFGS(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		ArmijoBacktracking(
+		bool ls_success = ArmijoBacktracking(
 			M, S,
 			c1, tau, iiter == 0 ? 1 : ls_max_iter,
 			output > 0
 		);
 
-		actual_delta_L = M.Func->Value - oldL;
-		oldL = M.Func->Value;
-		if (output) std::printf("Target = %.10f\n", M.Func->Value);
+		if ( ! ls_success && iiter > 0 ){
+			if (output) std::printf("Line search failed! Falling back to steepest descent!\n");
+			Ss.clear();
+			Gs.clear();
+			Rhos.clear();
+			S = - M.Gradient;
+			M.Func->Calculate(M.getPoint(), {0});
+			ls_success = ArmijoBacktracking(
+				M, S,
+				c1, tau, ls_max_iter * ls_max_iter,
+				output > 0
+			);
+		}
+
+		if ( ! ls_success && iiter > 0 ){
+			if (output) std::printf("Line search failed for steepest descent! Check your gradient or increase the line search maximal iteration number!\n");
+			break;
+		}
 
 		Snorm = std::sqrt(M.Inner(S, S));
 		Pmat = M.Retract(S);
 		DecoupleBlock(Pmat, P, M.BlockParameters);
 		M.Func->Calculate(P, {1});
+
+		actual_delta_L = M.Func->Value - oldL;
+		if (output) std::printf("Target = %.10f\n", M.Func->Value);
+		oldL = M.Func->Value;
 
 		// Transporting previous vectors I
 		if ( (int)Rhos.size() == max_mem ){
@@ -85,7 +104,7 @@ bool LBFGS(
 			Ss[i] = M.TransportTangent(Ss[i], S);
 			Gs[i] = M.TransportTangent(Gs[i], S);
 		}
-		if ( iiter > 0 ){
+		if ( iiter > 0 && ls_success ){
 			Ss.push_back(M.TransportTangent(S, S));
 			Gs.push_back(M.TransportTangent(M.Gradient, S));
 		}
@@ -112,7 +131,7 @@ bool LBFGS(
 		// Transporting previous vectors II
 		std::vector<Eigen::MatrixXd> preconSs(Ss.size(), Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols()));
 		std::vector<Eigen::MatrixXd> preconYs(Ss.size(), Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols()));
-		if ( iiter > 0 ){
+		if ( iiter > 0 && ls_success ){
 			for ( int i = 0; i < (int)Ss.size(); i++ ){
 				preconSs[i] = M.PreconditionerInvSqrt(Ss[i]);
 				if ( i < (int)Ss.size() - 1 )
