@@ -8,5 +8,6 @@ from Rayleigh import *
 from Singular import *
 from RayleighLagrange import *
 from RayleighInterior import *
+from Determinant import *
 
 ut.main()
