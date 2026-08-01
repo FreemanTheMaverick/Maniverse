@@ -20,8 +20,7 @@ class ObjDeterminant(mv.Objective):
 		self.beta = 0
 
 		# Rank-deficient 1
-		self.u0 = np.zeros(10)
-		self.v0 = np.zeros(10)
+		self.u0v0t = np.zeros([10, 10])
 
 		# Rank-deficient 2
 		self.U0 = np.zeros([10, 2])
@@ -46,9 +45,8 @@ class ObjDeterminant(mv.Objective):
 			detUV = np.linalg.det( U @ V )
 			self.beta = sing_prod * detUV
 			if self.rank == 4:
-				self.u0 = U[:, 4]
-				self.v0 = V[:, 4]
-				self.Gradient = [ sing_prod * self.C0 @ np.outer( self.v0, self.u0 ) ]
+				self.u0v0t = np.outer(U[:, 4], V[:, 4])
+				self.Gradient = [ sing_prod * self.C0 @ self.u0v0t ]
 			elif self.rank == 3:
 				self.U0 = U[:, 3:]
 				self.V0 = V[:, 3:]
@@ -57,20 +55,20 @@ class ObjDeterminant(mv.Objective):
 				self.Gradient = [ np.zeros([10, 5]) ]
 
 	def Hessian(self, X_):
-		X = X_[0]
+		C0tX = self.C0.T @ X_[0]
 		if self.rank == 5:
 			return [ self.Value * self.C0 @ (
-				np.sum( self.C0tCinv.T * ( self.C0.T @ X ) ) * self.C0tCinv.T
-				- self.C0tCinv.T @ X.T @ self.C0 @ self.C0tCinv.T
+				np.sum( self.C0tCinv.T * C0tX ) * self.C0tCinv.T
+				- self.C0tCinv.T @ C0tX.T @ self.C0tCinv.T
 			) ]
 		if self.rank == 4:
-			return [ 2 * self.beta * (
-				self.C0 @ np.outer(self.u0, self.v0) * np.sum( self.C0tCinv * ( self.C0.T @ X ) )
-				- self.C0 @ np.outer(self.u0, self.v0) @ X.T @ self.C0 @ self.C0tCinv.T
-				- np.outer(self.u0, self.v0) @ self.C0 @ X @ self.C0 @ self.C0tCinv.T
+			return [ self.beta * self.C0 @ (
+				0.5 * self.C0tCinv.T * np.sum( self.u0v0t * C0tX.T )
+				+ 0.5 * self.u0v0t * np.sum( C0tX * self.C0tCinv )
+				- self.C0tCinv.T @ C0tX.T @ self.u0v0t
 			) ]
 		if self.rank == 3:
-			M = self.U0.T @ self.C0.T @ X @ self.V0
+			M = self.U0.T @ C0tX @ self.V0
 			M[0, 1] *= -1
 			M[1, 0] *= -1
 			M[0, 0], M[1, 1] = M[1, 1], M[0, 0]
