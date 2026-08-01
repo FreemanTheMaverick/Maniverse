@@ -31,7 +31,7 @@ class TestPrincipal(ut.TestCase):
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution = np.linalg.eigh(self.Obj.A)[1][:, 5:]
 
-	def testNewton(self):
+	def testNewtonCG(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
