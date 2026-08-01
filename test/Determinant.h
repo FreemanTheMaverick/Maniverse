@@ -4,6 +4,8 @@
 #include <vector>
 #include <Maniverse/Manifold/Manifold.h>
 
+namespace mv = Maniverse;
+
 class ObjDeterminant: public mv::Objective{ public:
 	Eigen::MatrixXd C0 = Eigen::MatrixXd::Zero(10, 5);
 	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(10, 5);
@@ -15,8 +17,7 @@ class ObjDeterminant: public mv::Objective{ public:
 	double beta = 0;
 
 	// Rank-deficient 1
-	Eigen::VectorXd u0 = Eigen::VectorXd::Zero(10);
-	Eigen::VectorXd v0 = Eigen::VectorXd::Zero(10);
+	Eigen::MatrixXd u0v0t = Eigen::MatrixXd::Zero(10, 10);
 
 	// Rank-deficient 2
 	Eigen::MatrixXd U0 = Eigen::MatrixXd::Zero(10, 2);
@@ -41,9 +42,10 @@ class ObjDeterminant: public mv::Objective{ public:
 			const double detUV = ( svd.matrixU() * svd.matrixV() ).determinant();
 			beta = sing_prod * detUV;
 			if ( rank == 4 ){
-				u0 = svd.matrixU().col(4);
-				v0 = svd.matrixV().col(4);
-				Gradient = { sing_prod * C0 * v0 * u0.transpose() };
+				const Eigen::VectorXd u0 = svd.matrixU().col(4);
+				const Eigen::VectorXd v0 = svd.matrixV().col(4);
+				u0v0t = u0 * v0.transpose();
+				Gradient = { sing_prod * C0 * u0v0t };
 			}else if ( rank == 3 ){
 				U0 = svd.matrixU().rightCols(2);
 				V0 = svd.matrixV().rightCols(2);
@@ -53,45 +55,25 @@ class ObjDeterminant: public mv::Objective{ public:
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> X_) const override{
-		const Eigen::MatrixXd X = X_[0];
+		const Eigen::MatrixXd C0tX = C0.transpose() * X_[0];
 		if ( rank == 5 ) return std::vector<Eigen::MatrixXd>{ Value * C0 * (
-				C0tCinv.cwiseProduct( C0.transpose() * X ).sum() * C0tCinv.transpose()
-				- C0tCinv.transpose() * X.transpose() * C0 * C0tCinv.transpose()
+				C0tCinv.transpose().cwiseProduct(C0tX).sum() * C0tCinv.transpose()
+				- C0tCinv.transpose() * C0tX.transpose() * C0tCinv.transpose()
 		) };
-		if ( rank == 4 ) return std::vector<Eigen::MatrixXd>{ 2 * beta * (
-				C0 * u0 * v0.transpose() * C0tCinv.cwiseProduct( C0.transpose() * X ).sum()
-				- C0 * u0 * v0.transpose() * X.transpose() * C0 * C0tCinv.transpose()
-				- u0 * v0.transpose() * C0 * X * C0 * C0tCinv.transpose()
-		) };
+		if ( rank == 4 ){
+			return std::vector<Eigen::MatrixXd>{ beta * C0 * (
+					0.5 * C0tCinv.transpose() * u0v0t.cwiseProduct(C0tX.transpose() )
+					+ 0.5 * u0v0t * C0tCinv.cwiseProduct(C0tX)
+					- C0tCinv.transpose() * C0tX.transpose() * u0v0t
+			) };
+		}
 		if ( rank == 3 ){
-			Eigen::MatrixXd M = U0.transpose() * C0.transpose() * X * V0;
+			Eigen::MatrixXd M = U0.transpose() * C0tX * V0;
 			M(0, 1) *= -1;
 			M(1, 0) *= -1;
 			std::swap(M(0, 0), M(1, 1));
 			return std::vector<Eigen::MatrixXd>{ 2 * beta * C0 * U0 * M.transpose() * V0.transpose() };
 		}
 		return { Eigen::MatrixXd::Zero(10, 5) };
-	};
-};
-
-class ObjDeterminants: public mv::Objective{ public:
-	std::vector<ObjDeterminant> Funcs;
-	ObjDeterminants(std::vector<Eigen::MatrixXd> C0s){
-		for ( Eigen::MatrixXd& C0 : C0s ) Funcs.push_back(ObjDeterminant(C0));
-	};
-	void Calculate(std::vector<Eigen::MatrixXd> Cs_, std::vector<int> derivatives){
-		Value = 0;
-		Eigen::MatrixXd gradient = Eigen::MatrixXd::Zero(Cs_[0].rows(), Cs_[0].cols());
-		for ( ObjDeterminant& func : Funcs ){
-			func.Calculate(Cs_, derivatives);
-			Value += func.Value;
-			gradient += func.Gradient[0];
-		}
-		Gradient = { gradient };
-	};
-	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> Xs_) const override{
-		Eigen::MatrixXd HX = Eigen::MatrixXd::Zero(Xs_[0].rows(), Xs_[0].cols());
-		for ( const ObjDeterminant& func : Funcs ) HX += func.Hessian(Xs_)[0];
-		return { HX };
 	};
 };

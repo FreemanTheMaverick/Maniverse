@@ -6,14 +6,14 @@
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
 
+#include "Determinant.h"
+
 // Alignment of two spaces
 // Finding the maximal overlap of two spaces
 // Minimize L(C) = det[ C0.t C ] ( -1 )
 // C0, C \in Flag(5; 10) = Gr(5; 10)
 
 namespace mv = Maniverse;
-
-#include "Determinant.h"
 
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
