@@ -5,10 +5,10 @@
 #include <Maniverse/Manifold/Euclidean.h>
 #include <Maniverse/Manifold/Orthogonal.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
-#include <Maniverse/LinearSolver/MinRes.h>
 //#include <Maniverse/Diagonalizer/Davidson.h>
 
 // Symmetric diagonalization
@@ -100,6 +100,16 @@ class TestDiagonalization{ public:
 		__Check_Result__
 	};
 
+	void testNewtonMR(){
+		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		const bool converged = mv::Newton(
+				M, tr, mr, Tolerance, 36, 1
+		);
+		__Check_Result__
+	};
+
 	void testLBFGS(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		const bool converged = mv::LBFGS(
@@ -133,6 +143,7 @@ class TestDiagonalization{ public:
 
 int main(){
 	TestDiagonalization().testNewtonCG();
+	TestDiagonalization().testNewtonMR();
 	TestDiagonalization().testLBFGS();
 	TestDiagonalization().testLanczos();
 	//TestDiagonalization().testDavidson();

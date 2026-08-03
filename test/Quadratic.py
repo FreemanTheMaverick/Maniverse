@@ -95,7 +95,7 @@ class TestQuadratic(ut.TestCase):
 		tr = mv.TrustRegion()
 		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
-				M, tr, mr, self.Tolerance, 19, 0
+				M, tr, mr, self.Tolerance, 20, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)

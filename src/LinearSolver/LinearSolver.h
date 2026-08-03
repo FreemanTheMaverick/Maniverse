@@ -10,6 +10,11 @@
 
 namespace Maniverse{
 
+double SteihaugToint(
+		std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot,
+		Eigen::VectorXd v, Eigen::VectorXd p, double R
+);
+
 class LinearSolver{ public:
 	std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot;
 	std::function<Eigen::VectorXd (Eigen::VectorXd)> proj;
