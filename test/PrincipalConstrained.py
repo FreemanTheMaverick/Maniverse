@@ -18,7 +18,7 @@ class Obj(mv.Objective):
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
 		self.Lambda = [0]
 		self.Det = ObjDeterminant(np.linalg.eigh(self.A)[1][:, 4:9])
-	
+
 	def Calculate(self, C, derivatives):
 		self.Det.Calculate(C, derivatives)
 		if 0 in derivatives:
@@ -58,8 +58,8 @@ class TestPrincipal(ut.TestCase):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
-		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 25, 1)(mv.Newton)(
-				M, tr, cg, self.Tolerance, 12, 1
+		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 25, 0)(mv.Newton)(
+				M, tr, cg, self.Tolerance, 12, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
