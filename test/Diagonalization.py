@@ -57,6 +57,16 @@ class TestDiagonalization(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
 
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 36, 0
+		)
+		assert converged
+		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
+
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
 		converged = mv.LBFGS(
@@ -78,5 +88,6 @@ class TestDiagonalization(ut.TestCase):
 
 if __name__ == "__main__":
 	TestDiagonalization().testNewtonCG()
+	TestDiagonalization().testNewtonMR()
 	TestDiagonalization().testLBFGS()
 	TestDiagonalization().testLanczos()

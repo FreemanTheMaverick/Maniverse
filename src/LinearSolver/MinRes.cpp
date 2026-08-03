@@ -9,6 +9,7 @@
 #include <cmath>
 #include <tuple>
 #include <chrono>
+#include<iostream>
 
 #include "../Macro.h"
 
@@ -16,17 +17,7 @@
 
 namespace Maniverse{
 
-static std::tuple<Eigen::VectorXd, Eigen::VectorXd> SteihaugToint(
-		std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot,
-		Eigen::VectorXd v, Eigen::VectorXd p, double R){
-	const double A = dot(p, p);
-	const double B = dot(v, p) * 2;
-	const double C = dot(v, v) - R * R;
-	const double t = ( std::sqrt( B * B - 4 * A * C ) - B ) / 2 / A;
-	return std::make_tuple(v + t * p, p);
-}
-
-void MinRes::Calculate(double R){
+void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 	if (Verbose){
 		std::printf("Linear system solving with MinRes\n");
 		std::printf("Maximal search radius          : %f\n", R);
@@ -66,7 +57,6 @@ void MinRes::Calculate(double R){
 
 		if ( std::abs((L - Llast)/L) < std::get<0>(Tolerance) || std::sqrt(r2 / dot(b, b)) < std::get<1>(Tolerance) ){
 			if (Verbose) std::printf("Tolerance met!\n");
-			Sequence.push_back(std::make_tuple(x_m1, P(d_m2)));
 			return;
 		}
 
@@ -79,8 +69,17 @@ void MinRes::Calculate(double R){
 		const double epsilon_p1 = s_m1 * beta_p1;
 		const double delta1_p1 = - c_m1 * beta_p1;
 
+		if ( FrownNPC && c_m1 * gamma1 >= 0 ){
+			if ( Verbose ) std::printf("Non-positive curvature!\n");
+			if ( Sequence.size() == 0 ){
+				const double t = 1. + SteihaugToint(dot, r_m1, r_m1, R);
+				Sequence.push_back(std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(r_m1.size())));
+			}
+			return;
+		}
+
 		const double gamma2 = std::hypot(gamma1, beta_p1);
-		if ( gamma2 > 1e-12 ){
+		if ( gamma2 > 1e-16 ){
 			const double c = gamma1 / gamma2;
 			const double s = beta_p1 / gamma2;
 			const double tau = c * phi_m1;
@@ -88,10 +87,11 @@ void MinRes::Calculate(double R){
 			const Eigen::VectorXd d = ( v - delta2 * d_m1 - epsilon * d_m2 ) / gamma2;
 			const Eigen::VectorXd x = x_m1 + tau * P(d);
 			const double xplusnorm = std::sqrt(dot(x, x));
-			if ( ( FrownNPC && c_m1 * gamma1 >= 0 ) || xplusnorm >= R ){
-				if ( Verbose && FrownNPC && c_m1 * gamma1 >= 0 ) std::printf("Non-positive curvature!\n");
-				if ( Verbose && xplusnorm >= R ) std::printf("Out of trust region!\n");
-				Sequence.push_back(SteihaugToint(dot, x_m1, P(d), R));
+			if ( xplusnorm < R ) Sequence.push_back(std::make_tuple(x_m1, tau * P(d)));
+			else{
+				if ( Verbose ) std::printf("Out of trust region!\n");
+				const double t = 1. + SteihaugToint(dot, r_m1, r_m1, R);
+				Sequence.push_back(std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(r_m1.size())));
 				return;
 			}
 			if ( std::abs(beta_p1) > 1e-16 ){
@@ -114,6 +114,7 @@ void MinRes::Calculate(double R){
 			}
 		}else{
 			if (Verbose) std::printf("Early stop due to the small Gamma(2)!\n");
+			Sequence.push_back(std::make_tuple(x_m1, Eigen::VectorXd::Zero(x_m1.size())));
 			return;
 		}
 	}
@@ -121,12 +122,17 @@ void MinRes::Calculate(double R){
 }
 
 Eigen::VectorXd MinRes::Find(double R){
-	for ( int i = 0; i < (int)Sequence.size(); i++ ) if ( dot(std::get<0>(Sequence[i]), std::get<0>(Sequence[i])) > R ){
+	for ( int i = 0; i < (int)Sequence.size(); i++ ){
 		const auto& [v, p] = Sequence[i];
-		const Eigen::VectorXd vnew = std::get<0>(SteihaugToint(dot, v, p, R));
-		return vnew;
+		if ( dot(v + p, v + p) > R * R ){
+			if ( i == 0 ){
+				const double t = 1. + SteihaugToint(dot, b, b, R);
+				return t * b;
+			}else return v;
+		}
 	}
-	return std::get<0>(this->Sequence.back());
+	const auto& [v, p] = Sequence.back();
+	return v + p;
 }
 
 #ifdef __PYTHON__

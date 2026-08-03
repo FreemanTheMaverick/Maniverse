@@ -14,6 +14,17 @@
 
 namespace Maniverse{
 
+double SteihaugToint(
+		std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot,
+		Eigen::VectorXd v, Eigen::VectorXd p, double R){
+	if ( p.norm() < 1e-15 ) return 0;
+	const double A = dot(p, p);
+	const double B = dot(v, p) * 2;
+	const double C = dot(v, v) - R * R;
+	const double t = ( std::sqrt( B * B - 4 * A * C ) - B ) / 2 / A;
+	return t;
+}
+
 LinearSolver::LinearSolver(Iterate& M, bool constraint, bool FrownNPC, std::tuple<double, double> Tolerance, int MaxIter, bool Verbose) : FrownNPC(FrownNPC), Tolerance(Tolerance), MaxIter(MaxIter), Verbose(Verbose){
 	if (Verbose){
 		std::printf("Configuring linear solver for Newton step\n");
@@ -37,6 +48,7 @@ LinearSolver::LinearSolver(Iterate& M, bool constraint, bool FrownNPC, std::tupl
 		P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); };
 	}
 }
+
 #ifdef __PYTHON__
 class PyLinearSolver : public LinearSolver, pybind11::trampoline_self_life_support{ public:
 	using LinearSolver::LinearSolver;

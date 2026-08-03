@@ -16,16 +16,6 @@
 
 namespace Maniverse{
 
-static double SteihaugToint(
-		std::function<double (Eigen::VectorXd, Eigen::VectorXd)> dot,
-		Eigen::VectorXd v, Eigen::VectorXd p, double R){
-	const double A = dot(p, p);
-	const double B = dot(v, p) * 2;
-	const double C = dot(v, v) - R * R;
-	const double t = ( std::sqrt( B * B - 4 * A * C ) - B ) / 2 / A;
-	return t;
-}
-
 void ConjugateGradient::Calculate(double R){
 	if (Verbose){
 		std::printf("Linear system solving with conjugate gradient\n");

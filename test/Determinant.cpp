@@ -2,6 +2,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Flag.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -53,7 +54,17 @@ class TestDeterminant{ public:
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, cg, Tolerance, 10, 1
+				M, tr, cg, Tolerance, 8, 1
+		);
+		__Check_Result__
+	};
+
+	void testNewtonMR(){
+		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		const bool converged = mv::Newton(
+				M, tr, mr, Tolerance, 8, 1
 		);
 		__Check_Result__
 	};
@@ -79,6 +90,7 @@ class TestDeterminant{ public:
 
 int main(){
 	TestDeterminant().testNewtonCG();
+	TestDeterminant().testNewtonMR();
 	TestDeterminant().testLBFGS();
 	TestDeterminant().testLanczos();
 }
