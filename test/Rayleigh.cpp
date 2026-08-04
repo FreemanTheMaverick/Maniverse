@@ -68,7 +68,7 @@ class TestRayleigh{ public:
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
 		es.compute(Obj.A);
 		const Eigen::MatrixXd Evec = es.eigenvectors();
-		Manifold = mv::Stiefel( ( Evec.col(0) + Evec.col(1) ) / std::sqrt(2) );
+		Manifold = mv::Stiefel( ( Evec.col(0) + 2 * Evec.col(1) ) / std::sqrt(5) );
 		Solution = Evec.col(0);
 	};
 
@@ -77,7 +77,7 @@ class TestRayleigh{ public:
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, cg, Tolerance, 3, 1
+				M, tr, cg, Tolerance, 6, 1
 		);
 		__Check_Result__
 	};
@@ -87,7 +87,7 @@ class TestRayleigh{ public:
 		mv::TrustRegion tr;
 		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, mr, Tolerance, 3, 1
+				M, tr, mr, Tolerance, 7, 1
 		);
 		__Check_Result__
 	};
@@ -96,7 +96,7 @@ class TestRayleigh{ public:
 		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
-				10, 8, 0.1, 0.75, 5, 1
+				10, 10, 0.1, 0.75, 5, 1
 		);
 		__Check_Result__
 	};

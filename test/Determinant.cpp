@@ -64,7 +64,7 @@ class TestDeterminant{ public:
 		mv::TrustRegion tr;
 		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, mr, Tolerance, 8, 1
+				M, tr, mr, Tolerance, 9, 1
 		);
 		__Check_Result__
 	};

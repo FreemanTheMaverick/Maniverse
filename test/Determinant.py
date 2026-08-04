@@ -122,7 +122,7 @@ class TestDeterminant(ut.TestCase):
 		tr = mv.TrustRegion()
 		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
-				M, tr, mr, self.Tolerance, 8, 0
+				M, tr, mr, self.Tolerance, 9, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
