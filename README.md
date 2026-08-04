@@ -31,6 +31,29 @@ However, my knowledge in OOM is deficient, and I am still learning through textb
 For helping make Maniverse real, I have a long namelist to thank.
 The good thing is that the current codes do work as they are expected, at least in my projects.
 
+## Features
+
+### Manifolds
+- Stiefel manifold and its derivatives (Flag, Grassmann, Orthogonal)
+- Simplex manifold
+- User-defined manifolds
+- Any products of the manifolds above
+
+### Optimizers
+- Trust-region Newton's method with conjugate gradient or minimal residual as the linear subproblem solver
+- L-BFGS
+- Anderson acceleration (rarely used; not fully tested yet)
+- Augmented Lagrangian method for extra non-manifold constraints with one of the unconstrained optimizers above for internal optimization
+
+### Linear system solvers
+- Conjugate gradient
+- Minimal residual
+
+They can be set to be vigilant about non-positive curvatures of the Hessian in Newton's method.
+
+### Diagonalizers
+- Lanczos method
+
 ## Prerequisites
 * A C++ compiler that supports C++17 standard
 * GNU make
