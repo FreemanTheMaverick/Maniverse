@@ -9,7 +9,6 @@
 #include <cmath>
 #include <tuple>
 #include <chrono>
-#include<iostream>
 
 #include "../Macro.h"
 
@@ -71,10 +70,8 @@ void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 
 		if ( FrownNPC && c_m1 * gamma1 >= 0 ){
 			if ( Verbose ) std::printf("Non-positive curvature!\n");
-			if ( Sequence.size() <= 0 || ( Sequence.size() > 0 && xnorm < 1e-14 ) ){
-				const double t = 1. + SteihaugToint(dot, r_m1, r_m1, R);
-				Sequence = { std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(b.size())) };
-			}
+			const double t = 1. + SteihaugToint(dot, r_m1, r_m1, R);
+			Sequence = { std::make_tuple(t * r_m1, t * r_m1) };
 			return;
 		}
 
@@ -87,11 +84,9 @@ void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 			const Eigen::VectorXd d = ( v - delta2 * d_m1 - epsilon * d_m2 ) / gamma2;
 			const Eigen::VectorXd x = x_m1 + tau * P(d);
 			const double xplusnorm = std::sqrt(dot(x, x));
-			if ( xplusnorm < R ) Sequence.push_back(std::make_tuple(x_m1, tau * P(d)));
-			else{
+			Sequence.push_back(std::make_tuple(x, x));
+			if ( xplusnorm > R ){
 				if ( Verbose ) std::printf("Out of trust region!\n");
-				const double t = 1. + SteihaugToint(dot, r_m1, r_m1, R);
-				Sequence.push_back(std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(r_m1.size())));
 				return;
 			}
 			if ( std::abs(beta_p1) > 1e-14 ){
@@ -114,7 +109,7 @@ void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 			}
 		}else{
 			if (Verbose) std::printf("Early stop due to the small Gamma(2)!\n");
-			Sequence.push_back(std::make_tuple(x_m1, Eigen::VectorXd::Zero(x_m1.size())));
+			Sequence.push_back(std::make_tuple(x_m1, x_m1));
 			return;
 		}
 	}
@@ -123,16 +118,13 @@ void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 
 Eigen::VectorXd MinRes::Find(double R){
 	for ( int i = 0; i < (int)Sequence.size(); i++ ){
-		const auto& [v, p] = Sequence[i];
-		if ( dot(v + p, v + p) > R * R ){
-			if ( i == 0 ){
-				const double t = 1. + SteihaugToint(dot, b, b, R);
-				return t * b;
-			}else return v;
+		const auto& [v, _] = Sequence[i];
+		if ( dot(v, v) > R * R ){
+			const double t = 1. + SteihaugToint(dot, v, v, R);
+			return t * v;
 		}
 	}
-	const auto& [v, p] = Sequence.back();
-	return v + p;
+	return std::get<0>(Sequence.back());
 }
 
 #ifdef __PYTHON__

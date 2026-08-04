@@ -27,7 +27,7 @@ class TestRayleigh(ut.TestCase):
 		super().__init__(*args)
 		self.Obj = Obj()
 		_, Evec = np.linalg.eigh(self.Obj.A)
-		self.Manifold = mv.Stiefel( ( Evec[:, 0] + Evec[:, 1] ) / np.sqrt(2) )
+		self.Manifold = mv.Stiefel( ( Evec[:, 0] + 2*Evec[:, 1] ) / np.sqrt(5) )
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 		self.Solution = Evec[:, 0]
 
@@ -36,7 +36,7 @@ class TestRayleigh(ut.TestCase):
 		tr = mv.TrustRegion()
 		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
-				M, tr, cg, self.Tolerance, 3, 0
+				M, tr, cg, self.Tolerance, 6, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
@@ -46,7 +46,7 @@ class TestRayleigh(ut.TestCase):
 		tr = mv.TrustRegion()
 		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.Newton(
-				M, tr, mr, self.Tolerance, 3, 0
+				M, tr, mr, self.Tolerance, 7, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
@@ -55,7 +55,7 @@ class TestRayleigh(ut.TestCase):
 		M = mv.Iterate(self.Obj, {self.Manifold})
 		converged = mv.LBFGS(
 				M, self.Tolerance,
-				10, 8, 0.1, 0.75, 5, 0
+				10, 10, 0.1, 0.75, 5, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
