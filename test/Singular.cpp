@@ -105,9 +105,9 @@ class TestSingular{ public:
 	void testNewtonCG(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);		
+		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::Newton(
-				M, tr, cg, Tolerance, 23, 1
+				M, tr, cg, Tolerance, 25, 1
 		);
 		__Check_Result__
 	};

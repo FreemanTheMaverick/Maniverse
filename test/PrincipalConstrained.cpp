@@ -4,6 +4,7 @@
 #include <Maniverse/Manifold/Flag.h>
 #include <Maniverse/Optimizer/AugmentedLagrangian.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -81,13 +82,13 @@ class ObjPrincipal: public mv::Objective{ public:
 	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
 	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
 
-class TestPrincipal{ public:
+class TestPrincipalConstrained{ public:
 	ObjPrincipal Obj = ObjPrincipal();
 	mv::Flag Manifold = mv::Flag(Eigen::MatrixXd::Identity(10, 5));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 5);
 
-	TestPrincipal(){
+	TestPrincipalConstrained(){
 		Manifold.setBlockParameters({5});
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
 		es.compute(Obj.A);
@@ -100,6 +101,16 @@ class TestPrincipal{ public:
 		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 25, 1)(mv::Newton)(
 				M, tr, cg, Tolerance, 12, 1
+		);
+		__Check_Result__
+	};
+
+	void testNewtonMR(){
+		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 25, 1)(mv::Newton)(
+				M, tr, mr, Tolerance, 12, 1
 		);
 		__Check_Result__
 	};
@@ -125,7 +136,8 @@ class TestPrincipal{ public:
 };
 
 int main(){
-	TestPrincipal().testNewtonCG();
-	TestPrincipal().testLBFGS();
-	TestPrincipal().testLanczos();
+	TestPrincipalConstrained().testNewtonCG();
+	TestPrincipalConstrained().testNewtonMR();
+	TestPrincipalConstrained().testLBFGS();
+	TestPrincipalConstrained().testLanczos();
 }
