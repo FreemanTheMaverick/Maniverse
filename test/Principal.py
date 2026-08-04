@@ -41,6 +41,16 @@ class TestPrincipal(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 10, 0
+		)
+		assert converged
+		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		converged = mv.LBFGS(
@@ -62,5 +72,6 @@ class TestPrincipal(ut.TestCase):
 
 if __name__ == "__main__":
 	TestPrincipal().testNewtonCG()
+	TestPrincipal().testNewtonMR()
 	TestPrincipal().testLBFGS()
 	TestPrincipal().testLanczos()

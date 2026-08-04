@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Stiefel.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Optimizer/Anderson.h>
@@ -92,6 +93,16 @@ class TestProjection{ public:
 		__Check_Result__
 	};
 
+	void testNewtonMR(){
+		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		const bool converged = mv::Newton(
+				M, tr, mr, Tolerance, 10, 1
+		);
+		__Check_Result__
+	};
+
 	void testLBFGS(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
@@ -122,6 +133,7 @@ class TestProjection{ public:
 
 int main(){
 	TestProjection().testNewtonCG();
+	TestProjection().testNewtonMR();
 	TestProjection().testLBFGS();
 	TestProjection().testAnderson();
 	TestProjection().testLanczos();

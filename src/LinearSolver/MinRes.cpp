@@ -71,15 +71,15 @@ void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 
 		if ( FrownNPC && c_m1 * gamma1 >= 0 ){
 			if ( Verbose ) std::printf("Non-positive curvature!\n");
-			if ( Sequence.size() == 0 ){
+			if ( Sequence.size() <= 0 || ( Sequence.size() > 0 && xnorm < 1e-14 ) ){
 				const double t = 1. + SteihaugToint(dot, r_m1, r_m1, R);
-				Sequence.push_back(std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(r_m1.size())));
+				Sequence = { std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(b.size())) };
 			}
 			return;
 		}
 
 		const double gamma2 = std::hypot(gamma1, beta_p1);
-		if ( gamma2 > 1e-16 ){
+		if ( gamma2 > 1e-14 ){
 			const double c = gamma1 / gamma2;
 			const double s = beta_p1 / gamma2;
 			const double tau = c * phi_m1;
@@ -94,7 +94,7 @@ void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
 				Sequence.push_back(std::make_tuple(t * r_m1, Eigen::VectorXd::Zero(r_m1.size())));
 				return;
 			}
-			if ( std::abs(beta_p1) > 1e-16 ){
+			if ( std::abs(beta_p1) > 1e-14 ){
 				const Eigen::VectorXd v_p1 = p / beta_p1;
 				const Eigen::VectorXd r = s * s * r_m1 - phi * c * v_p1;
 				r_m1 = r;

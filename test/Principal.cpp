@@ -3,6 +3,7 @@
 #include <iostream>
 #include <Maniverse/Manifold/Flag.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
 #include <Maniverse/Optimizer/LBFGS.h>
 #include <Maniverse/Diagonalizer/Lanczos.h>
@@ -79,6 +80,16 @@ class TestPrincipal{ public:
 		__Check_Result__
 	};
 
+	void testNewtonMR(){
+		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::TrustRegion tr;
+		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		const bool converged = mv::Newton(
+				M, tr, mr, Tolerance, 10, 1
+		);
+		__Check_Result__
+	};
+
 	void testLBFGS(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
@@ -100,6 +111,7 @@ class TestPrincipal{ public:
 
 int main(){
 	TestPrincipal().testNewtonCG();
+	TestPrincipal().testNewtonMR();
 	TestPrincipal().testLBFGS();
 	TestPrincipal().testLanczos();
 }

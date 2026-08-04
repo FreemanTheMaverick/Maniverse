@@ -49,6 +49,16 @@ class TestProjection(ut.TestCase):
 		assert converged
 		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
 
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 10, 0
+		)
+		assert converged
+		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
+
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		converged = mv.LBFGS(
@@ -79,6 +89,7 @@ class TestProjection(ut.TestCase):
 
 if __name__ == "__main__":
 	TestProjection().testNewtonCG()
+	TestProjection().testNewtonMR()
 	TestProjection().testLBFGS()
 	TestProjection().testAnderson()
 	TestProjection().testLanczos()

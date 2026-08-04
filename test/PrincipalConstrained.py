@@ -45,7 +45,7 @@ class Obj(mv.Objective):
 				+ self.Rho * np.sum( self.Det.Gradient[0] * V[0] ) * self.Det.Gradient[0]
 		]
 
-class TestPrincipal(ut.TestCase):
+class TestPrincipalConstrained(ut.TestCase):
 	def __init__(self, *args):
 		super().__init__(*args)
 		self.Obj = Obj()
@@ -60,6 +60,16 @@ class TestPrincipal(ut.TestCase):
 		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
 		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 25, 0)(mv.Newton)(
 				M, tr, cg, self.Tolerance, 12, 0
+		)
+		assert converged
+		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 25, 0)(mv.Newton)(
+				M, tr, mr, self.Tolerance, 12, 0
 		)
 		assert converged
 		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
@@ -85,6 +95,7 @@ class TestPrincipal(ut.TestCase):
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestPrincipal().testNewtonCG()
-	TestPrincipal().testLBFGS()
-	TestPrincipal().testLanczos()
+	TestPrincipalConstrained().testNewtonCG()
+	TestPrincipalConstrained().testNewtonMR()
+	TestPrincipalConstrained().testLBFGS()
+	TestPrincipalConstrained().testLanczos()
