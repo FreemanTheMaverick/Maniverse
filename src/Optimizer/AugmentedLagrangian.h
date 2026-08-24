@@ -23,7 +23,7 @@ pybind11::function AugmentedLagrangian(
 		double init_rho, double theta_rho, double theta_sigma,
 		std::vector<double> tol, int max_iter, int output){ return pybind11::cpp_function([=](pybind11::function func) -> pybind11::cpp_function{ return pybind11::cpp_function([=](pybind11::args args, pybind11::kwargs kwargs) -> bool{
 #else
-auto AugmentedLagrangian(
+static auto AugmentedLagrangian(
 		double init_rho, double theta_rho, double theta_sigma,
 		std::vector<double> tol, int max_iter, int output){ return [=](auto&& func){ return [=, func = std::forward<decltype(func)>(func)](auto&&... args) -> bool{
 #endif
