@@ -86,7 +86,7 @@ static auto AugmentedLagrangian(
 
 		NotConverged:
 		if ( output ) std::printf("Not converged yet!\n");
-		const double max_vio = *std::max_element(Violation.begin(), Violation.end(), [](const int& a, const int& b){ return abs(a) < abs(b); });
+		const double max_vio = std::abs(*std::max_element(Violation.begin(), Violation.end(), [](const int& a, const int& b){ return std::abs(a) < std::abs(b); }));
 		for ( int i = 0; i < ncons; i++ ){
 			Lambda[i] += Rho * Violation[i];
 		}
