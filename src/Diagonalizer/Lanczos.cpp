@@ -63,7 +63,7 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(
 			es.compute(T.topLeftCorner(j + 1, j + 1));
 			Evals = es.eigenvalues();
 			if (output){
-				std::printf("%d Eigenvalues found:", j + 1);
+				std::printf("Found %d eigenvalues:", j + 1);
 				for ( int i = 0; i < j + 1; i++ ) std::printf(" %f", Evals(i));
 				std::printf("\n");
 			}
