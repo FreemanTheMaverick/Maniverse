@@ -18,6 +18,11 @@
 
 namespace Maniverse{
 
+#define __Print_Constraint_Gradient_Norm__\
+	std::printf("Constraint gradient norm:");\
+	for ( int i = 0; i < ncons; i++ ) std::printf(" %f", M.Constraint_Gradient[i].norm());\
+	std::printf("\n");
+
 #ifdef __PYTHON__
 pybind11::function AugmentedLagrangian(
 		double init_rho, double theta_rho, double theta_sigma,
@@ -51,6 +56,7 @@ static auto AugmentedLagrangian(
 	if ( output ) std::printf("First run for the initial multipliers ...\n");
 	M.Func->Calculate(M.getPoint(), {0, 1});
 	M.setGradient();
+	if ( output){ __Print_Constraint_Gradient_Norm__ }
 	Lambda = M.getEffectiveLambda();
 	Rho = init_rho;
 
@@ -74,6 +80,7 @@ static auto AugmentedLagrangian(
 			std::printf("Constraint violation:");
 			for ( int i = 0; i < ncons; i++ ) std::printf(" %E", Violation[i]);
 			std::printf("\n");
+			__Print_Constraint_Gradient_Norm__
 		}
 		for ( int i = 0 ; i < ncons; i++ ) if ( std::abs(Violation[i]) > tol[i] ) goto NotConverged;
 		if ( output ){
