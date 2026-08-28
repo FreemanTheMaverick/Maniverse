@@ -11,20 +11,20 @@ class ObjDeterminant(mv.Objective):
 	def __init__(self, C0):
 		super().__init__()
 		self.C0 = C0
-		self.C = np.zeros([10, 5])
-		self.C0tC = np.zeros([10, 5])
-		self.C0tCinv = np.zeros([10, 5])
+		self.C = np.zeros_like(C0)
+		self.C0tC = np.zeros([C0.shape[1], C0.shape[1]])
+		self.C0tCinv = np.zeros([C0.shape[1], C0.shape[1]])
 		self.rank = 0
 
 		# Rank-deficient
 		self.beta = 0
 
 		# Rank-deficient 1
-		self.u0v0t = np.zeros([10, 10])
+		self.u0v0t = np.zeros([C0.shape[0], C0.shape[0]])
 
 		# Rank-deficient 2
-		self.U0 = np.zeros([10, 2])
-		self.V0 = np.zeros([10, 2])
+		self.U0 = np.zeros([C0.shape[0], 2])
+		self.V0 = np.zeros([C0.shape[0], 2])
 
 	def Calculate(self, C_, derivatives):
 		self.C = C_[0]
@@ -38,64 +38,42 @@ class ObjDeterminant(mv.Objective):
 		S = S[:self.rank]
 		V = Vh.T
 		self.C0tCinv = V[:, :self.rank] @ np.diag(1./S) @ U[:, :self.rank].T
-		if self.rank == 5:
+		if self.rank == self.C0.shape[1]:
 			self.Gradient = [ self.Value * self.C0 @ self.C0tCinv.T ]
 		else:
 			sing_prod = np.prod(S)
 			detUV = np.linalg.det( U @ V )
 			self.beta = sing_prod * detUV
-			if self.rank == 4:
-				self.u0v0t = np.outer(U[:, 4], V[:, 4])
+			if self.rank == self.C0.shape[1] - 1:
+				self.u0v0t = np.outer(U[:, self.rank], V[:, self.rank])
 				self.Gradient = [ sing_prod * self.C0 @ self.u0v0t ]
-			elif self.rank == 3:
-				self.U0 = U[:, 3:]
-				self.V0 = V[:, 3:]
-				self.Gradient = [ np.zeros([10, 5]) ]
+			elif self.rank == self.C0.shape[1] - 2:
+				self.U0 = U[:, self.rank + 1:]
+				self.V0 = V[:, self.rank + 1:]
+				self.Gradient = [ np.zeros_like(self.C0) ]
 			else:
-				self.Gradient = [ np.zeros([10, 5]) ]
+				self.Gradient = [ np.zeros_like(self.C0) ]
 
 	def Hessian(self, X_):
 		C0tX = self.C0.T @ X_[0]
-		if self.rank == 5:
+		if self.rank == self.C0.shape[1]:
 			return [ self.Value * self.C0 @ (
 				np.sum( self.C0tCinv.T * C0tX ) * self.C0tCinv.T
 				- self.C0tCinv.T @ C0tX.T @ self.C0tCinv.T
 			) ]
-		if self.rank == 4:
+		if self.rank == self.C0.shape[1] - 1:
 			return [ self.beta * self.C0 @ (
 				0.5 * self.C0tCinv.T * np.sum( self.u0v0t * C0tX.T )
 				+ 0.5 * self.u0v0t * np.sum( C0tX * self.C0tCinv )
 				- self.C0tCinv.T @ C0tX.T @ self.u0v0t
 			) ]
-		if self.rank == 3:
+		if self.rank == self.C0.shape[1] - 2:
 			M = self.U0.T @ C0tX @ self.V0
 			M[0, 1] *= -1
 			M[1, 0] *= -1
 			M[0, 0], M[1, 1] = M[1, 1], M[0, 0]
 			return [ 2 * self.beta * self.C0 @ self.U0 @ M.T @ self.V0.T ]
-		return [ np.zeros([10, 5]) ]
-
-class ObjDeterminants(mv.Objective):
-	def __init__(self, C0s):
-		super().__init__()
-		self.Funcs = []
-		for C0 in C0s:
-			self.Funcs.append(ObjDeterminant(C0))
-
-	def Calculate(self, Cs_, derivatives):
-		self.Value = 0
-		gradient = np.zeros_like(Cs_[0])
-		for func in self.Funcs:
-			func.Calculate(Cs_, derivatives)
-			self.Value += func.Value
-			gradient += func.Gradient[0]
-		self.Gradient = [ gradient ]
-
-	def Hessian(self, Xs_):
-		HX = np.zeros_like(Xs_[0])
-		for func in self.Funcs:
-			HX += func.Hessian(Xs_)[0]
-		return [ HX ]
+		return [ np.zeros_like(self.C0) ]
 
 class TestDeterminant(ut.TestCase):
 	def __init__(self, *args):
