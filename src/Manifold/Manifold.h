@@ -72,7 +72,7 @@ class Objective{ public:
 	virtual std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const;
 	virtual std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const;
 	std::vector<double> Lambda;
-	double Rho;
+	double Rho = 0;
 	std::vector<double> Constraint_Value;
 	std::vector<std::vector<Eigen::MatrixXd>> Constraint_Gradient;
 };
