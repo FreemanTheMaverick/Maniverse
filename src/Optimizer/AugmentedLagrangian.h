@@ -18,7 +18,7 @@
 
 namespace Maniverse{
 
-#define __Print_Constraint_Status__{\
+#define __Print_Constraint_Status__ {\
 	std::printf("Constraint violation:    ");\
 	for ( int i = 0; i < ncons; i++ ) std::printf(" % E", Violation[i]);\
 	std::printf("\n");\
