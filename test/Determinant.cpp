@@ -43,7 +43,8 @@ class TestDeterminant{ public:
 		};
 		const Eigen::MatrixXd A = Eigen::Map<const Eigen::MatrixXd>(data, 10, 10);
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(A);
-		const Eigen::MatrixXd eigvecs = es.eigenvectors();
+		Eigen::MatrixXd eigvecs = es.eigenvectors();
+		for ( int icol = 0; icol < 10; icol++ ) if (eigvecs(0, icol) <= 0) eigvecs.col(icol) *= -1;
 		Obj = ObjDeterminant(eigvecs.leftCols(5));
 		Solution = - eigvecs.leftCols(5);
 		Manifold.setBlockParameters({5});
