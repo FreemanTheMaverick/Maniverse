@@ -18,13 +18,19 @@
 
 namespace Maniverse{
 
-#define __Print_Constraint_Status__\
+#define __Print_Constraint_Status__{\
 	std::printf("Constraint violation:    ");\
 	for ( int i = 0; i < ncons; i++ ) std::printf(" % E", Violation[i]);\
 	std::printf("\n");\
 	std::printf("Constraint gradient norm:");\
 	for ( int i = 0; i < ncons; i++ ) std::printf(" % E", M.Constraint_Gradient[i].norm());\
-	std::printf("\n");
+	std::printf("\n");\
+	Eigen::MatrixXd cons_jac(M.Point.size(), ncons);\
+	for ( int i = 0; i < ncons; i++ ) cons_jac.col(i) = M.Constraint_Gradient[i];\
+	Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr(cons_jac);\
+	const double smallest = qr.matrixQR().diagonal().cwiseAbs().minCoeff();\
+	std::printf("Linear dependence: %E\n", smallest);\
+}
 
 #ifdef __PYTHON__
 pybind11::function AugmentedLagrangian(
