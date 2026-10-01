@@ -17,7 +17,7 @@
 
 namespace mv = Maniverse;
 
-class UnpreconObjQuadratic: public mv::Objective{ public:
+class UnpreconObjQuadratic: public mv::Function{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
 	Eigen::MatrixXd Ax = Eigen::MatrixXd::Zero(10, 1); // Temporary variable to reuse
 
@@ -79,7 +79,7 @@ class AndersonObjQuadratic: public UnpreconObjQuadratic{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Ms[0]->P ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Manifolds[0]->P ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -177,7 +177,7 @@ class TestQuadratic{ public:
 	void testLanczos(){
 		mv::Iterate M(UnpreconObj, {Manifold.Share()});
 		M.setPoint({Eigen::MatrixXd::Zero(10, 1)}, 1);
-		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__

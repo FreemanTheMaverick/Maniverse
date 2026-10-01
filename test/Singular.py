@@ -10,7 +10,7 @@ import Maniverse as mv
 # s \in R(6)
 # V \in O(6)
 
-class Obj(mv.Objective):
+class Obj(mv.Function):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
@@ -68,7 +68,7 @@ class TestSingular(ut.TestCase):
 				M, tr, cg, self.Tolerance, 25, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P * M.Manifolds[1].P[:, 0] @ M.Manifolds[2].P.T, self.Obj.A, atol = 1e-5)
 
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
@@ -78,7 +78,7 @@ class TestSingular(ut.TestCase):
 				M, tr, mr, self.Tolerance, 22, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P * M.Manifolds[1].P[:, 0] @ M.Manifolds[2].P.T, self.Obj.A, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
@@ -87,12 +87,12 @@ class TestSingular(ut.TestCase):
 				100, 131, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P * M.Ms[1].P[:, 0] @ M.Ms[2].P.T, self.Obj.A, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P * M.Manifolds[1].P[:, 0] @ M.Manifolds[2].P.T, self.Obj.A, atol = 1e-5)
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
 		M.setPoint([self.Solution0, self.Solution1, self.Solution2], 1)
-		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evals)):

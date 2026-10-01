@@ -20,13 +20,13 @@ namespace Maniverse{
 
 #define __Print_Constraint_Status__ {\
 	std::printf("Constraint violation:    ");\
-	for ( int i = 0; i < ncons; i++ ) std::printf(" % E", Violation[i]);\
+	for ( Constraint& constraint : M.Constraints ) std::printf(" % E", constraint.Func->Value);\
 	std::printf("\n");\
 	std::printf("Constraint gradient norm:");\
-	for ( int i = 0; i < ncons; i++ ) std::printf(" % E", M.Constraint_Gradient[i].norm());\
+	for ( Constraint& constraint : M.Constraints ) std::printf(" % E", constraint.Gradient.norm());\
 	std::printf("\n");\
 	Eigen::MatrixXd cons_jac(M.Point.size(), ncons);\
-	for ( int i = 0; i < ncons; i++ ) cons_jac.col(i) = M.Constraint_Gradient[i];\
+	for ( int i = 0; i < (int)M.Constraints.size(); i++ ) cons_jac.col(i) = M.Constraints[i].Gradient;\
 	Eigen::ColPivHouseholderQR<Eigen::MatrixXd> qr(cons_jac);\
 	const double smallest = qr.matrixQR().diagonal().cwiseAbs().minCoeff();\
 	std::printf("Linear dependence: %E\n", smallest);\
@@ -46,9 +46,7 @@ static auto AugmentedLagrangian(
 	#else
 	Iterate& M = std::get<0>(std::forward_as_tuple(args...));
 	#endif
-	std::vector<double>& Lambda = M.Func->Lambda;
-	std::vector<double>& Violation = M.Func->Constraint_Value;
-	const int ncons = (int)Lambda.size();
+	const int ncons = (int)M.Constraints.size();
 	if ( output ){
 		std::printf("***************************** Augmented Lagrangian *****************************\n\n");
 		std::printf("Number of constraints: %d\n", ncons);
@@ -58,22 +56,21 @@ static auto AugmentedLagrangian(
 		std::printf("\n");
 	}
 
-	double& Rho = M.Func->Rho = 0;
-	std::memset(Lambda.data(), 0, ncons * 8);
+	double& Rho = M.Rho = 0;
 	double last_max_vio = 0;
 
 	if ( output ) std::printf("First run for the initial multipliers ...\n");
-	M.Func->Calculate(M.getPoint(), {0, 1});
+	M.Calculate(M.getPoint(), {0, 1});
 	M.setGradient();
 	if ( output){ __Print_Constraint_Status__ }
-	Lambda = M.getEffectiveLambda();
+	M.setLambda(M.calcLambda());
 	Rho = init_rho;
 
 	for ( int iiter = 0; iiter < max_iter; iiter++ ){
 		if ( output ){
 			std::printf("\nIteration %d\n", iiter);
 			std::printf("Lagrange multipliers:");
-			for ( int i = 0; i < ncons; i++ ) std::printf(" %f", Lambda[i]);
+			for ( Constraint& constraint : M.Constraints ) std::printf(" %f", constraint.Lambda);
 			std::printf("\n");
 			std::printf("Penalty factor: %f\n", Rho);
 			std::printf("Running internal optimization ...\n");
@@ -86,20 +83,20 @@ static auto AugmentedLagrangian(
 		if ( ! inner_converged ) throw std::runtime_error("Internal optimization did not converge!");
 
 		if ( output){ __Print_Constraint_Status__ }
-		for ( int i = 0 ; i < ncons; i++ ) if ( std::abs(Violation[i]) > tol[i] ) goto NotConverged;
+		for ( int i = 0 ; i < ncons; i++ ) if ( std::abs(M.Constraints[i].Func->Value) > tol[i] ) goto NotConverged;
 		if ( output ){
 			std::printf("Converged!\n");
 			std::printf("Final Lagrange multipliers:");
-			for ( int i = 0 ; i < ncons; i++ ) std::printf(" %f", Lambda[i]);
+			for ( Constraint& constraint : M.Constraints ) std::printf(" %f", constraint.Lambda);
 			std::printf("\n");
 		}
 		return true;
 
 		NotConverged:
 		if ( output ) std::printf("Not converged yet!\n");
-		const double max_vio = std::abs(*std::max_element(Violation.begin(), Violation.end(), [](const int& a, const int& b){ return std::abs(a) < std::abs(b); }));
+		const double max_vio = std::abs(std::max_element(M.Constraints.begin(), M.Constraints.end(), [](const Constraint& a, const Constraint& b){ return std::abs(a.Func->Value) < std::abs(b.Func->Value); })->Func->Value);
 		for ( int i = 0; i < ncons; i++ ){
-			Lambda[i] += Rho * Violation[i];
+			M.Constraints[i].Lambda += Rho * M.Constraints[i].Func->Value;
 		}
 		if ( iiter > 0 && max_vio > theta_sigma * last_max_vio ) Rho *= theta_rho;
 		last_max_vio = max_vio;

@@ -27,7 +27,7 @@ bool ArmijoBacktracking(
 		std::printf("| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |\n");
 	}
 
-	const double oldL = M.Func->Value;
+	const double oldL = M.Value;
 	const double SGr = M.Inner(S, M.Gradient);
 	const double Snorm = std::sqrt(M.Inner(S, S));
 
@@ -37,12 +37,12 @@ bool ArmijoBacktracking(
 		const auto start = __now__;
 		const Eigen::MatrixXd Pmat = M.Retract(alpha * S);
 		DecoupleBlock(Pmat, P, M.BlockParameters);
-		M.Func->Calculate(P, {0});
+		M.Calculate(P, {0});
 
 		const double RHS = oldL + c1 * alpha * SGr;
 
-		if ( output > 0 ) std::printf("| %4d |  %5.2E | %5.2E |  %15.10f  |        % 5.2E  | %6.3f |\n", iiter, alpha, alpha * Snorm, M.Func->Value - oldL, M.Func->Value - RHS, __duration__(start, __now__));
-		if ( M.Func->Value <= RHS ){
+		if ( output > 0 ) std::printf("| %4d |  %5.2E | %5.2E |  %15.10f  |        % 5.2E  | %6.3f |\n", iiter, alpha, alpha * Snorm, M.Value - oldL, M.Value - RHS, __duration__(start, __now__));
+		if ( M.Value <= RHS ){
 			S *= alpha;
 			return 1;
 		}

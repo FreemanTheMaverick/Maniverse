@@ -7,20 +7,20 @@ from setuptools.command.build import build
 import pybind11
 from pybind11.setup_helpers import Pybind11Extension, ParallelCompile, naive_recompile
 
-__version__ = "2.2.1"
+__version__ = "2.3.0"
 
 # Downloading Eigen3
 pwd = os.path.dirname(__file__)
-EIGEN3 = pwd + "/eigen-5.0.0/"
+EIGEN3 = pwd + "/eigen-5.0.1/"
 class CustomBuild(build):
 	def run(self):
-		url = "https://gitlab.com/libeigen/eigen/-/archive/5.0.0/eigen-5.0.0.tar.gz"
-		dest = pwd + "/eigen-5.0.0.tar.gz"
+		url = "https://gitlab.com/libeigen/eigen/-/archive/5.0.1/eigen-5.0.1.tar.gz"
+		dest = pwd + "/eigen-5.0.1.tar.gz"
 		print("Downloading Eigen3 from %s to %s ..." % (url, dest))
 		urllib.request.urlretrieve(url, dest)
 		print("Extracting %s to %s ..." % (dest, EIGEN3))
 		with tarfile.open(dest) as tar:
-			tar.extractall(path = pwd) # Directory: eigen-5.0.0
+			tar.extractall(path = pwd) # Directory: eigen-5.0.1
 		super().run()
 
 ParallelCompile(

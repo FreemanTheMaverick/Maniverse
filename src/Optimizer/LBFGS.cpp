@@ -49,8 +49,8 @@ bool LBFGS(
 	double Snorm = 0;
 	std::vector<Eigen::MatrixXd> P = M.getPoint();
 
-	std::deque<Eigen::MatrixXd> Ss;
-	std::deque<Eigen::MatrixXd> Gs;
+	std::deque<Eigen::VectorXd> Ss;
+	std::deque<Eigen::VectorXd> Gs;
 	std::deque<double> Rhos;
 	double gamma = 1;
 
@@ -72,7 +72,7 @@ bool LBFGS(
 			Gs.clear();
 			Rhos.clear();
 			S = - M.Gradient;
-			M.Func->Calculate(M.getPoint(), {0});
+			M.Calculate(M.getPoint(), {0});
 			ls_success = ArmijoBacktracking(
 				M, S,
 				c1, tau, ls_max_iter * ls_max_iter,
@@ -88,11 +88,11 @@ bool LBFGS(
 		Snorm = std::sqrt(M.Inner(S, S));
 		Pmat = M.Retract(S);
 		DecoupleBlock(Pmat, P, M.BlockParameters);
-		M.Func->Calculate(P, {1});
+		M.Calculate(P, {1});
 
-		actual_delta_L = M.Func->Value - oldL;
-		if (output) std::printf("Target = %.10f\n", M.Func->Value);
-		oldL = M.Func->Value;
+		actual_delta_L = M.Value - oldL;
+		if (output) std::printf("Target = %.10f\n", M.Value);
+		oldL = M.Value;
 
 		// Transporting previous vectors I
 		if ( (int)Rhos.size() == max_mem ){

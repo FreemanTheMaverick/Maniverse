@@ -18,54 +18,56 @@
 
 namespace mv = Maniverse;
 
-class ObjRayleigh: public mv::Objective{ public:
+class ObjRayleigh: public mv::Function{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
 	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(10, 1);
-	double Cnorm2 = 0;
 
 	ObjRayleigh(){
 		const double data[] = {
 			#include "Sym10.txt"
 		};
 		std::memcpy(A.data(), &data, 10 * 10 * 8);
-		Lambda.resize(1);
 	};
 
 	void Calculate(std::vector<Eigen::MatrixXd> C_, std::vector<int> derivatives) override{
 		C = C_[0];
-		Cnorm2 = C.norm() * C.norm();
 		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
-			Value =
-				C.cwiseProduct( A * C ).sum()
-				+ Lambda[0] * ( Cnorm2 - 1 )
-				+ Rho / 2 * ( Cnorm2 - 1 ) * ( Cnorm2 - 1 );
-			Constraint_Value = { Cnorm2 - 1 };
+			Value = C.cwiseProduct( A * C ).sum();
 		}
 		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
-			Gradient = {
-				2 * A * C
-				+ Lambda[0] * 2 * C
-				+ Rho * ( Cnorm2 - 1 ) * 2 * C
-			};
-			Constraint_Gradient = {{ 2 * C }};
+			Gradient = { 2 * A * C };
 		}
 	};
 
 	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V_) const override{
 		const Eigen::MatrixXd& V = V_[0];
-		return std::vector<Eigen::MatrixXd>{
-			2 * A * V
-			+ Lambda[0] * 2 * V
-			+ Rho * ( Cnorm2 - 1 ) * 2 * V
-			+ Rho * 2 * C.cwiseProduct(V).sum() * 2 * C
-		};
+		return std::vector<Eigen::MatrixXd>{ 2 * A * V };
+	};
+};
+
+class ConsRayleigh: public mv::Function{ public:
+	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(10, 1);
+
+	void Calculate(std::vector<Eigen::MatrixXd> C_, std::vector<int> derivatives) override{
+		C = C_[0];
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			Value = C.norm() * C.norm() - 1;
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { 2 * C };
+		}
+	};
+
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V_) const override{
+		const Eigen::MatrixXd& V = V_[0];
+		return std::vector<Eigen::MatrixXd>{ 2 * V };
 	};
 };
 
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Ms[0]->P - Solution ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Manifolds[0]->P - Solution ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -73,7 +75,7 @@ class ObjRayleigh: public mv::Objective{ public:
 #define __Check_Stability__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
-		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		const double residual = ( M.ConstraintProjection(M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )).norm();\
 		if ( residual > 1e-5 ) goto IncorrectCurvature;\
 	}\
 	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
@@ -81,10 +83,10 @@ class ObjRayleigh: public mv::Objective{ public:
 
 class TestRayleighLagrange{ public:
 	ObjRayleigh Obj = ObjRayleigh();
+	ConsRayleigh Cons = ConsRayleigh();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Identity(10, 1));
 	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Zero(10, 1);
-	double Lambda = 0;
 
 	TestRayleighLagrange(){
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
@@ -92,11 +94,10 @@ class TestRayleighLagrange{ public:
 		const Eigen::MatrixXd Evec = es.eigenvectors();
 		Manifold = mv::Euclidean( ( Evec.col(0) + Evec.col(1) ) / std::sqrt(2) );
 		Solution = Evec.col(0);
-		Lambda = - es.eigenvalues()(0);
 	};
 
 	void testNewtonCG(){
-		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::Newton)(
@@ -106,7 +107,7 @@ class TestRayleighLagrange{ public:
 	};
 
 	void testNewtonMR(){
-		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
 		mv::TrustRegion tr;
 		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::Newton)(
@@ -116,7 +117,7 @@ class TestRayleighLagrange{ public:
 	};
 
 	void testLBFGS(){
-		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
 		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 4, 1)(mv::LBFGS)(
 				M, Tolerance,
 				10, 20, 0.1, 0.75, 7, 1
@@ -125,10 +126,9 @@ class TestRayleighLagrange{ public:
 	};
 
 	void testLanczos(){
-		Obj.Lambda = { Lambda };
-		mv::Iterate M(Obj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
 		M.setPoint({Solution}, 1);
-		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 0, 1, 1);
 		__Check_Stability__

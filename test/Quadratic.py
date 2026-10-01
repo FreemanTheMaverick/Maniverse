@@ -8,7 +8,7 @@ import Maniverse as mv
 # A \in SPD(10), nearly diagonal
 # x \in R(10)
 
-class UnpreconObj(mv.Objective):
+class UnpreconObj(mv.Function):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
@@ -68,7 +68,7 @@ class TestQuadratic(ut.TestCase):
 				M, tr, cg, self.Tolerance, 21, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testUnpreconNewtonMR(self):
 		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
@@ -78,7 +78,7 @@ class TestQuadratic(ut.TestCase):
 				M, tr, mr, self.Tolerance, 21, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testPreconNewtonCG(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold])
@@ -88,7 +88,7 @@ class TestQuadratic(ut.TestCase):
 				M, tr, cg, self.Tolerance, 19, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testPreconNewtonMR(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold])
@@ -98,7 +98,7 @@ class TestQuadratic(ut.TestCase):
 				M, tr, mr, self.Tolerance, 20, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testUnpreconLBFGS(self):
 		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
@@ -107,7 +107,7 @@ class TestQuadratic(ut.TestCase):
 				20, 11, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testPreconLBFGS(self):
 		M = mv.Iterate(self.PreconObj, [self.Manifold])
@@ -116,7 +116,7 @@ class TestQuadratic(ut.TestCase):
 				20, 7, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testAnderson(self):
 		M = mv.Iterate(self.AndersonObj, [self.Manifold])
@@ -125,16 +125,16 @@ class TestQuadratic(ut.TestCase):
 				0.2, 6, 12, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, np.zeros_like(M.Ms[0].P), atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, np.zeros_like(M.Manifolds[0].P), atol = 1e-5)
 
 	def testLanczos(self):
 		M = mv.Iterate(self.UnpreconObj, [self.Manifold])
 		M.setPoint([np.zeros([10, 1])], 1)
-		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evecs)):
-			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
 if __name__ == "__main__":

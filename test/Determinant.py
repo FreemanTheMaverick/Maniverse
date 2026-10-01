@@ -7,7 +7,7 @@ import Maniverse as mv
 # Minimize L(C) = det[ C0.t C ] ( -1 )
 # C0, C \in Flag(5; 10) = Gr(5; 10)
 
-class ObjDeterminant(mv.Objective):
+class ObjDeterminant(mv.Function):
 	def __init__(self, C0):
 		super().__init__()
 		self.C0 = C0
@@ -99,7 +99,7 @@ class TestDeterminant(ut.TestCase):
 				M, tr, cg, self.Tolerance, 8, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P @ M.Manifolds[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
@@ -109,7 +109,7 @@ class TestDeterminant(ut.TestCase):
 				M, tr, mr, self.Tolerance, 9, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P @ M.Manifolds[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
@@ -118,12 +118,12 @@ class TestDeterminant(ut.TestCase):
 				10, 10, 0.1, 0.75, 15, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P @ M.Ms[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P @ M.Manifolds[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		M.setPoint([self.Solution], 1)
-		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, 1, 0, 0, 0)
 		residual = np.linalg.norm( M.Hessian(Evecs[0]) - Evals[0] * Evecs[0] )
