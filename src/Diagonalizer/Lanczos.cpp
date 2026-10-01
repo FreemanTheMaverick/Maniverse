@@ -101,7 +101,7 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 
 	// Hessian
 	const auto A = constraint ?
-		std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjectedHessian(X); }) :
+		std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.Hessian(X)); }) :
 		std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Hessian(X); }) ;
 
 	// Trial vector
@@ -115,7 +115,7 @@ std::tuple<std::vector<double>, std::vector<Eigen::VectorXd>> Lanczos(Iterate& M
 	// Preconditioner
 	const auto P = generalized ? (
 			constraint ?
-			std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjectedPreconditioner(X); }) :
+			std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.Preconditioner(X)); }) :
 			std::function<Eigen::VectorXd (Eigen::VectorXd)>([&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); })
 		) : std::function<Eigen::VectorXd (Eigen::VectorXd)>([](Eigen::VectorXd X) -> Eigen::VectorXd{ return X; }) ;
 

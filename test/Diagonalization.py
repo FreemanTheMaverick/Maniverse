@@ -9,7 +9,7 @@ import Maniverse as mv
 # n \in R(10)
 # C \in O(10)
 
-class Obj(mv.Objective):
+class Obj(mv.Function):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
@@ -55,7 +55,7 @@ class TestDiagonalization(ut.TestCase):
 				M, tr, cg, self.Tolerance, 26, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
+		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
 
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
@@ -65,7 +65,7 @@ class TestDiagonalization(ut.TestCase):
 				M, tr, mr, self.Tolerance, 27, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
+		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
@@ -74,12 +74,12 @@ class TestDiagonalization(ut.TestCase):
 				100, 110, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[1].P * M.Ms[0].P[:, 0] @ M.Ms[1].P.T, self.Obj.A)
+		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
 		M.setPoint([self.Solution0, self.Solution1], 1)
-		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evals)):

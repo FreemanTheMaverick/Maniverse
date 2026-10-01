@@ -8,7 +8,7 @@ import Maniverse as mv
 # A \in Sym(10)
 # C \in St(10, 1)
 
-class Obj(mv.Objective):
+class Obj(mv.Function):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
@@ -21,6 +21,7 @@ class Obj(mv.Objective):
 
 	def Hessian(self, V):
 		return [ 2 * self.A @ V[0] ]
+
 
 class TestRayleighInterior(ut.TestCase):
 	def __init__(self, *args):
@@ -39,18 +40,18 @@ class TestRayleighInterior(ut.TestCase):
 				M, tr, mr, self.Tolerance, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P[:, 0], self.Solution, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P[:, 0], self.Solution, atol = 1e-5)
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		M.setPoint([self.Solution], 1)
-		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evecs)):
-			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			residual = np.linalg.norm( M.ConstraintProjection(M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ) )
 			assert residual < 1e-5
 
 if __name__ == "__main__":
-	TestRayleighInterior().testNewtonCG()
+	TestRayleighInterior().testNewtonMR()
 	TestRayleighInterior().testLanczos()

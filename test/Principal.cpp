@@ -16,7 +16,7 @@
 
 namespace mv = Maniverse;
 
-class ObjPrincipal: public mv::Objective{ public:
+class ObjPrincipal: public mv::Function{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
 
 	ObjPrincipal(){
@@ -43,7 +43,7 @@ class ObjPrincipal: public mv::Objective{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Ms[0]->P * M.Ms[0]->P.transpose() - Solution * Solution.transpose() ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Manifolds[0]->P * M.Manifolds[0]->P.transpose() - Solution * Solution.transpose() ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -51,7 +51,7 @@ class ObjPrincipal: public mv::Objective{ public:
 #define __Check_Stability__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
-		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
 		if ( residual > 1e-5 ) goto IncorrectCurvature;\
 	}\
 	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
@@ -102,7 +102,7 @@ class TestPrincipal{ public:
 	void testLanczos(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		M.setPoint({Solution}, 1);
-		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__

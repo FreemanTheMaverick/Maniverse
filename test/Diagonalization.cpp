@@ -20,7 +20,7 @@
 
 namespace mv = Maniverse;
 
-class ObjDiagonalization: public mv::Objective{ public:
+class ObjDiagonalization: public mv::Function{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
 	Eigen::MatrixXd n = Eigen::MatrixXd::Zero(10, 1);
 	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(10, 10);
@@ -62,7 +62,7 @@ class ObjDiagonalization: public mv::Objective{ public:
 #define __Check_Result__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	if ( converged ){\
-		if ( ( M.Ms[1]->P * M.Ms[0]->P.asDiagonal() * M.Ms[1]->P.transpose() - Obj.A ).cwiseAbs().maxCoeff() < 1e-5 ){\
+		if ( ( M.Manifolds[1]->P * M.Manifolds[0]->P.asDiagonal() * M.Manifolds[1]->P.transpose() - Obj.A ).cwiseAbs().maxCoeff() < 1e-5 ){\
 			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
 		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
 	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
@@ -70,7 +70,7 @@ class ObjDiagonalization: public mv::Objective{ public:
 #define __Check_Stability__\
 	std::cout << typeid(*this).name() << " " << __func__ << " ";\
 	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
-		const double residual = ( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
+		const double residual = ( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] ).norm();\
 		if ( residual > 1e-5 ) goto IncorrectCurvature;\
 	}\
 	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
@@ -122,7 +122,7 @@ class TestDiagonalization{ public:
 	void testLanczos(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share()});
 		M.setPoint({Solution0, Solution1}, 1);
-		M.Func->Calculate(M.getPoint(), {0, 1, 2});
+		M.Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__

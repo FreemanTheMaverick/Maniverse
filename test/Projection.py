@@ -9,7 +9,7 @@ from scipy.linalg import expm
 # A \in R(10, 6)
 # C \in St(10, 6)
 
-class Obj(mv.Objective):
+class Obj(mv.Function):
 	def __init__(self):
 		super().__init__()
 		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
@@ -47,7 +47,7 @@ class TestProjection(ut.TestCase):
 				M, tr, cg, self.Tolerance, 9, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, self.Solution, atol = 1e-5)
 
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
@@ -57,7 +57,7 @@ class TestProjection(ut.TestCase):
 				M, tr, mr, self.Tolerance, 10, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, self.Solution, atol = 1e-5)
 
 	def testLBFGS(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
@@ -66,7 +66,7 @@ class TestProjection(ut.TestCase):
 				20, 19, 0.1, 0.75, 5, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, self.Solution, atol = 1e-5)
 
 	def testAnderson(self):
 		M = mv.Iterate(self.AndersonObj, [self.Manifold])
@@ -75,16 +75,16 @@ class TestProjection(ut.TestCase):
 				0.2, 6, 28, 0
 		)
 		assert converged
-		assert np.allclose(M.Ms[0].P, self.Solution, atol = 1e-5)
+		assert np.allclose(M.Manifolds[0].P, self.Solution, atol = 1e-5)
 
 	def testLanczos(self):
 		M = mv.Iterate(self.Obj, [self.Manifold])
 		M.setPoint([self.Solution], 1)
-		M.Func.Calculate(M.getPoint(), [0, 1, 2])
+		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
 		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
 		for i in range(len(Evecs)):
-			residual = np.linalg.norm( M.ConstraintProjectedHessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
 			assert residual < 1e-5
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@
 
 namespace mv = Maniverse;
 
-class ObjDeterminant: public mv::Objective{ public:
+class ObjDeterminant: public mv::Function{ public:
 	Eigen::MatrixXd C0 = Eigen::MatrixXd::Zero(0, 0);
 	Eigen::MatrixXd C = Eigen::MatrixXd::Zero(0, 0);
 	Eigen::MatrixXd C0tC = Eigen::MatrixXd::Zero(0, 0);

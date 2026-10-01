@@ -40,8 +40,8 @@ LinearSolver::LinearSolver(Iterate& M, bool constraint, bool FrownNPC, std::tupl
 	dot = [&M](Eigen::VectorXd X, Eigen::VectorXd Y) -> double{ return M.Inner(X, Y); };
 	if (constraint){
 		proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.TangentProjection(X)); };
-		A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjectedHessian(X); };
-		P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjectedPreconditioner(X); };
+		A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.Hessian(X)); };
+		P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.Preconditioner(X)); };
 	}else{
 		proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.TangentProjection(X); };
 		A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Hessian(X); };

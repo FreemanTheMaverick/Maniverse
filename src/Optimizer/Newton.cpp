@@ -80,14 +80,14 @@ bool Newton(
 			}
 
 			// Evaluating the objective function
-			M.Func->Calculate(P, {0});
+			M.Calculate(P, {0});
 
 			// Rating the new step
-			actual_delta_L = M.Func->Value - oldL;
+			actual_delta_L = M.Value - oldL;
 			const double rho = actual_delta_L / predicted_delta_L;
 			accepted = ( rho > tr.RhoThreshold || iiter == 0 || Snorm < tol2 );
 			if (output){
-				std::printf("Target = %.10f\n", M.Func->Value);
+				std::printf("Target = %.10f\n", M.Value);
 				std::printf("Step score:\n");
 				std::printf("| Predicted and actual changes in target = %E, %E\n", predicted_delta_L, actual_delta_L);
 				std::printf("| Score of the new step Rho = %f, compared with RhoThreshold %f\n", rho, tr.RhoThreshold);
@@ -104,10 +104,10 @@ bool Newton(
 		}
 
 		// Evaluating the Euclidean derivatives
-		M.Func->Calculate(P, {1, 2});
+		M.Calculate(P, {1, 2});
 
 		// Updating the new step
-		oldL = M.Func->Value;
+		oldL = M.Value;
 		M.setPoint(P, 1);
 
 		// Obtaining Riemannian gradient

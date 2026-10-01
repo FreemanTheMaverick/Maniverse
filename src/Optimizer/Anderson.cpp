@@ -46,12 +46,12 @@ bool Anderson(
 
 	std::vector<Eigen::MatrixXd> P = M.getPoint();
 	std::vector<Eigen::MatrixXd> R = M.getPoint();
-	Eigen::MatrixXd Pmat = M.Point;
-	Eigen::MatrixXd S = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
-	Eigen::MatrixXd Rmat = Eigen::MatrixXd::Zero(Pmat.rows(), Pmat.cols());
+	Eigen::VectorXd Pvec = M.Point;
+	Eigen::VectorXd S = Eigen::VectorXd::Zero(Pvec.size());
+	Eigen::VectorXd Rvec = Eigen::VectorXd::Zero(Pvec.size());
 
-	std::deque<Eigen::MatrixXd> Ss;
-	std::deque<Eigen::MatrixXd> Ys;
+	std::deque<Eigen::VectorXd> Ss;
+	std::deque<Eigen::VectorXd> Ys;
 
 	bool converged = 0;
 
@@ -59,14 +59,11 @@ bool Anderson(
 		if (output) std::printf("Iteration %d\n", iiter);
 		const auto iter_start = __now__;
 
-		Eigen::MatrixXd oldRmat = M.TransportTangent(Rmat, S);
-		M.Func->Calculate(P, {0, 1});
-		actual_delta_L = M.Func->Value - oldL;
-		oldL = M.Func->Value;
-		if (output) std::printf("Target = %.10f\n", M.Func->Value);
-
-		R = M.Func->Gradient;
-		AssembleBlock(Rmat, R, M.BlockParameters);
+		Eigen::VectorXd oldRvec = M.TransportTangent(Rvec, S);
+		M.Calculate(P, {0, 1});
+		actual_delta_L = M.Value - oldL;
+		oldL = M.Value;
+		if (output) std::printf("Target = %.10f\n", M.Value);
 
 		// Transporting previous vectors I
 		if ( (int)Ss.size() == max_mem ){
@@ -83,8 +80,11 @@ bool Anderson(
 
 		// Checking convergence
 		M.setPoint(P, 1);
-		Rmat = M.TangentProjection(Rmat);
-		const double Rnorm = std::sqrt( M.Inner(Rmat, Rmat) );
+		M.setGradient();
+		R = M.getGradient();
+		Rvec = M.Gradient;
+
+		const double Rnorm = std::sqrt( M.Inner(Rvec, Rvec) );
 		const double Snorm = std::sqrt( M.Inner(S, S) );
 		if ( Rnorm < tol1 ){
 			if ( iiter == 0 ) converged = 1;
@@ -100,7 +100,7 @@ bool Anderson(
 		}
 
 		// Transporting previous vectors II
-		if ( iiter > 0 ) Ys.push_back(Rmat - oldRmat);
+		if ( iiter > 0 ) Ys.push_back(Rvec - oldRvec);
 
 		if ( size > 0 ){
 			// Solving for the extrapolation vector
@@ -110,9 +110,9 @@ bool Anderson(
 				YtY(i, j) = YtY(j, i) = Ys[i].cwiseProduct(Ys[j]).sum();
 			}
 			const Eigen::MatrixXd YtYinv = YtY.ldlt().solve(Eigen::MatrixXd::Identity(size, size));
-			Eigen::MatrixXd YtR = Eigen::MatrixXd::Zero(size, 1);
-			for ( int i = 0; i < size; i++ ) YtR(i, 0) = Ys[i].cwiseProduct(Rmat).sum();
-			const Eigen::MatrixXd Gamma = YtYinv * YtR;
+			Eigen::VectorXd YtR = Eigen::VectorXd::Zero(size);
+			for ( int i = 0; i < size; i++ ) YtR(i) = Ys[i].cwiseProduct(Rvec).sum();
+			const Eigen::VectorXd Gamma = YtYinv * YtR;
 			if (output){
 				std::printf("Extrapolation coefficients:");
 				for ( int i = 0; i < size; i++ ) std::printf(" %f", Gamma(i));
@@ -120,14 +120,14 @@ bool Anderson(
 			}
 
 			// Obtaining the next step
-			Eigen::MatrixXd Rmat_bar = Rmat;
-			for ( int i = 0; i < size; i++ ) Rmat_bar -= Ys[i] * Gamma(i, 0);
-			S = beta * Rmat_bar;
-			for ( int i = 0; i < size; i++ ) S -= Ss[i] * Gamma(i, 0);
-		}else S = Rmat;
+			Eigen::VectorXd Rvec_bar = Rvec;
+			for ( int i = 0; i < size; i++ ) Rvec_bar -= Ys[i] * Gamma(i);
+			S = beta * Rvec_bar;
+			for ( int i = 0; i < size; i++ ) S -= Ss[i] * Gamma(i);
+		}else S = Rvec;
 
-		const Eigen::MatrixXd Pmat = M.Retract(S);
-		DecoupleBlock(Pmat, P, M.BlockParameters);
+		const Eigen::VectorXd Pvec = M.Retract(S);
+		DecoupleBlock(Pvec, P, M.BlockParameters);
 
 		// Elapsed time
 		if (output) std::printf("Elapsed time: %f seconds for current iteration; %f seconds in total\n\n", __duration__(iter_start, __now__), __duration__(all_start, __now__));

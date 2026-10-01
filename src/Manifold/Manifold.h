@@ -62,7 +62,7 @@ class Manifold{ public:
 	virtual std::shared_ptr<Manifold> Share() const;
 };
 
-class Objective{ public:
+class Function{ public:
 	virtual void Calculate(std::vector<Eigen::MatrixXd> P, std::vector<int> derivative);
 	double Value = 0;
 	std::vector<Eigen::MatrixXd> Gradient;
@@ -71,39 +71,64 @@ class Objective{ public:
 	virtual std::vector<Eigen::MatrixXd> PreconditionerInv(std::vector<Eigen::MatrixXd> X) const;
 	virtual std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const;
 	virtual std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const;
-	std::vector<double> Lambda;
-	double Rho = 0;
-	std::vector<double> Constraint_Value;
-	std::vector<std::vector<Eigen::MatrixXd>> Constraint_Gradient;
+};
+
+class Constraint{ public:
+	int TotalSize = 0;
+	std::vector<std::array<int, 3>> BlockParameters;
+	Function* Func;
+	std::vector<std::shared_ptr<Manifold>> Manifolds;
+	Constraint(int total_size, std::vector<std::array<int, 3>> block_parameters, Function& func, std::vector<std::shared_ptr<Manifold>> manifolds);
+	double Lambda = 0;
+	Eigen::VectorXd Gradient;
+	void setGradient();
+	std::vector<Eigen::MatrixXd> getGradient() const;
+	Eigen::VectorXd Hessian(Eigen::VectorXd X) const;
 };
 
 class Iterate{ public:
-	std::vector<std::shared_ptr<Manifold>> Ms;
-	Objective* Func;
 	Eigen::VectorXd Point;
+	void setPoint(std::vector<Eigen::MatrixXd> ps, bool purify);
+	std::vector<Eigen::MatrixXd> getPoint() const;
+
+	// Total value of the (augmented) Lagrangian function
+	std::vector<std::shared_ptr<Manifold>> Manifolds;
+	void Calculate(std::vector<Eigen::MatrixXd> P, std::vector<int> derivatives);
+	double Value;
 	Eigen::VectorXd Gradient;
-	Eigen::VectorXd Hessian(Eigen::VectorXd X) const;
-	Eigen::VectorXd ConstraintProjectedHessian(Eigen::VectorXd X) const;
-	Eigen::VectorXd Preconditioner(Eigen::VectorXd X) const;
-	Eigen::VectorXd ConstraintProjectedPreconditioner(Eigen::VectorXd X) const;
-	Eigen::VectorXd PreconditionerInv(Eigen::VectorXd X) const;
-	Eigen::VectorXd ConstraintProjectedPreconditionerInv(Eigen::VectorXd X) const;
-	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd X) const;
-	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd X) const;
+	void setGradient();
+	std::vector<Eigen::MatrixXd> getGradient() const;
+	Eigen::VectorXd Hessian(Eigen::VectorXd Xvec) const;
+	Eigen::VectorXd Preconditioner(Eigen::VectorXd Xvec) const;
+	Eigen::VectorXd PreconditionerInv(Eigen::VectorXd Xvec) const;
+	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd Xvec) const;
+	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd Xvec) const;
 
-	std::vector<double> getEffectiveLambda() const;
-	std::vector<std::vector<std::shared_ptr<Manifold>>> Constraints;
-	std::vector<Eigen::VectorXd> Constraint_Gradient;
+	// Objective function and its gradient and Hessian
+	Function* Objective;
+	Eigen::VectorXd ObjectiveGradient;
+	void setObjectiveGradient();
+	std::vector<Eigen::MatrixXd> getObjectiveGradient() const;
+	Eigen::VectorXd ObjectiveHessian(Eigen::VectorXd Xvec) const;
 
-	int TotalSize;
-	std::vector<std::tuple<int, int, int>> BlockParameters;
+	// Constraints
+	std::vector<Constraint> Constraints;
+	std::vector<double> calcLambda() const;
+	void setLambda(std::vector<double> lambda);
+	std::vector<double> getLambda() const;
+	double Rho = 0;
+	Eigen::VectorXd ConstraintProjection(Eigen::VectorXd A) const;
 
-	Iterate(Objective& func, std::vector<std::shared_ptr<Manifold>> Ms);
+	int TotalSize = 0;
+	std::vector<std::array<int, 3>> BlockParameters;
 
+	Iterate(Function& objective, std::vector<std::shared_ptr<Manifold>> manifolds, std::vector<Function*> cons_funcs = {});
+
+	// Manifold utilities
 	std::string getName() const;
 	int getDimension() const;
-	double Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const;
 
+	double Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const;
 	Eigen::VectorXd Retract(Eigen::VectorXd X) const;
 	Eigen::VectorXd InverseRetract(Iterate& N) const;
 	Eigen::VectorXd TransportTangent(Eigen::VectorXd X, Eigen::VectorXd Y) const;
@@ -111,13 +136,7 @@ class Iterate{ public:
 
 	Eigen::VectorXd TangentProjection(Eigen::VectorXd A) const;
 	Eigen::VectorXd TangentPurification(Eigen::VectorXd A) const;
-	Eigen::VectorXd ConstraintProjection(Eigen::VectorXd A) const;
  
-	void setPoint(std::vector<Eigen::MatrixXd> ps, bool purify);
-	void setGradient();
-
-	std::vector<Eigen::MatrixXd> getPoint() const;
-	std::vector<Eigen::MatrixXd> getGradient() const;
 };
 
 #define GetBlock(mat, iM, BlockParameters)\
