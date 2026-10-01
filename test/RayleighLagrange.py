@@ -85,6 +85,7 @@ class TestRayleighLagrange(ut.TestCase):
 		M.setPoint([self.Solution], 1)
 		M.Calculate(M.getPoint(), [0, 1, 2])
 		M.setGradient()
+		M.setLambda(M.calcLambda())
 		Evals, Evecs = mv.Lanczos(M, M.getDimension() - 1, 0, 1, 0)
 		for i in range(M.getDimension() - 1):
 			residual = np.linalg.norm( M.ConstraintProjection(M.Hessian(Evecs[i]) - Evals[i] * Evecs[i]) )

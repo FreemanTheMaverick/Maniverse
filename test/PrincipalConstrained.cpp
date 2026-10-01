@@ -110,7 +110,7 @@ class TestPrincipalConstrained{ public:
 		M.setPoint({Solution}, 1);
 		M.Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();
-		M.calcLambda();
+		M.setLambda(M.calcLambda());
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 0, 1, 1);
 		__Check_Stability__
 	};
