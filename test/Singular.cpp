@@ -91,7 +91,7 @@ class TestSingular{ public:
 	mv::Stiefel Manifold0 = mv::Stiefel(Eigen::MatrixXd::Identity(10, 6));
 	mv::Euclidean Manifold1 = mv::Euclidean(Eigen::MatrixXd::Zero(6, 1));
 	mv::Orthogonal Manifold2 = mv::Orthogonal(Eigen::MatrixXd::Identity(6, 6));
-	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
+	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution0 = Eigen::MatrixXd::Identity(10, 6);
 	Eigen::MatrixXd Solution1 = Eigen::MatrixXd::Zero(6, 1);
 	Eigen::MatrixXd Solution2 = Eigen::MatrixXd::Identity(6, 6);

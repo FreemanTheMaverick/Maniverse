@@ -72,7 +72,7 @@ class TestProjection{ public:
 	ObjProjection Obj = ObjProjection();
 	AndersonObjProjection AndersonObj = AndersonObjProjection();
 	mv::Stiefel Manifold = mv::Stiefel(Eigen::MatrixXd::Identity(10, 6));
-	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
+	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 6);
 
 	TestProjection(){

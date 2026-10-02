@@ -98,7 +98,7 @@ class TestQuadratic{ public:
 	PreconObjQuadratic PreconObj = PreconObjQuadratic();
 	AndersonObjQuadratic AndersonObj = AndersonObjQuadratic();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Zero(10, 1));
-	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
+	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 
 	TestQuadratic(){
 		Eigen::MatrixXd from0to9(10, 1);
