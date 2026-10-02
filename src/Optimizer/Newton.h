@@ -1,7 +1,4 @@
-#include <Eigen/Dense>
-#include <functional>
-#include <vector>
-#include <tuple>
+#include <array>
 
 #include "../Manifold/Manifold.h"
 #include "../LinearSolver/LinearSolver.h"
@@ -14,7 +11,7 @@ bool Newton(
 		Iterate& M,
 		TrustRegion& tr,
 		LinearSolver& ls,
-		std::tuple<double, double, double> tol,
+		std::array<double, 3> tol,
 		int max_iter, int output
 );
 

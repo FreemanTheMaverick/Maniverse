@@ -6,7 +6,7 @@
 
 #include <Eigen/Dense>
 #include <cmath>
-#include <tuple>
+#include <array>
 #include <vector>
 #include <deque>
 #include <cstdio>
@@ -22,7 +22,7 @@ namespace Maniverse{
 // https://doi.org/10.1287/moor.2023.0284
 bool Anderson(
 		Iterate& M,
-		std::tuple<double, double, double> tol,
+		std::array<double, 3> tol,
 		double beta, int max_mem, int max_iter,
 		int output){
 

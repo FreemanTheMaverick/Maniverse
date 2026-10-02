@@ -65,7 +65,7 @@ class TestPrincipalConstrained{ public:
 	ObjPrincipal Obj = ObjPrincipal();
 	ObjDeterminant Cons = ObjDeterminant(Eigen::MatrixXd::Zero(10, 5));
 	mv::Flag Manifold = mv::Flag(Eigen::MatrixXd::Identity(10, 5));
-	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
+	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 5);
 
 	TestPrincipalConstrained(){

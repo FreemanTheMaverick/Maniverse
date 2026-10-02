@@ -6,7 +6,7 @@
 
 #include <Eigen/Dense>
 #include <cmath>
-#include <tuple>
+#include <array>
 #include <cstdio>
 #include <chrono>
 
@@ -23,7 +23,7 @@ bool Newton(
 		Iterate& M,
 		TrustRegion& tr,
 		LinearSolver& ls,
-		std::tuple<double, double, double> tol,
+		std::array<double, 3> tol,
 		int max_iter, int output){
 
 	auto [tol0, tol1, tol2] = tol;

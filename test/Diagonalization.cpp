@@ -80,7 +80,7 @@ class TestDiagonalization{ public:
 	ObjDiagonalization Obj = ObjDiagonalization();
 	mv::Euclidean Manifold0 = mv::Euclidean(Eigen::MatrixXd::Zero(10, 1));
 	mv::Orthogonal Manifold1 = mv::Orthogonal(Eigen::MatrixXd::Identity(10, 10));
-	std::tuple<double, double, double> Tolerance = {1.e-5, 1.e-5, 1.e-5};
+	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution0 = Eigen::MatrixXd::Zero(10, 1);
 	Eigen::MatrixXd Solution1 = Eigen::MatrixXd::Zero(10, 10);
 
