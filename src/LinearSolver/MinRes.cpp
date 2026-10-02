@@ -16,7 +16,9 @@
 
 namespace Maniverse{
 
-void MinRes::Calculate(double R){ // https://doi.org/10.1137/21M143666X
+// General algorithm: https://doi.org/10.1137/21M143666X
+// Right preconditioning: Section 9.3.2, https://doi.org/10.1137/1.9780898718003
+void MinRes::Calculate(double R){
 	if (Verbose){
 		std::printf("Linear system solving with MinRes\n");
 		std::printf("Maximal search radius          : %f\n", R);

@@ -49,10 +49,11 @@ The good thing is that the current codes do work as they are expected, at least 
 - Conjugate gradient
 - Minimal residual
 
-They can be set to be vigilant about non-positive curvatures of the Hessian in Newton's method.
+They can be set to be vigilant about non-positive curvatures in the Hessian and aware of the trust region in Newton's method.
+Preconditioners can be applied to both methods.
 
 ### Diagonalizers
-- Lanczos method
+- Lanczos method (for stability check of solutions to constrained and unconstrained optimization problems)
 
 ## Prerequisites
 * A C++ compiler that supports C++17 standard
