@@ -86,6 +86,14 @@ void Iterate::setGradient(){
 		constraint.setGradient();
 		this->Gradient += ( constraint.Lambda + this->Rho * constraint.Func->Value ) * constraint.Gradient;
 	}
+	for ( int icons = 0; icons < (int)this->Constraints.size(); icons++ ){
+		Constraint& consi = this->Constraints[icons];
+		consi.OrthogonalGradient = consi.Gradient;
+		for ( int jcons = 0; jcons < icons; jcons++ ){
+			Constraint& consj = this->Constraints[jcons];
+			consi.OrthogonalGradient -= this->Inner(consi.Gradient, consj.OrthogonalGradient) * consj.OrthogonalGradient / this->Inner(consj.OrthogonalGradient, consj.OrthogonalGradient);
+		}
+	}
 }
 
 std::vector<Eigen::MatrixXd> Iterate::getGradient() const{
@@ -187,6 +195,7 @@ Eigen::VectorXd Iterate::ObjectiveHessian(Eigen::VectorXd Xvec) const{
 
 std::vector<double> Iterate::calcLambda() const{
 	const int ncons = this->Constraints.size();
+	if ( ncons == 0 ) throw std::runtime_error("No constraints to calculate Lagrange multipliers for!");
 	Eigen::VectorXd Gf = this->ObjectiveGradient;
 	Eigen::MatrixXd Gg = Eigen::MatrixXd::Zero(Gf.size(), ncons);
 	for ( int i = 0; i < ncons; i++ ) Gg.col(i) = this->Constraints[i].Gradient;
@@ -196,6 +205,7 @@ std::vector<double> Iterate::calcLambda() const{
 
 void Iterate::setLambda(std::vector<double> lambda){
 	const int ncons = this->Constraints.size();
+	if ( ncons != (int)lambda.size() ) throw std::runtime_error("Wrong number of Lagrange multipliers!");
 	for ( int i = 0; i < ncons; i++ ) this->Constraints[i].Lambda = lambda[i];
 }
 
@@ -207,7 +217,7 @@ std::vector<double> Iterate::getLambda() const{
 
 Eigen::VectorXd Iterate::ConstraintProjection(Eigen::VectorXd Xvec) const{
 	for ( const Constraint& constraint : this->Constraints ){
-		const Eigen::VectorXd& cons_grad = constraint.Gradient;
+		const Eigen::VectorXd& cons_grad = constraint.OrthogonalGradient;
 		Xvec -= this->Inner(Xvec, cons_grad) * cons_grad / this->Inner(cons_grad, cons_grad);
 	}
 	return Xvec;
@@ -329,6 +339,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def(pybind11::init<int, std::vector<std::array<int, 3>>, Function&, std::vector<std::shared_ptr<Manifold>>>())
 		.def_readwrite("Lambda", &Constraint::Lambda)
 		.def_readwrite("Gradient", &Constraint::Gradient)
+		.def_readwrite("OrthogonalGradient", &Constraint::OrthogonalGradient)
 		.def("setGradient", &Constraint::setGradient)
 		.def("getGradient", &Constraint::getGradient)
 		.def("Hessian", &Constraint::Hessian);

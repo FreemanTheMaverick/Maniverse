@@ -81,6 +81,7 @@ class Constraint{ public:
 	Constraint(int total_size, std::vector<std::array<int, 3>> block_parameters, Function& func, std::vector<std::shared_ptr<Manifold>> manifolds);
 	double Lambda = 0;
 	Eigen::VectorXd Gradient;
+	Eigen::VectorXd OrthogonalGradient;
 	void setGradient();
 	std::vector<Eigen::MatrixXd> getGradient() const;
 	Eigen::VectorXd Hessian(Eigen::VectorXd X) const;
