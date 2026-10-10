@@ -73,7 +73,8 @@ class TestRayleighInterior{ public:
 	void testNewtonMR(){
 		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::MinRes mr(M, 0, 0, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::MinRes mr(0, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(mr, M);
 		const bool converged = mv::Newton(
 				M, tr, mr, Tolerance, 5, 1
 		);

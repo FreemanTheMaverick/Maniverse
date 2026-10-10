@@ -19,6 +19,17 @@
 
 namespace Maniverse{
 
+void initLinearSolverForNewton(LinearSolver& ls, Iterate& M){
+	if (ls.Verbose){
+		std::printf("Manifold                                 : %s\n", M.getName().c_str());
+		std::printf("Dimension number                         : %d\n", M.getDimension());
+	}
+	ls.dot = [&M](Eigen::VectorXd X, Eigen::VectorXd Y) -> double{ return M.Inner(X, Y); };
+	ls.proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.TangentProjection(X); };
+	ls.A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Hessian(X); };
+	ls.P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); };
+}
+
 bool Newton(
 		Iterate& M,
 		TrustRegion& tr,
@@ -71,7 +82,7 @@ bool Newton(
 			if ( iiter > 0 ) S = ls.Find(R);
 			Snorm = std::sqrt(M.Inner(S, S));
 			Pmat = M.Retract(S);
-			DecoupleBlock(Pmat, P, M.BlockParameters);
+			MV_DecoupleBlock(Pmat, P, M.BlockParameters);
 			if ( iiter > 0 ) predicted_delta_L = M.Inner(M.Gradient + 0.5 * M.Hessian(S), S);
 			if (output){
 				std::printf("Trial %d - %d:\n", iiter, trial);
@@ -144,6 +155,7 @@ bool Newton(
 
 #ifdef __PYTHON__
 void Init_Newton(pybind11::module_& m){
+	m.def("initLinearSolverForNewton", &initLinearSolverForNewton);
 	m.def("Newton", &Newton);
 }
 #endif

@@ -7,6 +7,8 @@
 
 namespace Maniverse{
 
+void initLinearSolverForNewton(LinearSolver& ls, Iterate& M);
+
 bool Newton(
 		Iterate& M,
 		TrustRegion& tr,

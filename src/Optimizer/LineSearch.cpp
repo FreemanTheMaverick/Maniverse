@@ -36,7 +36,7 @@ bool ArmijoBacktracking(
 	for ( int iiter = 0; iiter < max_iter; iiter++ ){
 		const auto start = __now__;
 		const Eigen::MatrixXd Pmat = M.Retract(alpha * S);
-		DecoupleBlock(Pmat, P, M.BlockParameters);
+		MV_DecoupleBlock(Pmat, P, M.BlockParameters);
 		M.Calculate(P, {0});
 
 		const double RHS = oldL + c1 * alpha * SGr;

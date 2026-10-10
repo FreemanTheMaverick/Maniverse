@@ -63,7 +63,8 @@ class TestSingular(ut.TestCase):
 	def testNewtonCG(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
 		tr = mv.TrustRegion()
-		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		cg = mv.ConjugateGradient(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(cg, M)
 		converged = mv.Newton(
 				M, tr, cg, self.Tolerance, 25, 0
 		)
@@ -73,7 +74,8 @@ class TestSingular(ut.TestCase):
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
 		tr = mv.TrustRegion()
-		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		mr = mv.MinRes(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(mr, M)
 		converged = mv.Newton(
 				M, tr, mr, self.Tolerance, 22, 0
 		)

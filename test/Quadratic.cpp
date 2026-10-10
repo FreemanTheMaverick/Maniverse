@@ -17,16 +17,22 @@
 
 namespace mv = Maniverse;
 
-class UnpreconObjQuadratic: public mv::Function{ public:
+class ObjQuadratic: public mv::Function{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
 	Eigen::MatrixXd Ax = Eigen::MatrixXd::Zero(10, 1); // Temporary variable to reuse
+	Eigen::VectorXd Ainv = Eigen::VectorXd::Zero(10);
+	Eigen::VectorXd Asqrt = Eigen::VectorXd::Zero(10);
+	Eigen::VectorXd Ainvsqrt = Eigen::VectorXd::Zero(10);
 
-	UnpreconObjQuadratic(){
+	ObjQuadratic(){
 		const double data[] = {
 			#include "Sym10.txt"
 		};
 		std::memcpy(A.data(), &data, 10 * 10 * 8);
 		A = A * A + Eigen::MatrixXd::Identity(10, 10) * 0.01; // Constructing a SPD matrix whose diagonal elements dominate
+		Ainv = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse();
+		Asqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseSqrt();
+		Ainvsqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().cwiseSqrt();
 		for ( int i = 0; i < 10; i++ ) for ( int j = 0; j < 10; j++ )
 			if ( i != j ) A(i, j) *= 0.01;
 	};
@@ -46,30 +52,9 @@ class UnpreconObjQuadratic: public mv::Function{ public:
 	};
 };
 
-
-typedef Eigen::DiagonalMatrix<double, -1, -1> Diagonal;
-
-class PreconObjQuadratic: public UnpreconObjQuadratic{ public:
-	Diagonal Ainv = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().asDiagonal();
-	Diagonal Asqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseSqrt().asDiagonal();
-	Diagonal Ainvsqrt = ( 2 * A ).diagonal().cwiseAbs().cwiseInverse().cwiseSqrt().asDiagonal();
-
-	std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<Eigen::MatrixXd>{ Ainv * v[0] };
-	};
-
-	std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<Eigen::MatrixXd>{ Ainvsqrt * v[0] };
-	};
-
-	std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> v) const override{
-		return std::vector<Eigen::MatrixXd>{ Asqrt * v[0] };
-	};
-};
-
-class AndersonObjQuadratic: public UnpreconObjQuadratic{ public:
+class AndersonObjQuadratic: public ObjQuadratic{ public:
 	void Calculate(std::vector<Eigen::MatrixXd> x, std::vector<int> derivatives) override{
-		UnpreconObjQuadratic::Calculate(x, derivatives);
+		ObjQuadratic::Calculate(x, derivatives);
 		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
 			Gradient = { - 2 * A * x[0] };
 		}
@@ -94,8 +79,7 @@ class AndersonObjQuadratic: public UnpreconObjQuadratic{ public:
 	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
 
 class TestQuadratic{ public:
-	UnpreconObjQuadratic UnpreconObj = UnpreconObjQuadratic();
-	PreconObjQuadratic PreconObj = PreconObjQuadratic();
+	ObjQuadratic Obj = ObjQuadratic();
 	AndersonObjQuadratic AndersonObj = AndersonObjQuadratic();
 	mv::Euclidean Manifold = mv::Euclidean(Eigen::MatrixXd::Zero(10, 1));
 	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
@@ -107,9 +91,13 @@ class TestQuadratic{ public:
 	};
 
 	void testUnpreconNewtonCG(){
-		mv::Iterate M(UnpreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::ConjugateGradient cg(1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(cg, M);
+		M.Preconditioner = [&Ainv = Obj.Ainv](Eigen::VectorXd v) -> Eigen::VectorXd {
+			return Ainv.cwiseProduct(v).eval();
+		};
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 20, 1
 		);
@@ -117,9 +105,10 @@ class TestQuadratic{ public:
 	};
 
 	void testUnpreconNewtonMR(){
-		mv::Iterate M(UnpreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::MinRes mr(M, 0, 1, {1e-8, 1e-8}, M.getDimension(), 1);
+		mv::MinRes mr(1, {1e-8, 1e-8}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(mr, M);
 		const bool converged = mv::Newton(
 				M, tr, mr, Tolerance, 20, 1
 		);
@@ -128,9 +117,13 @@ class TestQuadratic{ public:
 
 
 	void testPreconNewtonCG(){
-		mv::Iterate M(PreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::ConjugateGradient cg(1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(cg, M);
+		M.Preconditioner = [&Ainv = Obj.Ainv](Eigen::VectorXd v) -> Eigen::VectorXd {
+			return Ainv.cwiseProduct(v).eval();
+		};
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 19, 1
 		);
@@ -138,9 +131,13 @@ class TestQuadratic{ public:
 	};
 
 	void testPreconNewtonMR(){
-		mv::Iterate M(PreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
 		mv::TrustRegion tr;
-		mv::MinRes mr(M, 0, 1, {1e-8, 1e-8}, M.getDimension(), 1);
+		mv::MinRes mr(1, {1e-8, 1e-8}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(mr, M);
+		M.Preconditioner = [&Ainv = Obj.Ainv](Eigen::VectorXd v) -> Eigen::VectorXd {
+			return Ainv.cwiseProduct(v).eval();
+		};
 		const bool converged = mv::Newton(
 				M, tr, mr, Tolerance, 20, 1
 		);
@@ -148,7 +145,7 @@ class TestQuadratic{ public:
 	};
 
 	void testUnpreconLBFGS(){
-		mv::Iterate M(UnpreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				20, 11, 0.1, 0.75, 5, 1
@@ -157,7 +154,13 @@ class TestQuadratic{ public:
 	};
 
 	void testPreconLBFGS(){
-		mv::Iterate M(PreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
+		M.PreconditionerSqrt = [&Ainvsqrt = Obj.Ainvsqrt](Eigen::VectorXd v) -> Eigen::VectorXd {
+			return Ainvsqrt.cwiseProduct(v).eval();
+		};
+		M.PreconditionerInvSqrt = [&Asqrt = Obj.Asqrt](Eigen::VectorXd v) -> Eigen::VectorXd {
+			return Asqrt.cwiseProduct(v).eval();
+		};
 		const bool converged = mv::LBFGS(
 				M, Tolerance,
 				20, 7, 0.1, 0.75, 5, 1
@@ -175,7 +178,7 @@ class TestQuadratic{ public:
 	};
 
 	void testLanczos(){
-		mv::Iterate M(UnpreconObj, {Manifold.Share()});
+		mv::Iterate M(Obj, {Manifold.Share()});
 		M.setPoint({Eigen::MatrixXd::Zero(10, 1)}, 1);
 		M.Calculate(M.getPoint(), {0, 1, 2});
 		M.setGradient();

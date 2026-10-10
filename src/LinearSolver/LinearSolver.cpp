@@ -5,7 +5,7 @@
 #endif
 
 #include <Eigen/Dense>
-#include <tuple>
+#include <array>
 #include <cmath>
 
 #include "../Manifold/Manifold.h"
@@ -25,27 +25,14 @@ double SteihaugToint(
 	return t;
 }
 
-LinearSolver::LinearSolver(Iterate& M, bool constraint, bool FrownNPC, std::tuple<double, double> Tolerance, int MaxIter, bool Verbose) : FrownNPC(FrownNPC), Tolerance(Tolerance), MaxIter(MaxIter), Verbose(Verbose){
+LinearSolver::LinearSolver(bool FrownNPC, std::array<double, 2> Tolerance, int MaxIter, bool Verbose) : FrownNPC(FrownNPC), Tolerance(Tolerance), MaxIter(MaxIter), Verbose(Verbose){
 	if (Verbose){
 		std::printf("Configuring linear solver for Newton step\n");
-		std::printf("Manifold: %s\n", M.getName().c_str());
-		std::printf("Dimension number: %d\n", M.getDimension());
-		if (constraint) std::printf("Extra constraint: Yes\n");
-		else std::printf("Extra constraint: No\n");
+		std::printf("Linear solver type                       : %s\n", typeid(*this).name());
 		std::printf("Frown at non-positive curvature          : %d\n", FrownNPC);
-		std::printf("Tolerance of relative quadratic lowering : %E\n", std::get<0>(Tolerance));
-		std::printf("Tolerance of relative residual           : %E\n", std::get<1>(Tolerance));
+		std::printf("Tolerance of relative quadratic lowering : %E\n", Tolerance[0]);
+		std::printf("Tolerance of relative residual           : %E\n", Tolerance[1]);
 		std::printf("Maximal iterations                       : %d\n", MaxIter);
-	}
-	dot = [&M](Eigen::VectorXd X, Eigen::VectorXd Y) -> double{ return M.Inner(X, Y); };
-	if (constraint){
-		proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.TangentProjection(X)); };
-		A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.Hessian(X)); };
-		P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.Preconditioner(X)); };
-	}else{
-		proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.TangentProjection(X); };
-		A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Hessian(X); };
-		P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); };
 	}
 }
 
@@ -73,9 +60,7 @@ void Init_LinearSolver(pybind11::module_& m){
 		.def_readwrite("Tolerance", &LinearSolver::Tolerance)
 		.def_readwrite("MaxIter", &LinearSolver::MaxIter)
 		.def_readwrite("Verbose", &LinearSolver::Verbose)
-		.def(pybind11::init<
-			Iterate&, bool, bool, std::tuple<double, double>, int, bool
-		>())
+		.def(pybind11::init<bool, std::array<double, 2>, int, bool>())
 		.def("Calculate", &LinearSolver::Calculate)
 		.def("Find", &LinearSolver::Find);
 }

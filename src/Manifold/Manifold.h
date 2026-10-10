@@ -4,7 +4,8 @@
 #include <typeinfo>
 #include <string>
 #include <vector>
-#include <tuple>
+#include <array>
+#include <functional>
 #include <memory>
 
 namespace Maniverse{
@@ -67,10 +68,6 @@ class Function{ public:
 	double Value = 0;
 	std::vector<Eigen::MatrixXd> Gradient;
 	virtual std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> X) const;
-	virtual std::vector<Eigen::MatrixXd> Preconditioner(std::vector<Eigen::MatrixXd> X) const;
-	virtual std::vector<Eigen::MatrixXd> PreconditionerInv(std::vector<Eigen::MatrixXd> X) const;
-	virtual std::vector<Eigen::MatrixXd> PreconditionerSqrt(std::vector<Eigen::MatrixXd> X) const;
-	virtual std::vector<Eigen::MatrixXd> PreconditionerInvSqrt(std::vector<Eigen::MatrixXd> X) const;
 };
 
 class Constraint{ public:
@@ -100,10 +97,10 @@ class Iterate{ public:
 	void setGradient();
 	std::vector<Eigen::MatrixXd> getGradient() const;
 	Eigen::VectorXd Hessian(Eigen::VectorXd Xvec) const;
-	Eigen::VectorXd Preconditioner(Eigen::VectorXd Xvec) const;
-	Eigen::VectorXd PreconditionerInv(Eigen::VectorXd Xvec) const;
-	Eigen::VectorXd PreconditionerSqrt(Eigen::VectorXd Xvec) const;
-	Eigen::VectorXd PreconditionerInvSqrt(Eigen::VectorXd Xvec) const;
+	std::function<Eigen::VectorXd (Eigen::VectorXd)> Preconditioner = [](Eigen::VectorXd X) -> Eigen::VectorXd { return X; };
+	std::function<Eigen::VectorXd (Eigen::VectorXd)> PreconditionerInv = [](Eigen::VectorXd X) -> Eigen::VectorXd { return X; };
+	std::function<Eigen::VectorXd (Eigen::VectorXd)> PreconditionerSqrt = [](Eigen::VectorXd X) -> Eigen::VectorXd { return X; };
+	std::function<Eigen::VectorXd (Eigen::VectorXd)> PreconditionerInvSqrt = [](Eigen::VectorXd X) -> Eigen::VectorXd { return X; };
 
 	// Objective function and its gradient and Hessian
 	Function* Objective;
@@ -140,29 +137,29 @@ class Iterate{ public:
  
 };
 
-#define GetBlock(mat, iM, BlockParameters)\
+#define MV_GetBlock(mat, iM, BlockParameters)\
 	Eigen::Map<const Eigen::MatrixXd>(\
 			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
 			std::get<2>(BlockParameters[iM])\
 	)
 
-#define SetBlock(mat, iM, BlockParameters)\
+#define MV_SetBlock(mat, iM, BlockParameters)\
 	Eigen::Map<Eigen::MatrixXd> _##mat##_##iM##_(\
 			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
 			std::get<2>(BlockParameters[iM])\
 	); _##mat##_##iM##_
 
-#define AssembleBlock(big_mat, mat_vec, BlockParameters){\
+#define MV_AssembleBlock(big_mat, mat_vec, BlockParameters){\
 	for ( int _imat_ = 0; _imat_ < (int)mat_vec.size(); _imat_++ ){\
-		SetBlock(big_mat, _imat_, BlockParameters) = mat_vec[_imat_];\
+		MV_SetBlock(big_mat, _imat_, BlockParameters) = mat_vec[_imat_];\
 	}\
 }
 
-#define DecoupleBlock(big_mat, mat_vec, BlockParameters){\
+#define MV_DecoupleBlock(big_mat, mat_vec, BlockParameters){\
 	for ( int _imat_ = 0; _imat_ < (int)mat_vec.size(); _imat_++ )\
-		mat_vec[_imat_] = GetBlock(big_mat, _imat_, BlockParameters);\
+		mat_vec[_imat_] = MV_GetBlock(big_mat, _imat_, BlockParameters);\
 }
 
 }

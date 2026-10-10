@@ -38,7 +38,8 @@ class TestPrincipalConstrained(ut.TestCase):
 	def testNewtonCG(self):
 		M = mv.Iterate(self.Obj, [self.Manifold], [self.Cons])
 		tr = mv.TrustRegion()
-		cg = mv.ConjugateGradient(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		cg = mv.ConjugateGradient(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(cg, M)
 		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 25, 0)(mv.Newton)(
 				M, tr, cg, self.Tolerance, 12, 0
 		)
@@ -48,7 +49,8 @@ class TestPrincipalConstrained(ut.TestCase):
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, [self.Manifold], [self.Cons])
 		tr = mv.TrustRegion()
-		mr = mv.MinRes(M, 0, 1, (1e-4, 1e-4), M.getDimension(), 0)
+		mr = mv.MinRes(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(mr, M)
 		converged = mv.AugmentedLagrangian(1, 3.3, 0.8, (1e-5,), 25, 0)(mv.Newton)(
 				M, tr, mr, self.Tolerance, 12, 0
 		)

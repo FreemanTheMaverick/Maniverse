@@ -5,6 +5,7 @@ Init_Newton(m);
 Init_LBFGS(m);
 Init_Anderson(m);
 Init_AugmentedLagrangian(m);
+Init_SQP(m);
 #endif
 
 #ifdef PyManiverseOut
@@ -14,4 +15,5 @@ void Init_Newton(pybind11::module_& m);
 void Init_LBFGS(pybind11::module_& m);
 void Init_Anderson(pybind11::module_& m);
 void Init_AugmentedLagrangian(pybind11::module_& m);
+void Init_SQP(pybind11::module_& m);
 #endif
