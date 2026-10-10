@@ -35,7 +35,8 @@ class TestRayleighInterior(ut.TestCase):
 	def testNewtonMR(self):
 		M = mv.Iterate(self.Obj, {self.Manifold})
 		tr = mv.TrustRegion()
-		mr = mv.MinRes(M, 0, 0, (1e-4, 1e-4), M.getDimension(), 0)
+		mr = mv.MinRes(0, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(mr, M)
 		converged = mv.Newton(
 				M, tr, mr, self.Tolerance, 5, 0
 		)

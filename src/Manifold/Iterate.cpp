@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/eigen.h>
+#include <pybind11/functional.h>
 #endif
 
 #include <Eigen/Dense>
@@ -27,26 +28,26 @@ void Constraint::setGradient(){
 		this->Manifolds[jman]->Ge = this->Func->Gradient[jman];
 		this->Manifolds[jman]->getGradient();
 		Eigen::VectorXd& cons_grad_i = this->Gradient;
-		SetBlock(cons_grad_i, jman, this->BlockParameters) = this->Manifolds[jman]->Gr;
+		MV_SetBlock(cons_grad_i, jman, this->BlockParameters) = this->Manifolds[jman]->Gr;
 	}
 }
 
 std::vector<Eigen::MatrixXd> Constraint::getGradient() const{
 	std::vector<Eigen::MatrixXd> gs;
-	DecoupleBlock(this->Gradient, gs, this->BlockParameters);
+	MV_DecoupleBlock(this->Gradient, gs, this->BlockParameters);
 	return gs;
 }
 
 Eigen::VectorXd Constraint::Hessian(Eigen::VectorXd Xvec) const{
 	const int nmans = (int)this->Manifolds.size();
 	std::vector<Eigen::MatrixXd> X(nmans);
-	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = GetBlock(Xvec, iman, this->BlockParameters);
+	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = MV_GetBlock(Xvec, iman, this->BlockParameters);
 
 	std::vector<Eigen::MatrixXd> HeX = this->Func->Hessian(X);
 
 	Eigen::VectorXd HrXvec = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman], 1);
+		MV_SetBlock(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman], 1);
 	}
 	return HrXvec;
 }
@@ -55,7 +56,7 @@ void Iterate::setPoint(std::vector<Eigen::MatrixXd> ps, bool purify){
 	if ( ps.size() != this->Manifolds.size() ) throw std::runtime_error("Wrong number of Points!");
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
 		this->Manifolds[iman]->setPoint(ps[iman], purify);
-		SetBlock(Point, iman, this->BlockParameters) = this->Manifolds[iman]->P;
+		MV_SetBlock(Point, iman, this->BlockParameters) = this->Manifolds[iman]->P;
 	}
 	for ( int icons = 0; icons < (int)this->Constraints.size(); icons++ ){
 		for ( int jman = 0; jman < (int)this->Manifolds.size(); jman++ ){
@@ -66,7 +67,7 @@ void Iterate::setPoint(std::vector<Eigen::MatrixXd> ps, bool purify){
 
 std::vector<Eigen::MatrixXd> Iterate::getPoint() const{
 	std::vector<Eigen::MatrixXd> ps(Manifolds.size());
-	DecoupleBlock(this->Point, ps, this->BlockParameters);
+	MV_DecoupleBlock(this->Point, ps, this->BlockParameters);
 	return ps;
 }
 
@@ -98,7 +99,7 @@ void Iterate::setGradient(){
 
 std::vector<Eigen::MatrixXd> Iterate::getGradient() const{
 	std::vector<Eigen::MatrixXd> gs;
-	DecoupleBlock(this->Gradient, gs, this->BlockParameters);
+	MV_DecoupleBlock(this->Gradient, gs, this->BlockParameters);
 	return gs;
 }
 
@@ -110,85 +111,29 @@ Eigen::VectorXd Iterate::Hessian(Eigen::VectorXd Xvec) const{
 	return HrXvec;
 }
 
-Eigen::VectorXd Iterate::Preconditioner(Eigen::VectorXd Xvec) const{
-	const int nmans = (int)this->Manifolds.size();
-	std::vector<Eigen::MatrixXd> X(nmans);
-	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = GetBlock(Xvec, iman, this->BlockParameters);
-
-	std::vector<Eigen::MatrixXd> PX = this->Objective->Preconditioner(X);
-
-	Eigen::VectorXd PXvec = Eigen::VectorXd::Zero(this->TotalSize);
-	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(PXvec, iman, this->BlockParameters) = PX[iman];
-	}
-	return PXvec;
-}
-
-Eigen::VectorXd Iterate::PreconditionerInv(Eigen::VectorXd Xvec) const{
-	const int nmans = (int)this->Manifolds.size();
-	std::vector<Eigen::MatrixXd> X(nmans);
-	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = GetBlock(Xvec, iman, this->BlockParameters);
-
-	std::vector<Eigen::MatrixXd> PX = this->Objective->PreconditionerInv(X);
-
-	Eigen::VectorXd PXvec = Eigen::VectorXd::Zero(this->TotalSize);
-	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(PXvec, iman, this->BlockParameters) = PX[iman];
-	}
-	return PXvec;
-}
-
-Eigen::VectorXd Iterate::PreconditionerSqrt(Eigen::VectorXd Xvec) const{
-	const int nmans = (int)this->Manifolds.size();
-	std::vector<Eigen::MatrixXd> X(nmans);
-	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = GetBlock(Xvec, iman, this->BlockParameters);
-
-	std::vector<Eigen::MatrixXd> PX = this->Objective->PreconditionerSqrt(X);
-
-	Eigen::VectorXd PXvec = Eigen::VectorXd::Zero(this->TotalSize);
-	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(PXvec, iman, this->BlockParameters) = PX[iman];
-	}
-	return PXvec;
-}
-
-Eigen::VectorXd Iterate::PreconditionerInvSqrt(Eigen::VectorXd Xvec) const{
-	const int nmans = (int)this->Manifolds.size();
-	std::vector<Eigen::MatrixXd> X(nmans);
-	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = GetBlock(Xvec, iman, this->BlockParameters);
-
-	std::vector<Eigen::MatrixXd> PX = this->Objective->PreconditionerInvSqrt(X);
-
-	Eigen::VectorXd PXvec = Eigen::VectorXd::Zero(this->TotalSize);
-	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(PXvec, iman, this->BlockParameters) = PX[iman];
-	}
-	return PXvec;
-}
-
 void Iterate::setObjectiveGradient(){
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
 		this->Manifolds[iman]->Ge = this->Objective->Gradient[iman];
 		this->Manifolds[iman]->getGradient();
-		SetBlock(ObjectiveGradient, iman, this->BlockParameters) = this->Manifolds[iman]->Gr;
+		MV_SetBlock(ObjectiveGradient, iman, this->BlockParameters) = this->Manifolds[iman]->Gr;
 	}
 }
 
 std::vector<Eigen::MatrixXd> Iterate::getObjectiveGradient() const{
 	std::vector<Eigen::MatrixXd> gs;
-	DecoupleBlock(this->ObjectiveGradient, gs, this->BlockParameters);
+	MV_DecoupleBlock(this->ObjectiveGradient, gs, this->BlockParameters);
 	return gs;
 }
 Eigen::VectorXd Iterate::ObjectiveHessian(Eigen::VectorXd Xvec) const{
 	const int nmans = (int)this->Manifolds.size();
 	std::vector<Eigen::MatrixXd> X(nmans);
-	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = GetBlock(Xvec, iman, this->BlockParameters);
+	for ( int iman = 0; iman < nmans; iman++ ) X[iman] = MV_GetBlock(Xvec, iman, this->BlockParameters);
 
 	std::vector<Eigen::MatrixXd> HeX = this->Objective->Hessian(X);
 
 	Eigen::VectorXd HrXvec = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman], 1);
+		MV_SetBlock(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman], 1);
 	}
 	return HrXvec;
 }
@@ -243,9 +188,9 @@ Iterate::Iterate(Function& objective, std::vector<std::shared_ptr<Manifold>> man
 	this->Gradient.resize(this->TotalSize); this->Gradient.setZero();
 	this->ObjectiveGradient.resize(this->TotalSize); this->ObjectiveGradient.setZero();
 	for ( int iman = 0; iman < nmans; iman++ ){
-		SetBlock(Point, iman, this->BlockParameters) = Manifolds[iman]->P;
-		SetBlock(Gradient, iman, this->BlockParameters) = Manifolds[iman]->Gr;
-		SetBlock(ObjectiveGradient, iman, this->BlockParameters) = Manifolds[iman]->Gr;
+		MV_SetBlock(Point, iman, this->BlockParameters) = Manifolds[iman]->P;
+		MV_SetBlock(Gradient, iman, this->BlockParameters) = Manifolds[iman]->Gr;
+		MV_SetBlock(ObjectiveGradient, iman, this->BlockParameters) = Manifolds[iman]->Gr;
 	}
 
 	for ( Function* cons_func : cons_funcs ){
@@ -276,7 +221,7 @@ int Iterate::getDimension() const{
 double Iterate::Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const{
 	double inner = 0;
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		inner += this->Manifolds[iman]->Inner(GetBlock(X, iman, this->BlockParameters), GetBlock(Y, iman, this->BlockParameters));
+		inner += this->Manifolds[iman]->Inner(MV_GetBlock(X, iman, this->BlockParameters), MV_GetBlock(Y, iman, this->BlockParameters));
 	}
 	return inner;
 }
@@ -284,7 +229,7 @@ double Iterate::Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const{
 Eigen::VectorXd Iterate::Retract(Eigen::VectorXd X) const{
 	Eigen::VectorXd Exp = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		SetBlock(Exp, iman, this->BlockParameters) = this->Manifolds[iman]->Retract(GetBlock(X, iman, this->BlockParameters));
+		MV_SetBlock(Exp, iman, this->BlockParameters) = this->Manifolds[iman]->Retract(MV_GetBlock(X, iman, this->BlockParameters));
 	}
 	return Exp;
 }
@@ -292,7 +237,7 @@ Eigen::VectorXd Iterate::Retract(Eigen::VectorXd X) const{
 Eigen::VectorXd Iterate::InverseRetract(Iterate& N) const{
 	Eigen::MatrixXd Log = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		SetBlock(Log, iman, this->BlockParameters) = this->Manifolds[iman]->InverseRetract(*(N.Manifolds[iman]));
+		MV_SetBlock(Log, iman, this->BlockParameters) = this->Manifolds[iman]->InverseRetract(*(N.Manifolds[iman]));
 	}
 	return Log;
 }
@@ -300,7 +245,7 @@ Eigen::VectorXd Iterate::InverseRetract(Iterate& N) const{
 Eigen::VectorXd Iterate::TransportTangent(Eigen::VectorXd A, Eigen::VectorXd Y) const{
 	Eigen::VectorXd B = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		SetBlock(B, iman, this->BlockParameters) = this->Manifolds[iman]->TransportTangent(GetBlock(A, iman, this->BlockParameters), GetBlock(Y, iman, this->BlockParameters));
+		MV_SetBlock(B, iman, this->BlockParameters) = this->Manifolds[iman]->TransportTangent(MV_GetBlock(A, iman, this->BlockParameters), MV_GetBlock(Y, iman, this->BlockParameters));
 	}
 	return B;
 }
@@ -308,7 +253,7 @@ Eigen::VectorXd Iterate::TransportTangent(Eigen::VectorXd A, Eigen::VectorXd Y) 
 Eigen::VectorXd Iterate::TransportManifold(Eigen::VectorXd A, Iterate& N) const{
 	Eigen::VectorXd B = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		SetBlock(B, iman, this->BlockParameters) = this->Manifolds[iman]->TransportManifold(GetBlock(A, iman, this->BlockParameters), *(N.Manifolds[iman]));
+		MV_SetBlock(B, iman, this->BlockParameters) = this->Manifolds[iman]->TransportManifold(MV_GetBlock(A, iman, this->BlockParameters), *(N.Manifolds[iman]));
 	}
 	return B;
 }
@@ -316,7 +261,7 @@ Eigen::VectorXd Iterate::TransportManifold(Eigen::VectorXd A, Iterate& N) const{
 Eigen::VectorXd Iterate::TangentProjection(Eigen::VectorXd A) const{
 	Eigen::VectorXd X = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		SetBlock(X, iman, this->BlockParameters) = this->Manifolds[iman]->TangentProjection(GetBlock(A, iman, this->BlockParameters));
+		MV_SetBlock(X, iman, this->BlockParameters) = this->Manifolds[iman]->TangentProjection(MV_GetBlock(A, iman, this->BlockParameters));
 	}
 	return X;
 }
@@ -324,7 +269,7 @@ Eigen::VectorXd Iterate::TangentProjection(Eigen::VectorXd A) const{
 Eigen::VectorXd Iterate::TangentPurification(Eigen::VectorXd A) const{
 	Eigen::VectorXd X = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
-		SetBlock(X, iman, this->BlockParameters) = this->Manifolds[iman]->TangentPurification(GetBlock(A, iman, this->BlockParameters));
+		MV_SetBlock(X, iman, this->BlockParameters) = this->Manifolds[iman]->TangentPurification(MV_GetBlock(A, iman, this->BlockParameters));
 	}
 	return X;
 }
@@ -357,9 +302,10 @@ void Init_Iterate(pybind11::module_& m){
 		.def("setGradient", &Iterate::setGradient)
 		.def("getGradient", &Iterate::getGradient)
 		.def("Hessian", &Iterate::Hessian)
-		.def("Preconditioner", &Iterate::Preconditioner)
-		.def("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
-		.def("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
+		.def_readwrite("Preconditioner", &Iterate::Preconditioner)
+		.def_readwrite("PreconditionerInv", &Iterate::PreconditionerInv)
+		.def_readwrite("PreconditionerSqrt", &Iterate::PreconditionerSqrt)
+		.def_readwrite("PreconditionerInvSqrt", &Iterate::PreconditionerInvSqrt)
 
 		//.def_readwrite("Objective", &Iterate::Objective)
 		.def_readwrite("ObjectiveGradient", &Iterate::ObjectiveGradient)

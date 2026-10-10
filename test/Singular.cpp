@@ -106,7 +106,8 @@ class TestSingular{ public:
 	void testNewtonCG(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
 		mv::TrustRegion tr;
-		mv::ConjugateGradient cg(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::ConjugateGradient cg(1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(cg, M);
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 25, 1
 		);
@@ -116,7 +117,8 @@ class TestSingular{ public:
 	void testNewtonMR(){
 		mv::Iterate M(Obj, {Manifold0.Share(), Manifold1.Share(), Manifold2.Share()});
 		mv::TrustRegion tr;
-		mv::MinRes mr(M, 0, 1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::MinRes mr(1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(mr, M);
 		const bool converged = mv::Newton(
 				M, tr, mr, Tolerance, 25, 1
 		);

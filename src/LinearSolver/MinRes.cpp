@@ -133,9 +133,7 @@ Eigen::VectorXd MinRes::Find(double R){
 void Init_MinRes(pybind11::module_& m){
 	pybind11::classh<MinRes, LinearSolver>(m, "MinRes")
 		.def_readwrite("Sequence", &MinRes::Sequence)
-		.def(pybind11::init<
-			Iterate&, bool, bool, std::tuple<double, double>, int, bool
-		>());
+		.def(pybind11::init<bool, std::array<double, 2>, int, bool>());
 }
 #endif
 

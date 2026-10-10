@@ -94,9 +94,7 @@ Eigen::VectorXd ConjugateGradient::Find(double R){
 void Init_ConjugateGradient(pybind11::module_& m){
 	pybind11::classh<ConjugateGradient, LinearSolver>(m, "ConjugateGradient")
 		.def_readwrite("Sequence", &ConjugateGradient::Sequence)
-		.def(pybind11::init<
-			Iterate&, bool, bool, std::tuple<double, double>, int, bool
-		>());
+		.def(pybind11::init<bool, std::array<double, 2>, int, bool>());
 }
 #endif
 

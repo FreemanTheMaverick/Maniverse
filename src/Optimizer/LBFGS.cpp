@@ -87,7 +87,7 @@ bool LBFGS(
 
 		Snorm = std::sqrt(M.Inner(S, S));
 		Pmat = M.Retract(S);
-		DecoupleBlock(Pmat, P, M.BlockParameters);
+		MV_DecoupleBlock(Pmat, P, M.BlockParameters);
 		M.Calculate(P, {1});
 
 		actual_delta_L = M.Value - oldL;
