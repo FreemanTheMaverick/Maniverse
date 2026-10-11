@@ -7,7 +7,7 @@
 #include <Eigen/Dense>
 #include <cstdio>
 #include <cmath>
-#include <tuple>
+#include <array>
 #include <chrono>
 
 #include "../Macro.h"
@@ -15,6 +15,12 @@
 #include "MinRes.h"
 
 namespace Maniverse{
+
+MinRes::MinRes(
+	bool FrownNPC, std::array<double, 2> Tolerance, int MaxIter, bool Verbose
+) : LinearSolver(FrownNPC, Tolerance, MaxIter, Verbose){
+	if (Verbose) std::printf("Linear solver type                       : MinRes\n");
+}
 
 // General algorithm: https://doi.org/10.1137/21M143666X
 // Right preconditioning: Section 9.3.2, https://doi.org/10.1137/1.9780898718003

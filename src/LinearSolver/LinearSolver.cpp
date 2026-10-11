@@ -27,8 +27,7 @@ double SteihaugToint(
 
 LinearSolver::LinearSolver(bool FrownNPC, std::array<double, 2> Tolerance, int MaxIter, bool Verbose) : FrownNPC(FrownNPC), Tolerance(Tolerance), MaxIter(MaxIter), Verbose(Verbose){
 	if (Verbose){
-		std::printf("Configuring linear solver for Newton step\n");
-		std::printf("Linear solver type                       : %s\n", typeid(*this).name());
+		std::printf("Configuring linear solver ...\n");
 		std::printf("Frown at non-positive curvature          : %d\n", FrownNPC);
 		std::printf("Tolerance of relative quadratic lowering : %E\n", Tolerance[0]);
 		std::printf("Tolerance of relative residual           : %E\n", Tolerance[1]);
