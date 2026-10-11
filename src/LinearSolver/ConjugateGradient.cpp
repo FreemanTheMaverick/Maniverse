@@ -16,6 +16,12 @@
 
 namespace Maniverse{
 
+ConjugateGradient::ConjugateGradient(
+	bool FrownNPC, std::array<double, 2> Tolerance, int MaxIter, bool Verbose
+) : LinearSolver(FrownNPC, Tolerance, MaxIter, Verbose){
+	if (Verbose) std::printf("Linear solver type                       : Conjugate gradient\n");
+}
+
 void ConjugateGradient::Calculate(double R){
 	if (Verbose){
 		std::printf("Linear system solving with conjugate gradient\n");
