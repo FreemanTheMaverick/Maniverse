@@ -18,6 +18,7 @@ namespace Maniverse{
 
 void initLinearSolverForNormal(LinearSolver& ls, Iterate& M){ // For the normal subproblem Eq 18.45
 	if (ls.Verbose){
+		std::printf("Initializing linear solver for the normal subproblem of SQP\n");
 		std::printf("Manifold                                 : %s\n", M.getName().c_str());
 		std::printf("Dimension number                         : %d\n", M.getDimension());
 		std::printf("Extra constraint number                  : %d\n", (int)M.Constraints.size());
@@ -41,13 +42,24 @@ void initLinearSolverForNormal(LinearSolver& ls, Iterate& M){ // For the normal 
 	for ( Constraint& c : M.Constraints ) ls.b -= c.Gradient * c.Func->Value;
 }
 
-void initLinearSolverForProjectedCG(LinearSolver& ls, Iterate& M){
+void initLinearSolverForProjected(LinearSolver& ls, Iterate& M){
+	if (ls.Verbose){
+		std::printf("Initializing linear solver for the projected subproblem of SQP ...\n");
+		std::printf("Manifold                                 : %s\n", M.getName().c_str());
+		std::printf("Dimension number                         : %d\n", M.getDimension());
+		std::printf("Extra constraint number                  : %d\n", (int)M.Constraints.size());
+	}
+	ls.dot = [&M](Eigen::VectorXd X, Eigen::VectorXd Y) -> double{ return M.Inner(X, Y); };
+	ls.proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.TangentProjection(X)); };
+	ls.A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Hessian(X); };
+	ls.P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); };
+	M.Rho = 0;
 }
 
 #ifdef __PYTHON__
 void Init_SQP(pybind11::module_& m){
 	m.def("initLinearSolverForNormal", &initLinearSolverForNormal);
-	m.def("initLinearSolverForProjectedCG", &initLinearSolverForProjectedCG);
+	m.def("initLinearSolverForProjected", &initLinearSolverForProjected);
 }
 #endif
 

@@ -5,6 +5,6 @@ namespace Maniverse{
 
 void initLinearSolverForNormal(LinearSolver& ls, Iterate& M);
 
-void initLinearSolverForProjectedCG(LinearSolver& ls, Iterate& M);
+void initLinearSolverForProjected(LinearSolver& ls, Iterate& M);
 
 }

@@ -21,6 +21,7 @@ namespace Maniverse{
 
 void initLinearSolverForNewton(LinearSolver& ls, Iterate& M){
 	if (ls.Verbose){
+		std::printf("Initializing linear solver for the subproblem of Newton's method ...\n");
 		std::printf("Manifold                                 : %s\n", M.getName().c_str());
 		std::printf("Dimension number                         : %d\n", M.getDimension());
 	}
