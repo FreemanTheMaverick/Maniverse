@@ -2,97 +2,35 @@
 > Numerical optimization on manifolds
 
 ## Overview
-Maniverse is a library for optimization on manifolds (OOM).
-
-### What is Maniverse intended for?
-I wrote Maniverse primarily for my quantum chemistry packages [Chinium](https://github.com/FreemanTheMaverick/Chinium) and [Orbaplaw](https://github.com/FreemanTheMaverick/Orbaplaw), which take care of some classic constraints in quantum chemistry via OOM.
-However, Maniverse is intended for more general use than merely quantum chemistry.
-
-### Why another library for OOM?
-The two packages mentioned above are written in C++ and Python separately, so I hoped to have a single library for both C++ and Python.
-As far as I know, none of the existing libraries are 2-in-1.
-
-### How will Maniverse be maintained?
-Optimization on manifolds has two aspects: the manifolds and the optimization algorithms.
-Therefore, this question should be divided into two: how will the two aspects be maintained separately?
-
-For the manifolds, as a quantum chemist, I focused more on the Stiefel manifold and the Grassmann manifold (and their derivatives), so major emphasis will be laid on these two.
-However, users are welcomed to give advice on more manifolds to be supported.
-Additionally, Maniverse provides a base class `Manifold` from which users can derive their own manifold class.
-
-For the optimization algorithms, the attention is paid to the second-order methods, because nearly all the functions to be optimized in quantum chemistry are smooth and well-behaved.
-These methods include Riemannian trust region method and Riemannian BFGS.
-I would like to keep track of the popular field of OOM and implement more efficient algorithms as they are being proposed, as long as they enhance the performance in my projects on quantum chemistry.
-
-### Are you an expert on OOM?
-No.
-It has just occurred to me that OOM can be extremely powerful in some topics in quantum chemistry in middle 2024, so I set out to develop Maniverse.
-However, my knowledge in OOM is deficient, and I am still learning through textbooks, papers and discussions on webs.
-For helping make Maniverse real, I have a long namelist to thank.
-The good thing is that the current codes do work as they are expected, at least in my projects.
+`Maniverse` is a C++17 library for numerical optimization on manifolds,
+with a Python interface.
+It was developed for the quantum chemistry packages
+[Chinium](https://github.com/FreemanTheMaverick/Chinium) and
+[Orbaplaw](https://github.com/FreemanTheMaverick/Orbaplaw),
+and is also designed for use in other applications.
+It includes built-in manifolds and optimization algorithms,
+and supports extensions for additional problem types.
 
 ## Features
+- **Manifolds**: Stiefel and related manifolds (Flag, Grassmann, and Orthogonal), the Simplex manifold, and user-defined manifolds. Products of manifolds are supported.
+- **Optimizers**: Trust-region Newton's method with conjugate-gradient or minimum-residual inner solvers, L-BFGS, Anderson acceleration, and an augmented-Lagrangian wrapper for equality constraints.
+- **Linear solvers**: Conjugate Gradient and MinRes, with preconditioning and optional handling of non-positive curvature in Newton's trust-region subproblem.
+- **Hessian eigenpairs**: A Lanczos method for examining the stability of constrained and unconstrained solutions.
 
-### Manifolds
-- Stiefel manifold and its derivatives (Flag, Grassmann, Orthogonal)
-- Simplex manifold
-- User-defined manifolds
-- Any products of the manifolds above
+## Guides
+Use these guides to install `Maniverse`, formulate your optimization problem, choose an appropriate solver, and solve it with the library.
+- [Installation](doc/Installation.md)
+- [Quick start: Rayleigh quotient on the Stiefel manifold](doc/QuickStart.md)
+- [Manifolds: base class and built-ins](doc/Manifolds.md)
+- [Objective and constraint functions](doc/Function.md)
+- [The Iterate class that ties manifolds and functions together](doc/Iterate.md)
+- [Optimizers: Newton/trust-region, L-BFGS, Anderson, Augmented Lagrangian](doc/Optimizers.md)
+- [Linear system solvers: CG and MinRes](doc/LinearSolvers.md)
+- [Diagonalizer: Lanczos method](doc/Diagonalizers.md)
+- [FAQ: purpose, motivation, and maintenance](doc/FAQ.md)
 
-### Optimizers
-- Trust-region Newton's method with conjugate gradient or minimal residual as the linear subproblem solver
-- L-BFGS
-- Anderson acceleration (rarely used; not fully tested yet)
-- Augmented Lagrangian method for extra non-manifold constraints with one of the unconstrained optimizers above for internal optimization
+## Related links
 
-### Linear system solvers
-- Conjugate gradient
-- Minimal residual
-
-They can be set to be vigilant about non-positive curvatures in the Hessian and aware of the trust region in Newton's method.
-Preconditioners can be applied to both methods.
-
-### Diagonalizers
-- Lanczos method (for stability check of solutions to constrained and unconstrained optimization problems)
-
-## Prerequisites
-* A C++ compiler that supports C++17 standard
-* GNU make
-* [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page) >= 3.4.90
-* [PyBind11](https://pybind11.readthedocs.io/en/stable/index.html#) >= 2.13.6 (For interface to python)
-* Python3 with numpy (For interface to python)
-
-## Installation
-### Manual build
-* Downloading the latest stable release
-```
-$ wget https://github.com/FreemanTheMaverick/Maniverse/archive/refs/tags/v0.3.5.tar.gz
-```
-* Edit the first few lines of `/Maniverse/makefile` for your own computer configuration, including
-  * the commands that call the C++ compiler, the GNU make and `ar`
-  * the option that indicates whether to build for C++ use or python use
-  * the directories that contain the necessary libraries
-* ```make -j[N]``` and you will find the newly created directories `/Maniverse/include` and `/Maniverse/lib`.
-* Utilize Maniverse in your project
-  * For C++,
-    ```
-    $ g++ test.cpp -isystem $(MANIVERSE)/include/ -L$(MANIVERSE)/lib/ -l:libmaniverse.a # Static linking
-    $ g++ test.cpp -isystem $(MANIVERSE)/include/ -L$(MANIVERSE)/lib/ -lmaniverse # Shared linking
-    ```
-  * For Python,
-    ```
-    $ export PYTHONPATH=$PYTHONPATH:$(MANIVERSE)/lib/
-    $ python
-    >>> import Maniverse as mv
-    ```
-### Pip (for Python only)
-* Installation with `pip`
-```
-pip install Maniverse
-```
-Usually `pip` installs packages to a `lib/` directory that is already in `$PYTHONPATH`, so you do not need to set the environment variable for Maniverse.
-* Utilize Maniverse in your project
-```
-$ python
->>> import Maniverse as mv
-```
+- [Maniverse on GitHub](https://github.com/FreemanTheMaverick/Maniverse)
+- [Chinium](https://github.com/FreemanTheMaverick/Chinium), a quantum chemistry package that uses `Maniverse`
+- [Manopt](https://www.manopt.org/), a related manifold optimization toolbox
