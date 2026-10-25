@@ -52,7 +52,19 @@ void initLinearSolverForProjected(LinearSolver& ls, Iterate& M){
 	ls.dot = [&M](Eigen::VectorXd X, Eigen::VectorXd Y) -> double{ return M.Inner(X, Y); };
 	ls.proj = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.ConstraintProjection(M.TangentProjection(X)); };
 	ls.A = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Hessian(X); };
-	ls.P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{ return M.Preconditioner(X); };
+	ls.P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{
+		const Eigen::MatrixXd& A = M.OrthConsJacobian;
+		const Eigen::MatrixXd PX = M.Preconditioner(X);
+		const Eigen::MatrixXd PA = M.Preconditioner(A);
+		const int ncons = (int)M.Constraints.size();
+		Eigen::MatrixXd AtPA(ncons, ncons);
+		for ( int i = 0; i < ncons; i++ ){
+			for ( int j = i; j < ncons; j++ ){
+				AtPA(i, j) = AtPA(j, i) = M.Inner(A.col(i), PA.col(j));
+			}
+		}
+		return ( PX - PA * AtPA.inverse() * A.transpose() * PX ).eval();
+	};
 	M.Rho = 0;
 }
 

@@ -87,12 +87,14 @@ void Iterate::setGradient(){
 		constraint.setGradient();
 		this->Gradient += ( constraint.Lambda + this->Rho * constraint.Func->Value ) * constraint.Gradient;
 	}
-	for ( int icons = 0; icons < (int)this->Constraints.size(); icons++ ){
-		Constraint& consi = this->Constraints[icons];
-		consi.OrthogonalGradient = consi.Gradient;
+	const int ncons = (int)this->Constraints.size();
+	for ( int icons = 0; icons < ncons; icons++ ){
+		Eigen::Map<Eigen::VectorXd> orthi(this->OrthConsJacobian.col(icons).data(), this->TotalSize);
+		const Eigen::VectorXd gradi = this->Constraints[icons].Gradient;
+		orthi = gradi;
 		for ( int jcons = 0; jcons < icons; jcons++ ){
-			Constraint& consj = this->Constraints[jcons];
-			consi.OrthogonalGradient -= this->Inner(consi.Gradient, consj.OrthogonalGradient) * consj.OrthogonalGradient / this->Inner(consj.OrthogonalGradient, consj.OrthogonalGradient);
+			Eigen::Map<Eigen::VectorXd> orthj(this->OrthConsJacobian.col(jcons).data(), this->TotalSize);
+			orthi -= this->Inner(gradi, orthj) * orthj / this->Inner(orthj, orthj);
 		}
 	}
 }
@@ -161,9 +163,9 @@ std::vector<double> Iterate::getLambda() const{
 }
 
 Eigen::VectorXd Iterate::ConstraintProjection(Eigen::VectorXd Xvec) const{
-	for ( const Constraint& constraint : this->Constraints ){
-		const Eigen::VectorXd& cons_grad = constraint.OrthogonalGradient;
-		Xvec -= this->Inner(Xvec, cons_grad) * cons_grad / this->Inner(cons_grad, cons_grad);
+	for ( int icons = 0; icons < (int)this->Constraints.size(); icons++ ){
+		Eigen::Map<const Eigen::VectorXd> orthi(this->OrthConsJacobian.col(icons).data(), this->TotalSize);
+		Xvec -= this->Inner(Xvec, orthi) * orthi / this->Inner(orthi, orthi);
 	}
 	return Xvec;
 }
@@ -200,6 +202,7 @@ Iterate::Iterate(Function& objective, std::vector<std::shared_ptr<Manifold>> man
 		}
 		this->Constraints.emplace_back(this->TotalSize, this->BlockParameters, *cons_func, these_manifolds);
 	}
+	this->OrthConsJacobian.resize(this->TotalSize, cons_funcs.size());
 }
 
 std::string Iterate::getName() const{
@@ -284,7 +287,6 @@ void Init_Iterate(pybind11::module_& m){
 		.def(pybind11::init<int, std::vector<std::array<int, 3>>, Function&, std::vector<std::shared_ptr<Manifold>>>())
 		.def_readwrite("Lambda", &Constraint::Lambda)
 		.def_readwrite("Gradient", &Constraint::Gradient)
-		.def_readwrite("OrthogonalGradient", &Constraint::OrthogonalGradient)
 		.def("setGradient", &Constraint::setGradient)
 		.def("getGradient", &Constraint::getGradient)
 		.def("Hessian", &Constraint::Hessian);
@@ -314,6 +316,7 @@ void Init_Iterate(pybind11::module_& m){
 		.def("ObjectiveHessian", &Iterate::ObjectiveHessian)
 
 		.def_readwrite("Constraints", &Iterate::Constraints)
+		.def_readwrite("OrthConsJacobian", &Iterate::OrthConsJacobian)
 		.def("calcLambda", &Iterate::calcLambda)
 		.def("setLambda", &Iterate::setLambda)
 		.def("getLambda", &Iterate::getLambda)

@@ -80,6 +80,7 @@ These wrappers hold the Riemannian derivatives and multiplier state used by the 
 | `M.setLambda(values)` | — | Set one Lagrange multiplier per constraint. The list length must equal `len(M.Constraints)`. |
 | `M.getLambda()` | `list[float]` | Return the multipliers in constraint order. |
 | `M.calcLambda()` | `list[float]` | Estimate multipliers from the current objective and constraint gradients. Call the relevant evaluation and gradient methods first. |
+| `M.OrthConsJacobian` | `np.ndarray`, shape `(M.TotalSize, len(M.Constraints))` | Matrix whose column `i` is the Gram–Schmidt-orthogonalized, flattened Riemannian gradient of constraint `i`. It is updated by `M.setGradient()` and used by `M.ConstraintProjection()`. |
 | `M.ConstraintProjection(X)` | `np.ndarray` | Remove components of flattened direction `X` along the orthogonalized constraint gradients. Call `M.setGradient()` first. |
 
 `mv.Constraint` is a wrapper of all data related to one specifc equality-constraint.
@@ -88,7 +89,6 @@ These wrappers hold the Riemannian derivatives and multiplier state used by the 
 |-------------------|---------|---------|
 | `constraint.Lambda` | `float` | Lagrange multiplier $\lambda_i$ for this constraint. Prefer `M.setLambda()` and `M.getLambda()` when handling all constraints together. |
 | `constraint.Gradient` | `np.ndarray` | Flattened Riemannian gradient $\nabla g_i$ after `constraint.setGradient()`. |
-| `constraint.OrthogonalGradient` | `np.ndarray` | Gradient after sequential Gram–Schmidt orthogonalization by `M.setGradient()`. It is used by `M.ConstraintProjection()`. |
 | `constraint.setGradient()` | — | Project the wrapped function's current Euclidean gradient onto the tangent space and store it in `constraint.Gradient`. The constraint function must first be evaluated with derivative flag `1`. |
 | `constraint.getGradient()` | `list[np.ndarray]` | Return `constraint.Gradient` split into manifold blocks. |
 | `constraint.Hessian(X)` | `np.ndarray` | Apply the Riemannian Hessian of $g_i$ to flattened direction `X`. Required point-dependent Hessian data must already have been prepared by the constraint function. |
@@ -107,8 +107,8 @@ print("lambda:", first_constraint.Lambda)
 print("gradient blocks:", first_constraint.getGradient())
 ```
 
-Calling `M.setGradient()` updates every constraint's `Gradient` and 
-`OrthogonalGradient`, as well as the augmented-Lagrangian gradient `M.Gradient`.
+Calling `M.setGradient()` updates every constraint's `Gradient`,
+the columns of `M.OrthConsJacobian`, and the augmented-Lagrangian gradient `M.Gradient`.
 
 ### Preconditioners
 
@@ -220,8 +220,8 @@ M.setGradient()
 
 - `M.ObjectiveGradient`: the flattened bare objective gradient.
 - `M.Constraints[i].Gradient`: each flattened constraint gradient.
-- `M.Constraints[i].OrthogonalGradient`: the sequentially
-    Gram–Schmidt-orthogonalized constraint gradients.
+- `M.OrthConsJacobian[:, i]`: the sequentially Gram–Schmidt-orthogonalized
+    gradient for constraint `i`, stored as column `i` of the matrix.
 - `M.Gradient`: the flattened augmented-Lagrangian gradient.
 
 With constraints:
@@ -242,7 +242,7 @@ These are lists of arrays.
 #### Constraint projection
 
 After `M.setGradient()`, `M.ConstraintProjection(X)` removes components
-along the orthogonalized constraint gradients $q_i$:
+along the columns $q_i = \texttt{M.OrthConsJacobian}[:,i]$:
 
 $$
 X \mapsto X-\sum_i\frac{\langle X,q_i\rangle}{\langle q_i,q_i\rangle}q_i.
