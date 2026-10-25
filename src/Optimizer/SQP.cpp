@@ -55,17 +55,17 @@ void initLinearSolverForProjected(LinearSolver& ls, Iterate& M){
 	ls.P = [&M](Eigen::VectorXd X) -> Eigen::VectorXd{
 		const Eigen::MatrixXd& A = M.OrthConsJacobian;
 		const Eigen::MatrixXd PX = M.Preconditioner(X);
-		const Eigen::MatrixXd PA = M.Preconditioner(A);
 		const int ncons = (int)M.Constraints.size();
+		Eigen::MatrixXd PA(M.TotalSize, ncons);
 		Eigen::MatrixXd AtPA(ncons, ncons);
 		for ( int i = 0; i < ncons; i++ ){
+			PA.col(i) = M.Preconditioner(A.col(i));
 			for ( int j = i; j < ncons; j++ ){
-				AtPA(i, j) = AtPA(j, i) = M.Inner(A.col(i), PA.col(j));
+				AtPA(i, j) = AtPA(j, i) = M.Inner(PA.col(i), A.col(j));
 			}
 		}
 		return ( PX - PA * AtPA.inverse() * A.transpose() * PX ).eval();
 	};
-	M.Rho = 0;
 }
 
 #ifdef __PYTHON__
