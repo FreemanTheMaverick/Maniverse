@@ -198,8 +198,8 @@ and later searches use up to `ls_max_iter` attempts.
 `S` is a tangent-space search direction before line-search scaling, usually a descent direction such as `-M.Gradient`. The routine tries `alpha=1`, shrinking by `tau` each attempt, until the retracted point satisfies
 
 $$
-L(\operatorname{Retract}(\alpha S))
-\le L + c_1\alpha\langle S, \operatorname{grad} L\rangle_M.
+L(\text{Retract}(\alpha S))
+\le L + c_1\alpha\langle S, \text{grad} L\rangle_M.
 $$
 
 Here `L` and `grad L` are evaluated at the current iterate, and the inner product is `M.Inner`.

@@ -4,10 +4,10 @@ This example finds the two-dimensional principal subspace of a symmetric matrix.
 We maximize
 
 $$
-\operatorname{Tr}(C^T A C), \qquad C^T C=I,
+\mathrm{Tr}(C^T A C), \qquad C^T C=I,
 $$
 
-by minimizing its negative on the Grassmann manifold $\operatorname{Gr}(2,4)$,
+by minimizing its negative on the Grassmann manifold $\mathrm{Gr}(2,4)$,
 represented by `Flag` in `Maniverse`.
 Unlike an unconstrained Euclidean example,
 this demonstrates how `Maniverse` keeps every iterate on a nonlinear manifold.
@@ -120,7 +120,7 @@ int main() {
 
 `C0` is the initial guess for the optimization.
 Its columns form an orthonormal basis for the initial two-dimensional subspace.
-`Flag` with one block of size 2 represents $\operatorname{Gr}(2,4)$.
+`Flag` with one block of size 2 represents $\mathrm{Gr}(2,4)$.
 Rotating the columns of $C$ does not change the represented subspace,
 so the optimizer seeks the subspace itself rather than a particular basis.
 
