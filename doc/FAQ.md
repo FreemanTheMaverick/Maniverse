@@ -40,7 +40,7 @@ I would like to keep track of the popular field of OOM
 and implement more efficient algorithms as they are being proposed,
 as long as they enhance the performance in my projects on quantum chemistry.
 
-### Are you an expert on OOM?
+## Are you an expert on OOM?
 No.
 It has just occurred to me that OOM can be extremely powerful
 in some topics in quantum chemistry in middle 2024,

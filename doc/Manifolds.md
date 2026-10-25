@@ -59,7 +59,7 @@ and understand the consequences.
 | `Clone()` | Returns a copied manifold object. |
 | `Share()` | Returns a shared-ownership manifold object suitable for APIs expecting shared pointers. |
 
-## Built-in concrete manifolds
+## Built-in manifolds
 
 | Manifold class | Point shape / constraints | Dimension |
 |----------------|---------------------------|-----------|

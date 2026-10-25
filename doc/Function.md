@@ -163,21 +163,11 @@ $$
 \nabla f(x,y)=\left(r^{\odot 3},\;r^{\odot 3}\right),
 $$
 
-and for a block direction
-
-$$
-(u,v),
-$$
-
+and for a block direction $(u,v)$,
 the Euclidean Hessian-vector product is
 
 $$
-\nabla^2 f(x,y)[u,v]
-=
-\left(
-3r^{\odot 2}\odot(u+v),\;
-3r^{\odot 2}\odot(u+v)
-\right).
+\nabla^2 f(x,y)[u,v]=\left(3r^{\odot 2}\odot(u+v),\;3r^{\odot 2}\odot(u+v)\right).
 $$
 
 Here, $\odot$ and the superscript $\odot k$ denote elementwise multiplication and powers.
@@ -191,23 +181,13 @@ $$
 the Euclidean gradient is
 
 $$
-\nabla g(x,y)
-=
-\left(
-y,\;
-x
-\right),
+\nabla g(x,y)=\left(y,\;x\right),
 $$
 
 and
 
 $$
-\nabla^2 g(x,y)[u,v]
-=
-\left(
-v,\;
-u
-\right).
+\nabla^2 g(x,y)[u,v]=\left(v,\;u\right).
 $$
 
 A complete implementation is:

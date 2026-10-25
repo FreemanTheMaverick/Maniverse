@@ -70,7 +70,7 @@ when their candidate step reaches the boundary
 or negative curvature is detected (if `FrownNPC=True`).
 Most users do not need to call it directly.
 
-## Concrete linear solvers
+## Built-in linear solvers
 
 ### Conjugate gradient
 
@@ -83,7 +83,7 @@ or negative curvature is detected (if `FrownNPC=True`),
 CG arrives at the interpolated solution on the boundary
 via the Steihaug-Toint procedure.
 
-Without `FrownNPC=True`,
+With `FrownNPC=False`,
 CG behaviours are undefined if `A` is indefinite.
 
 ### Minimal residual
@@ -95,7 +95,8 @@ when `A` may be symmetric indefinite or poorly conditioned.
 If the trust-region boundary is reached
 or negative curvature is detected (if `FrownNPC=True`),
 MR adopts the interpolated solution like CG
-only when the current trial vector is the first and only candidate in the sequence;
+only when the current trial vector is the first and only candidate in the sequence
+(i.e., the gradient descent direction);
 otherwise, it falls back to the last candidate within the trust region as the solution.
 This is because the paths between neighbouring MR trial vectors are generally
 **not** monotonically decreasing for the quadratic subproblem nor the residual,

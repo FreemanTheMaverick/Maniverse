@@ -230,9 +230,7 @@ Without constraints, `M.Gradient` and `M.ObjectiveGradient` are equal.
 Otherwise, `M.Gradient` equals:
 
 $$
-\nabla L
-= \nabla f
-+ \sum_i(\lambda_i+\rho g_i) \nabla g_i.
+\nabla L = \nabla f + \sum_i(\lambda_i+\rho g_i) \nabla g_i.
 $$
 
 `M.getGradient()` and `M.getObjectiveGradient()`
@@ -273,10 +271,7 @@ Without constraints, `M.Hessian(X)` and `M.ObjectiveHessian(X)` are equal.
 Otherwise, `M.Hessian(X)` is equal to:
 
 $$
-\nabla^2L[X]
-= \nabla^2 f[X]
-+ \sum_i(\lambda_i+\rho g_i)\nabla^2g_i[X]
-+ \rho\sum_i\langle\nabla g_i,X\rangle\nabla g_i.
+\nabla^2L[X] = \nabla^2 f[X] + \sum_i(\lambda_i+\rho g_i)\nabla^2g_i[X] + \rho\sum_i\langle\nabla g_i,X\rangle\nabla g_i.
 $$
 
 ## Example: evaluating directional curvature
