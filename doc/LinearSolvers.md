@@ -92,12 +92,13 @@ MinRes reduces the linear residual in a Krylov subspace
 and is generally preferred
 when `A` may be symmetric indefinite or poorly conditioned.
 
-If the trust-region boundary is reached
-or negative curvature is detected (if `FrownNPC=True`),
-MR adopts the interpolated solution like CG
-only when the current trial vector is the first and only candidate in the sequence
-(i.e., the gradient descent direction);
-otherwise, it falls back to the last candidate within the trust region as the solution.
+MR adopts the interpolated solution like CG when
+(1) the trust-region boundary is reached by the **first** trial vector in the sequence
+(i.e., the gradient descent direction) or
+(2) a negative curvature is detected (if `FrownNPC=True`).
+Otherwise, when the trust-region boundary is reached by a following trial vector
+without a detected negative curvature,
+it falls back to the last candidate within the trust region as the solution.
 This is because the paths between neighbouring MR trial vectors are generally
 **not** monotonically decreasing for the quadratic subproblem nor the residual,
 and interpolation on them tends to result in large errors.
