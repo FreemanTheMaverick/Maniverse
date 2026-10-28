@@ -42,8 +42,8 @@ class Manifold{ public:
 	Manifold(Eigen::MatrixXd p, std::string geodesic);
 	virtual int getDimension() const;
 	virtual double Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const;
-	void getBasisSet();
-	void getHessianMatrix();
+	virtual Eigen::MatrixXd Flat(Eigen::MatrixXd X) const;
+	virtual Eigen::MatrixXd Sharp(Eigen::MatrixXd X) const;
 
 	virtual Eigen::MatrixXd Retract(Eigen::MatrixXd X) const;
 	virtual Eigen::MatrixXd InverseRetract(Manifold& N) const;
@@ -127,6 +127,9 @@ class Iterate{ public:
 	int getDimension() const;
 
 	double Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const;
+	Eigen::VectorXd Flat(Eigen::VectorXd X) const;
+	Eigen::VectorXd Sharp(Eigen::VectorXd X) const;
+
 	Eigen::VectorXd Retract(Eigen::VectorXd X) const;
 	Eigen::VectorXd InverseRetract(Iterate& N) const;
 	Eigen::VectorXd TransportTangent(Eigen::VectorXd X, Eigen::VectorXd Y) const;

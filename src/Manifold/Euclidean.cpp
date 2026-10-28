@@ -24,6 +24,14 @@ double Euclidean::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	return X.cwiseProduct(Y).sum();
 }
 
+Eigen::MatrixXd Euclidean::Flat(Eigen::MatrixXd X) const{
+	return X;
+}
+
+Eigen::MatrixXd Euclidean::Sharp(Eigen::MatrixXd X) const{
+	return X;
+}
+
 Eigen::MatrixXd Euclidean::Retract(Eigen::MatrixXd X) const{
 	return this->P + X;
 }

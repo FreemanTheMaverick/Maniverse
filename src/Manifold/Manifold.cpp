@@ -33,6 +33,16 @@ double Manifold::Inner(Eigen::MatrixXd /*X*/, Eigen::MatrixXd /*Y*/) const{
 	return 0;
 }
 
+Eigen::MatrixXd Manifold::Flat(Eigen::MatrixXd X) const{
+	__Not_Implemented__
+	return X;
+}
+
+Eigen::MatrixXd Manifold::Sharp(Eigen::MatrixXd X) const{
+	__Not_Implemented__
+	return X;
+}
+
 Eigen::MatrixXd Manifold::Retract(Eigen::MatrixXd /*X*/) const{
 	__Not_Implemented__
 	return Eigen::MatrixXd::Zero(0, 0);
@@ -93,8 +103,15 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 	int getDimension() const override{
 		PYBIND11_OVERRIDE(int, Manifold, getDimension);
 	}
+
 	double Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const override{
 		PYBIND11_OVERRIDE(double, Manifold, Inner, X, Y);
+	}
+	Eigen::MatrixXd Flat(Eigen::MatrixXd X) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, Flat, X);
+	}
+	Eigen::MatrixXd Sharp(Eigen::MatrixXd X) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, Sharp, X);
 	}
 
 	Eigen::MatrixXd Retract(Eigen::MatrixXd X) const override{
@@ -148,6 +165,8 @@ void Init_Manifold(pybind11::module_& m){
 		.def(pybind11::init<Eigen::MatrixXd, std::string>())
 		.def("getDimension", &Manifold::getDimension)
 		.def("Inner", &Manifold::Inner)
+		.def("Flat", &Manifold::Flat)
+		.def("Sharp", &Manifold::Sharp)
 		.def("Retract", &Manifold::Retract)
 		.def("InverseRetract", &Manifold::InverseRetract)
 		.def("TangentProjection", &Manifold::TangentProjection)
