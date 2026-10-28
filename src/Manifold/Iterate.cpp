@@ -229,6 +229,22 @@ double Iterate::Inner(Eigen::VectorXd X, Eigen::VectorXd Y) const{
 	return inner;
 }
 
+Eigen::VectorXd Iterate::Flat(Eigen::VectorXd X) const{
+    Eigen::VectorXd flat = Eigen::VectorXd::Zero(this->TotalSize);
+    for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
+        MV_SetBlock(flat, iman, this->BlockParameters) = this->Manifolds[iman]->Flat(MV_GetBlock(X, iman, this->BlockParameters));
+    }
+	return flat;
+}
+
+Eigen::VectorXd Iterate::Sharp(Eigen::VectorXd X) const{
+    Eigen::VectorXd sharp = Eigen::VectorXd::Zero(this->TotalSize);
+    for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){
+        MV_SetBlock(sharp, iman, this->BlockParameters) = this->Manifolds[iman]->Sharp(MV_GetBlock(X, iman, this->BlockParameters));
+    }
+	return sharp;
+}
+
 Eigen::VectorXd Iterate::Retract(Eigen::VectorXd X) const{
 	Eigen::VectorXd Exp = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < (int)this->Manifolds.size(); iman++ ){

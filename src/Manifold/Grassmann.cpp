@@ -63,6 +63,14 @@ double Grassmann::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	return X.cwiseProduct(Y).sum();
 }
 
+Eigen::MatrixXd Grassmann::Flat(Eigen::MatrixXd X) const{
+	return X;
+}
+
+Eigen::MatrixXd Grassmann::Sharp(Eigen::MatrixXd X) const{
+	return X;
+}
+
 Eigen::MatrixXd Grassmann::Retract(Eigen::MatrixXd X) const{
 	const Eigen::MatrixXd Xp = X * this->P - this->P * X;
 	const Eigen::MatrixXd pX = - Xp;

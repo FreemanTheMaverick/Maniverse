@@ -30,6 +30,14 @@ double Simplex::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	return this->P.cwiseInverse().cwiseProduct(X.cwiseProduct(Y)).sum();
 }
 
+Eigen::MatrixXd Simplex::Flat(Eigen::MatrixXd X) const{
+	return this->P.inverse().cwiseProduct(X);
+}
+
+Eigen::MatrixXd Simplex::Sharp(Eigen::MatrixXd X) const{
+	return this->P.cwiseProduct(X);
+}
+
 Eigen::MatrixXd Simplex::Retract(Eigen::MatrixXd X) const{
 	if ( X.norm() == 0 ) return this->P;
 	const Eigen::MatrixXd Xp = X.cwiseProduct(this->P.array().rsqrt().matrix());

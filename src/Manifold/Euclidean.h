@@ -13,6 +13,8 @@ class Euclidean: public Manifold{ public:
 
 	virtual int getDimension() const override;
 	double Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const override;
+	Eigen::MatrixXd Flat(Eigen::MatrixXd X) const override;
+	Eigen::MatrixXd Sharp(Eigen::MatrixXd X) const override;
 
 	Eigen::MatrixXd Retract(Eigen::MatrixXd X) const override;
 	virtual Eigen::MatrixXd InverseRetract(Manifold& N) const override;
