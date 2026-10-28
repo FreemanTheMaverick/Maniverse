@@ -140,29 +140,29 @@ class Iterate{ public:
  
 };
 
-#define MV_GetBlock(mat, iM, BlockParameters)\
+#define MV_constBlock(mat, iM, BlockParameters)\
 	Eigen::Map<const Eigen::MatrixXd>(\
 			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
 			std::get<2>(BlockParameters[iM])\
 	)
 
-#define MV_SetBlock(mat, iM, BlockParameters)\
-	Eigen::Map<Eigen::MatrixXd> _##mat##_##iM##_(\
+#define MV_Block(mat, iM, BlockParameters)\
+	Eigen::Map<Eigen::MatrixXd>(\
 			mat.data() + std::get<0>(BlockParameters[iM]),\
 			std::get<1>(BlockParameters[iM]),\
 			std::get<2>(BlockParameters[iM])\
-	); _##mat##_##iM##_
+	)
 
 #define MV_AssembleBlock(big_mat, mat_vec, BlockParameters){\
 	for ( int _imat_ = 0; _imat_ < (int)mat_vec.size(); _imat_++ ){\
-		MV_SetBlock(big_mat, _imat_, BlockParameters) = mat_vec[_imat_];\
+		MV_Block(big_mat, _imat_, BlockParameters) = mat_vec[_imat_];\
 	}\
 }
 
 #define MV_DecoupleBlock(big_mat, mat_vec, BlockParameters){\
 	for ( int _imat_ = 0; _imat_ < (int)mat_vec.size(); _imat_++ )\
-		mat_vec[_imat_] = MV_GetBlock(big_mat, _imat_, BlockParameters);\
+		mat_vec[_imat_] = MV_constBlock(big_mat, _imat_, BlockParameters);\
 }
 
 }
