@@ -61,6 +61,8 @@ All vector arguments and return values in this table use flattened ambient-coord
 | Method | Returns | Meaning |
 |--------|---------|---------|
 | `M.Inner(X, Y)` | `float` | Sum of the manifold inner products of directions `X` and `Y`. |
+| `M.Flat(X)` | `np.ndarray` | Apply each manifold block's metric (flat, or $\flat$) map, lowering tangent-vector indices to produce a flattened cotangent vector. |
+| `M.Sharp(X)` | `np.ndarray` | Apply each manifold block's inverse metric (sharp, or $\sharp$) map, raising cotangent-vector indices to produce a flattened tangent vector. |
 | `M.TangentProjection(X)` | `np.ndarray` | Project `X` onto the current tangent space. |
 | `M.TangentPurification(X)` | `np.ndarray` | Apply each manifold's tangent-purification operation to `X`. |
 | `M.Retract(S)` | `np.ndarray` | Retract tangent step `S` from the current point and return the resulting flattened point. It does not update `M`; use `setPoint` to store the result. |

@@ -348,6 +348,8 @@ void Init_Iterate(pybind11::module_& m){
 		.def("getDimension", &Iterate::getDimension)
 
 		.def("Inner", &Iterate::Inner)
+		.def("Flat", &Iterate::Flat)
+		.def("Sharp", &Iterate::Sharp)
 		.def("Retract", &Iterate::Retract)
 		.def("InverseRetract", &Iterate::InverseRetract)
 		.def("TransportTangent", &Iterate::TransportTangent)

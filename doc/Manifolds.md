@@ -47,6 +47,8 @@ and understand the consequences.
 |--------|-------------|
 | `getDimension()` | Returns the manifold dimension as an `int`. |
 | `Inner(X, Y)` | Computes the Riemannian inner product of tangent vectors represented in ambient coordinates. |
+| `Flat(X)` | Applies the metric (flat, or $\flat$) map to tangent vector `X`, lowering its index and returning the corresponding cotangent vector in ambient coordinates. |
+| `Sharp(X)` | Applies the inverse metric (sharp, or $\sharp$) map to cotangent vector `X`, raising its index and returning the corresponding tangent vector in ambient coordinates. |
 | `Retract(X)` | Returns the manifold retraction of tangent vector `X` from the current point `P`. Optimizers use this as the manifold update operation. |
 | `InverseRetract(N)` | Returns a tangent vector at `P` pointing toward another point `N` on the same manifold. |
 | `TransportTangent(X, Y)` | Transports a tangent vector `X` along another one `Y`. |
