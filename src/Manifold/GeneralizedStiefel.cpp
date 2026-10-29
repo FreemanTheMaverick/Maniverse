@@ -145,7 +145,7 @@ Eigen::MatrixXd GeneralizedStiefel::TangentPurification(Eigen::MatrixXd X) const
 void GeneralizedStiefel::setPoint(Eigen::MatrixXd p, bool purify){
 	if (purify){
 		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(Bsqrt * p);
-		p = ( p * svd.matrixV() * svd.singularValues().asDiagonal() ).eval();
+		p = ( p * svd.matrixV() * svd.nonzeroSingularValues().asDiagonal() ).eval();
 	}
 	this->P = p;
 }
