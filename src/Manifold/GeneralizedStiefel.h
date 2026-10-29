@@ -11,6 +11,7 @@ namespace Maniverse{
 class GeneralizedStiefel: public Manifold{ public:
 	Eigen::MatrixXd B;
 	Eigen::MatrixXd Binv;
+	Eigen::MatrixXd Bsqrt;
 
 	GeneralizedStiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std::string geodesic = "POLAR");
 

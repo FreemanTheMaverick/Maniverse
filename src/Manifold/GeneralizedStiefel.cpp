@@ -12,8 +12,10 @@
 
 namespace Maniverse{
 
+// https://doi.org/10.1016/j.cam.2022.114953
+
 GeneralizedStiefel::GeneralizedStiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std::string geodesic): Manifold(p, geodesic), B(B){
-	__Check_Geodesic__("EXACT", "POLAR", "QR")
+	__Check_Geodesic__("EXACT", "POLAR")
 	this->Name = "GeneralizedStiefel("
 		+ std::to_string(p.rows())
 		+ ", "
@@ -25,6 +27,7 @@ GeneralizedStiefel::GeneralizedStiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
 	if ( es.eigenvalues()(0) <= 0 ) throw std::runtime_error("The B-matrix must be positive definite!");
 	Binv = es.eigenvectors() * es.eigenvalues().cwiseInverse().asDiagonal() * es.eigenvectors().transpose();
+	Bsqrt = es.operatorSqrt();
 }
 
 int GeneralizedStiefel::getDimension() const{
@@ -37,7 +40,12 @@ double GeneralizedStiefel::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	return X.cwiseProduct(B * Y).sum();
 }
 
-double GeneralizedStiefel::Flat(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
+Eigen::MatrixXd GeneralizedStiefel::Flat(Eigen::MatrixXd X) const{
+	return B * X;
+}
+
+Eigen::MatrixXd GeneralizedStiefel::Sharp(Eigen::MatrixXd X) const{
+	return Binv * X;
 }
 
 Eigen::MatrixXd GeneralizedStiefel::Retract(Eigen::MatrixXd X) const{
@@ -48,23 +56,23 @@ Eigen::MatrixXd GeneralizedStiefel::Retract(Eigen::MatrixXd X) const{
 		A << this->P, X;
 		Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2 * ncols, 2 * ncols);
 		B.topLeftCorner(ncols, ncols) = B.bottomRightCorner(ncols, ncols) = this->P.transpose() * X;
-		B.topRightCorner(ncols, ncols) = - X.transpose() * X;
+		B.topRightCorner(ncols, ncols) = - X.transpose() * this->B * X;
 		B.bottomLeftCorner(ncols, ncols) = Eigen::MatrixXd::Identity(ncols, ncols);
 		Eigen::MatrixXd C = Eigen::MatrixXd::Zero(2 * ncols, ncols);
 		C.topRows(ncols) = ( - this->P.transpose() * X ).exp();
 		return A * B.exp() * C;
 	}else if ( this->Geodesic == "POLAR" ){
-		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeFullV> svd(this->P + X);
-		return svd.matrixU() * svd.matrixV().transpose();
-	}else if ( this->Geodesic == "QR" ){
-		Eigen::HouseholderQR<Eigen::MatrixXd> qr(this->P + X);
-		return qr.householderQ() * Eigen::MatrixXd::Identity(nrows, ncols);
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(
+			Eigen::MatrixXd::Identity(ncols, ncols) + X.transpose() * B * X
+		);
+		return ( this->P * X ) * es.operatorInverseSqrt();
 	}
 	__Check_Geodesic_Func__
 	return X;
 }
 
 inline static Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
+	// Solve A * X + X * A^t = Q
 	// https://discourse.mc-stan.org/t/solve-a-lyapunov-sylvester-equation-include-custom-c-function-using-eigen-library-possible/12688
 
 	const Eigen::MatrixXd B = A.transpose();
@@ -85,12 +93,11 @@ inline static Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
 }
 
 Eigen::MatrixXd GeneralizedStiefel::InverseRetract(Manifold& N) const{
-	// https://doi.org/10.1109/TSP.2012.2226167
 	__Check_Log_Map__
 	const Eigen::MatrixXd p = this->P;
 	const Eigen::MatrixXd q = N.P;
-	if ( this->Geodesic == "POLAR" ){ // Algorithm 2
-		const Eigen::MatrixXd M = p.transpose() * q;
+	if ( this->Geodesic == "POLAR" ){
+		const Eigen::MatrixXd M = p.transpose() * B * q;
 		const Eigen::MatrixXd S = Sylvester(M, 2 * Eigen::MatrixXd::Identity(p.cols(), p.cols()));
 		return q * S - p;
 	}
@@ -99,32 +106,17 @@ Eigen::MatrixXd GeneralizedStiefel::InverseRetract(Manifold& N) const{
 }
 
 Eigen::MatrixXd GeneralizedStiefel::TransportTangent(Eigen::MatrixXd Y, Eigen::MatrixXd Z) const{
-	// Transport Y along Z
-	// Section 3.5, https://doi.org/10.1007/s10589-016-9883-4
 	const int nrows = Y.rows();
 	const int ncols = Y.cols();
 	if ( this->Geodesic == "POLAR" ){
-		const Eigen::MatrixXd IplusZtZ = Eigen::MatrixXd::Identity(ncols, ncols) + Z.transpose() * Z;
+		const Eigen::MatrixXd IplusZtZ = Eigen::MatrixXd::Identity(ncols, ncols) + Z.transpose() * B * Z;
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(IplusZtZ);
 		const Eigen::MatrixXd A = es.operatorSqrt();
 		const Eigen::MatrixXd Ainv = es.operatorInverseSqrt();
-		const Eigen::MatrixXd RZ = this->Retract(Z);
-		const Eigen::MatrixXd RZtY = RZ.transpose() * Y;
-		const Eigen::MatrixXd Q = RZtY - RZtY.transpose();
-		const Eigen::MatrixXd Lambda = Sylvester(A, Q);
-		return RZ * Lambda + ( Eigen::MatrixXd::Identity(nrows, nrows) - RZ * RZ.transpose() ) * Y * Ainv;
-	}else if ( this->Geodesic == "QR" ){
-		Eigen::HouseholderQR<Eigen::MatrixXd> qr(this->P + Z);
-		const Eigen::MatrixXd Q = qr.householderQ() * Eigen::MatrixXd::Identity(nrows, ncols);
-		const Eigen::MatrixXd Rinv = qr.matrixQR().topLeftCorner(ncols, ncols).triangularView<Eigen::Upper>();
-		Eigen::MatrixXd TMP = Q.transpose() * Y * Rinv;
-		for ( int i = 0; i < ncols; i++ ){
-			for ( int j = 0; j < ncols; j++ ){
-				if ( i == j ) TMP(i, j) = 0;
-				else if ( i < j ) TMP(i, j) = - TMP(i, j);
-			}
-		}
-		return Q * TMP + ( Eigen::MatrixXd::Identity(nrows, nrows) - Q * Q.transpose() ) * Y * Rinv;
+		const Eigen::MatrixXd xiBeta = Y.transpose() * B * Z;
+		const Eigen::MatrixXd Q = xiBeta + xiBeta.transpose();
+		const Eigen::MatrixXd deri = Sylvester(A, Q);
+		return Y * Ainv - ( this->P + Z ) * Ainv * deri * Ainv;
 	}
 	__Check_Geodesic_Func__
 	return Y;
@@ -136,39 +128,38 @@ Eigen::MatrixXd GeneralizedStiefel::TransportManifold(Eigen::MatrixXd X, Manifol
 	return this->TransportTangent(X, Z);
 }
 
-inline static Eigen::MatrixXd GeneralizedStiefelTangentProjection(Eigen::MatrixXd P, Eigen::MatrixXd A){
-	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	const Eigen::MatrixXd PtA = P.transpose() * A;
+inline static Eigen::MatrixXd GeneralizedStiefelTangentProjection(Eigen::MatrixXd B, Eigen::MatrixXd P, Eigen::MatrixXd A){
+	const Eigen::MatrixXd PtA = P.transpose() * B * A;
 	const Eigen::MatrixXd SymPtA = 0.5 * ( PtA + PtA.transpose() );
 	return A - P * SymPtA;
 }
 
 Eigen::MatrixXd GeneralizedStiefel::TangentProjection(Eigen::MatrixXd X) const{
-	return GeneralizedStiefelTangentProjection(this->P, X);
+	return GeneralizedStiefelTangentProjection(B, this->P, X);
 }
 
 Eigen::MatrixXd GeneralizedStiefel::TangentPurification(Eigen::MatrixXd X) const{
-	return GeneralizedStiefelTangentProjection(this->P, X);
+	return GeneralizedStiefelTangentProjection(B, this->P, X);
 }
 
 void GeneralizedStiefel::setPoint(Eigen::MatrixXd p, bool purify){
 	if (purify){
-		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(p);
-		p = svd.matrixU() * svd.matrixV().transpose();
+		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(Bsqrt * p);
+		p = ( p * svd.matrixV() * svd.singularValues().asDiagonal() ).eval();
 	}
 	this->P = p;
 }
 
 void GeneralizedStiefel::getGradient(){
-	this->Gr = this->TangentProjection(this->Ge);
+	this->Gr = this->TangentProjection(this->Sharp(M->Ge));
 }
 
 Eigen::MatrixXd GeneralizedStiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
 	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	if ( ! weingarten ) return GeneralizedStiefelTangentProjection(this->P, HeX);
+	if ( ! weingarten ) return GeneralizedStiefelTangentProjection(B, this->P, HeX);
 	else{
 		const Eigen::MatrixXd tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
-		return GeneralizedStiefelTangentProjection(this->P, HeX - 0.5 * X * tmp);
+		return GeneralizedStiefelTangentProjection(B, this->P, HeX - 0.5 * X * tmp);
 	}
 }
 
@@ -183,7 +174,7 @@ std::shared_ptr<Manifold> GeneralizedStiefel::Share() const{
 #ifdef __PYTHON__
 void Init_GeneralizedStiefel(pybind11::module_& m){
 	pybind11::classh<GeneralizedStiefel, Manifold>(m, "GeneralizedStiefel")
-		.def(pybind11::init<Eigen::MatrixXd, Eigen::MatrixXd, td::string>(), pybind11::arg("p"), pybind11::arg("B"), pybind11::arg("geodesic") = "POLAR");
+		.def(pybind11::init<Eigen::MatrixXd, Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("B"), pybind11::arg("geodesic") = "POLAR");
 }
 #endif
 
