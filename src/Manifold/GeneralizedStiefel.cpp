@@ -24,7 +24,7 @@ GeneralizedStiefel::GeneralizedStiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std
 	if ( ! B.transpose().isApprox(B) ) throw std::runtime_error("The B-matrix must be symmetric!");
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
 	if ( es.eigenvalues()(0) <= 0 ) throw std::runtime_error("The B-matrix must be positive definite!");
-	Binv = es.operatorInverse();
+	Binv = es.eigenvectors() * es.eigenvalues().cwiseInverse().asDiagonal() * es.eigenvectors().transpose();
 }
 
 int GeneralizedStiefel::getDimension() const{
