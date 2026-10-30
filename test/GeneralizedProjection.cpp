@@ -13,21 +13,22 @@
 // Finding the generalized Stiefel matrix closest to the given matrix A
 // Minimize L(C) = || C - A ||^2_B
 // A \in R(10, 6)
-// B \in SPD(6)
+// B \in SPD(10)
 // C \in St_B(10, 6)
 
 namespace mv = Maniverse;
 
 class ObjProjection: public mv::Function{ public:
 	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 6);
-	Eigen::MatrixXd B = Eigen::MatrixXd::Zero(6, 6);
+	Eigen::MatrixXd B = Eigen::MatrixXd::Zero(10, 10);
 
 	ObjProjection(){
 		const double data[] = {
 			#include "Sym10.txt"
 		};
 		std::memcpy(A.data(), &data, 10 * 6 * 8);
-		B = A.topRows(6);
+		std::memcpy(B.data(), &data, 10 * 10 * 8);
+		B = ( B * B ).eval();
 	};
 
 	virtual void Calculate(std::vector<Eigen::MatrixXd> C, std::vector<int> derivatives) override{
@@ -64,16 +65,18 @@ class ObjProjection: public mv::Function{ public:
 
 class TestProjection{ public:
 	ObjProjection Obj = ObjProjection();
-	mv::GeneralizedStiefel Manifold = mv::GeneralizedStiefel(Eigen::MatrixXd::Identity(10, 6), Obj.B);
+	mv::GeneralizedStiefel Manifold = mv::GeneralizedStiefel(Obj.B., Obj.B);
 	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 6);
 
 	TestProjection(){
-		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(Obj.A);
+		Eigen::LLT<Eigen::MatrixXd> llt(Obj.B);
+		const Eigen::MatrixXd L = llt.matrixL();
+		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(L.transpose() * Obj.A);
 		const Eigen::MatrixXd U = svd.matrixU();
 		const Eigen::MatrixXd V = svd.matrixV();
-		Manifold = mv::GeneralizedStiefel( U * V.transpose() * ( Obj.A.bottomRows(6) - Obj.A.bottomRows(6).transpose() ).exp() );
-		Solution = U * V.transpose();
+		Manifold = mv::GeneralizedStiefel( L.transpose().inverse() * U * V.transpose() * ( Obj.A.bottomRows(6) - Obj.A.bottomRows(6).transpose() ).exp(), Obj.B );
+		Solution = L.transpose().inverse() * U * V.transpose();
 	};
 
 	void testNewtonCG(){
