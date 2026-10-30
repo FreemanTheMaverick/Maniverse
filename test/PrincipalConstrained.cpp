@@ -1,0 +1,126 @@
+#include <Eigen/Dense>
+#include <vector>
+#include <iostream>
+#include <Maniverse/Manifold/Flag.h>
+#include <Maniverse/Optimizer/AugmentedLagrangian.h>
+#include <Maniverse/LinearSolver/ConjugateGradient.h>
+#include <Maniverse/LinearSolver/MinRes.h>
+#include <Maniverse/Optimizer/Newton.h>
+#include <Maniverse/Optimizer/LBFGS.h>
+#include <Maniverse/Diagonalizer/Lanczos.h>
+
+#include "Determinant.h"
+
+// Principal component analysis
+// Finding the principal components in a lower dimensional subspace
+// Maximize L(C) = Tr[ C.t A C ] s.t. det[ C0.t C ] = 0 s.t. det[ C0.t C ] = 0
+// A \in Sym(10)
+// C, C0 \in Flag(5; 10) = Gr(5; 10)
+// C0 differs from the unconstrained optimized C (C*) by one vector ( Rank[ C0.t C* ] = 4 )
+
+namespace mv = Maniverse;
+
+class ObjPrincipal: public mv::Function{ public:
+	Eigen::MatrixXd A = Eigen::MatrixXd::Zero(10, 10);
+
+	ObjPrincipal(){
+		const double data[] = {
+			#include "Sym10.txt"
+		};
+		std::memcpy(A.data(), &data, 10 * 10 * 8);
+	};
+
+	void Calculate(std::vector<Eigen::MatrixXd> C, std::vector<int> derivatives) override{
+		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
+			Value = - C[0].cwiseProduct( A * C[0] ).sum();
+		}
+		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+			Gradient = { - 2 * A * C[0] };
+		}
+	};
+
+	std::vector<Eigen::MatrixXd> Hessian(std::vector<Eigen::MatrixXd> V) const override{
+		return std::vector<Eigen::MatrixXd>{ - 2 * A * V[0] };
+	};
+};
+
+#define __Check_Result__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	if ( converged ){\
+		if ( ( M.Manifolds[0]->P * M.Manifolds[0]->P.transpose() - Solution * Solution.transpose() ).cwiseAbs().maxCoeff() < 1e-5 ){\
+			std::cout << "\033[32mSuccess!\033[0m" << std::endl;\
+		}else std::cout << "\033[31mFailed: Incorrect solution!\033[0m" << std::endl;\
+	}else std::cout << "\033[31mFailed: Not converged!\033[0m" << std::endl;
+
+#define __Check_Stability__\
+	std::cout << typeid(*this).name() << " " << __func__ << " ";\
+	for ( int i = 0; i < (int)Evecs.size(); i++ ){\
+		const double residual = ( M.ConstraintProjection(M.Hessian( Evecs[i]) - Evals[i] * Evecs[i] )).norm();\
+		if ( residual > 1e-5 ) goto IncorrectCurvature;\
+	}\
+	std::cout << "\033[32mSuccess!\033[0m" << std::endl; return;\
+	IncorrectCurvature: std::cout << "\033[31mFailed: Eigenvalue equation is violated!\033[0m" << std::endl;
+
+class TestPrincipalConstrained{ public:
+	ObjPrincipal Obj = ObjPrincipal();
+	ObjDeterminant Cons = ObjDeterminant(Eigen::MatrixXd::Zero(10, 5));
+	mv::Flag Manifold = mv::Flag(Eigen::MatrixXd::Identity(10, 5));
+	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
+	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 5);
+
+	TestPrincipalConstrained(){
+		Manifold.setBlockParameters({5});
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es;
+		es.compute(Obj.A);
+		Solution = es.eigenvectors().rightCols(5);
+		Cons.C0 = es.eigenvectors().middleCols(4, 5);
+	};
+
+	void testNewtonCG(){
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
+		mv::TrustRegion tr;
+		mv::ConjugateGradient cg(1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(cg, M);
+		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 25, 1)(mv::Newton)(
+				M, tr, cg, Tolerance, 12, 1
+		);
+		__Check_Result__
+	};
+
+	void testNewtonMR(){
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
+		mv::TrustRegion tr;
+		mv::MinRes mr(1, {1e-4, 1e-4}, M.getDimension(), 1);
+		mv::initLinearSolverForNewton(mr, M);
+		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 25, 1)(mv::Newton)(
+				M, tr, mr, Tolerance, 12, 1
+		);
+		__Check_Result__
+	};
+
+	void testLBFGS(){
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
+		const bool converged = mv::AugmentedLagrangian(1, 3.3, 0.8, {1e-5}, 25, 1)(mv::LBFGS)(
+				M, Tolerance,
+				10, 43, 0.1, 0.75, 5, 1
+		);
+		__Check_Result__
+	};
+
+	void testLanczos(){
+		mv::Iterate M(Obj, {Manifold.Share()}, {&Cons});
+		M.setPoint({Solution}, 1);
+		M.Calculate(M.getPoint(), {0, 1, 2});
+		M.setGradient();
+		M.setLambda(M.calcLambda());
+		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension() - 1, 0, 1, 1);
+		__Check_Stability__
+	};
+};
+
+int main(){
+	TestPrincipalConstrained().testNewtonCG();
+	TestPrincipalConstrained().testNewtonMR();
+	TestPrincipalConstrained().testLBFGS();
+	TestPrincipalConstrained().testLanczos();
+}

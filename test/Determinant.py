@@ -1,0 +1,138 @@
+import unittest as ut
+import numpy as np
+import Maniverse as mv
+
+# Alignment of two spaces
+# Finding the maximal overlap of two spaces
+# Minimize L(C) = det[ C0.t C ] ( -1 )
+# C0, C \in Flag(5; 10) = Gr(5; 10)
+
+class ObjDeterminant(mv.Function):
+	def __init__(self, C0):
+		super().__init__()
+		self.C0 = C0
+		self.C = np.zeros_like(C0)
+		self.C0tC = np.zeros([C0.shape[1], C0.shape[1]])
+		self.C0tCinv = np.zeros([C0.shape[1], C0.shape[1]])
+		self.rank = 0
+
+		# Rank-deficient
+		self.beta = 0
+
+		# Rank-deficient 1
+		self.u0 = np.zeros([C0.shape[0]])
+		self.v0 = np.zeros([C0.shape[0]])
+		self.u0v0t = np.zeros([C0.shape[0], C0.shape[0]])
+
+		# Rank-deficient 2
+		self.U0 = np.zeros([C0.shape[0], 2])
+		self.V0 = np.zeros([C0.shape[0], 2])
+
+	def Calculate(self, C_, derivatives):
+		self.C = C_[0]
+		if 0 in derivatives:
+			self.C0tC = self.C0.T @ self.C
+			self.Value = np.linalg.det(self.C0tC)
+			if len(derivatives) == 1:
+				return
+		U, S, Vh = np.linalg.svd(self.C0tC)
+		self.rank = len([ s for s in S if s > 1e-10 ])
+		S = S[:self.rank]
+		V = Vh.T
+		self.C0tCinv = V[:, :self.rank] @ np.diag(1./S) @ U[:, :self.rank].T
+		self.Gradient = [ np.zeros_like(self.C0) ]
+		if self.rank == self.C0.shape[1]:
+			self.Gradient = [ self.Value * self.C0 @ self.C0tCinv.T ]
+		else:
+			sing_prod = np.prod(S)
+			detUV = np.linalg.det( U @ V )
+			self.beta = sing_prod * detUV
+			if self.rank == self.C0.shape[1] - 1:
+				self.u0 = U[:, self.rank]
+				self.v0 = V[:, self.rank]
+				self.u0v0t = np.outer(self.u0, self.v0)
+				self.Gradient = [ self.beta * self.C0 @ self.u0v0t ]
+			elif self.rank == self.C0.shape[1] - 2:
+				self.U0 = U[:, self.rank + 1:]
+				self.V0 = V[:, self.rank + 1:]
+
+	def Hessian(self, X_):
+		C0tX = self.C0.T @ X_[0]
+		if self.rank == self.C0.shape[1]:
+			return [ self.Value * self.C0 @ (
+				np.sum( self.C0tCinv.T * C0tX ) * self.C0tCinv.T
+				- self.C0tCinv.T @ C0tX.T @ self.C0tCinv.T
+			) ]
+		if self.rank == self.C0.shape[1] - 1:
+			return [ self.beta * self.C0 @ (
+				np.sum( self.u0 @ C0tX @ self.v0 ) * self.C0tCinv.T
+				+ np.sum( C0tX.T * self.C0tCinv ) * self.u0v0t
+				- self.u0v0t @ ( self.C0tCinv @ C0tX ).T
+				- ( C0tX @ self.C0tCinv ).T @ self.u0v0t
+			) ]
+		if self.rank == self.C0.shape[1] - 2:
+			M = self.U0.T @ C0tX @ self.V0
+			M[0, 1] *= -1
+			M[1, 0] *= -1
+			M[0, 0], M[1, 1] = M[1, 1], M[0, 0]
+			return [ self.beta * self.C0 @ self.U0 @ M.T @ self.V0.T ]
+		return [ np.zeros_like(self.C0) ]
+
+class TestDeterminant(ut.TestCase):
+	def __init__(self, *args):
+		super().__init__(*args)
+		_, eigvecs = np.linalg.eigh(np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10]))
+		for icol in range(10):
+			if eigvecs[0, icol] <= 0:
+				eigvecs[:, icol] *= -1
+		self.Obj = ObjDeterminant(eigvecs[:, :5])
+		self.Manifold = mv.Flag(np.eye(10, 5))
+		self.Manifold.setBlockParameters([5])
+		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
+		self.Solution = - eigvecs[:, :5]
+
+	def testNewtonCG(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(cg, M);
+		converged = mv.Newton(
+				M, tr, cg, self.Tolerance, 8, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[0].P @ M.Manifolds[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(mr, M);
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 9, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[0].P @ M.Manifolds[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+
+	def testLBFGS(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		converged = mv.LBFGS(
+				M, self.Tolerance,
+				10, 10, 0.1, 0.75, 15, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[0].P @ M.Manifolds[0].P.T, self.Solution @ self.Solution.T, atol = 1e-5)
+
+	def testLanczos(self):
+		M = mv.Iterate(self.Obj, [self.Manifold])
+		M.setPoint([self.Solution], 1)
+		M.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient()
+		Evals, Evecs = mv.Lanczos(M, 1, 0, 0, 0)
+		residual = np.linalg.norm( M.Hessian(Evecs[0]) - Evals[0] * Evecs[0] )
+		assert residual < 1e-5
+
+if __name__ == "__main__":
+	TestDeterminant().testNewtonCG()
+	TestDeterminant().testNewtonMR()
+	TestDeterminant().testLBFGS()
+	TestDeterminant().testLanczos()
