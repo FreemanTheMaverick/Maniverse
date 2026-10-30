@@ -33,6 +33,14 @@ double Stiefel::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	return X.cwiseProduct(Y).sum();
 }
 
+Eigen::MatrixXd Stiefel::Flat(Eigen::MatrixXd X) const{
+	return X;
+}
+
+Eigen::MatrixXd Stiefel::Sharp(Eigen::MatrixXd X) const{
+	return X;
+}
+
 Eigen::MatrixXd Stiefel::Retract(Eigen::MatrixXd X) const{
 	const int nrows = X.rows();
 	const int ncols = X.cols();

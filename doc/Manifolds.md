@@ -67,6 +67,7 @@ and understand the consequences.
 |----------------|---------------------------|-----------|
 | `Euclidean(P0)` | Any matrix shape | Number of entries in `P0` |
 | `Stiefel(P0)` | `m × n`, with orthonormal columns (`m ≥ n`) | `mn − n(n+1)/2` |
+| `GeneralizedStiefel(P0, B)` | `m × n`, with `P0ᵀ B P0 = I`, where `B` is symmetric positive definite | `mn − n(n+1)/2` |
 | `Orthogonal(P0)` | Square orthogonal matrix | `n(n−1)/2` |
 | `Flag(P0)` | Orthonormal frame with block sizes configured by `setBlockParameters([...])` | Depends on frame dimensions and block sizes |
 | `Grassmann(P0)` | `m × m` orthogonal projector onto the subspace | `k(m−k)`, where `k` is the projector rank |
