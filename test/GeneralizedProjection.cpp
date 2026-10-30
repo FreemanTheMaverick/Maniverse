@@ -34,10 +34,14 @@ class ObjProjection: public mv::Function{ public:
 	virtual void Calculate(std::vector<Eigen::MatrixXd> C, std::vector<int> derivatives) override{
 		const Eigen::MatrixXd C_minus_A = C[0] - A;
 		if ( std::count(derivatives.begin(), derivatives.end(), 0) ){
-			Value = C_minus_A.transpose().cwiseProduct(B * C_minus_A).sum();
+		std::cout<<1<<std::endl;
+			Value = C_minus_A.cwiseProduct(B * C_minus_A).sum();
+		std::cout<<1<<std::endl;
 		}
 		if ( std::count(derivatives.begin(), derivatives.end(), 1) ){
+		std::cout<<2<<std::endl;
 			Gradient = { 2 * B * ( C[0] - A ) };
+		std::cout<<2<<std::endl;
 		}
 	};
 
@@ -65,7 +69,10 @@ class ObjProjection: public mv::Function{ public:
 
 class TestProjection{ public:
 	ObjProjection Obj = ObjProjection();
-	mv::GeneralizedStiefel Manifold = mv::GeneralizedStiefel(Obj.B., Obj.B);
+	mv::GeneralizedStiefel Manifold = mv::GeneralizedStiefel(
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(Obj.B).operatorInverseSqrt().leftCols(6),
+		Obj.B
+	);
 	std::array<double, 3> Tolerance = {1.e-5, 1.e-5, 1.e-5};
 	Eigen::MatrixXd Solution = Eigen::MatrixXd::Identity(10, 6);
 

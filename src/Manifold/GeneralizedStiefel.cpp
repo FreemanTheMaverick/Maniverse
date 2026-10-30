@@ -21,7 +21,7 @@ GeneralizedStiefel::GeneralizedStiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std
 		+ ", "
 		+ std::to_string(p.cols())
 		+ ")";
-	if ( ! ( p.transpose() * B * p ).isApprox(Eigen::MatrixXd::Identity(p.cols(), p.cols())) )
+	if ( ! ( p.transpose() * p ).isApprox(Eigen::MatrixXd::Identity(p.cols(), p.cols())) )
 		throw std::runtime_error("A GeneralizedStiefel matrix must fulfill Ut.B.U = I!");
 	if ( ! B.transpose().isApprox(B) ) throw std::runtime_error("The B-matrix must be symmetric!");
 	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
