@@ -66,12 +66,10 @@ Eigen::MatrixXd Flag::TangentPurification(Eigen::MatrixXd X) const{
 	return FlagTangentProjection(this->P, this->BlockParameters, X);
 }
 
-Eigen::MatrixXd Flag::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
+Eigen::MatrixXd Flag::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
 	// https://doi.org/10.1007/s10957-023-02242-z
-	if ( weingarten ){
-		const Eigen::MatrixXd tmp = symf(this->BlockParameters, this->P.transpose() * this->Ge);
-		return this->TangentProjection(HeX - X * tmp);
-	}else return this->TangentProjection(HeX);
+	const Eigen::MatrixXd tmp = symf(this->BlockParameters, this->P.transpose() * this->Ge);
+	return this->TangentProjection(HeX - X * tmp);
 }
 
 std::unique_ptr<Manifold> Flag::Clone() const{

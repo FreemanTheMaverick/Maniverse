@@ -27,7 +27,7 @@ class Euclidean: public Manifold{ public:
 
 	virtual void setPoint(Eigen::MatrixXd p, bool purify) override;
 	virtual void getGradient() override;
-	virtual Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const override;
+	virtual Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const override;
 
 	virtual std::unique_ptr<Manifold> Clone() const override;
 	virtual std::shared_ptr<Manifold> Share() const override;

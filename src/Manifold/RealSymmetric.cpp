@@ -39,7 +39,7 @@ void RealSymmetric::getGradient(){
 	this->Gr = Symmetrize(this->Ge);
 }
 
-Eigen::MatrixXd RealSymmetric::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd RealSymmetric::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/) const{
 	return Symmetrize(HeX);
 }
 

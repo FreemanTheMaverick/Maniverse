@@ -66,7 +66,7 @@ void Euclidean::getGradient(){
 	this->Gr = this->Ge;
 }
 
-Eigen::MatrixXd Euclidean::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd Euclidean::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/) const{
 	return HeX;
 }
 

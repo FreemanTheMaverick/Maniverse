@@ -81,7 +81,7 @@ void Manifold::getGradient(){
 	__Not_Implemented__
 }
 
-Eigen::MatrixXd Manifold::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd Manifold::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/) const{
 	__Not_Implemented__
 	return HeX;
 }
@@ -142,8 +142,8 @@ class PyManifold : public Manifold, pybind11::trampoline_self_life_support{ publ
 	void getGradient() override{
 		PYBIND11_OVERRIDE(void, Manifold, getGradient);
 	}
-	Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const override{
-		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, getHessian, HeX, X, weingarten);
+	Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const override{
+		PYBIND11_OVERRIDE(Eigen::MatrixXd, Manifold, getHessian, HeX, X);
 	}
 
 	std::unique_ptr<Manifold> Clone() const override{

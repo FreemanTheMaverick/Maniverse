@@ -131,6 +131,19 @@ class TestProjection{ public:
 		const auto [Evals, Evecs] = mv::Lanczos(M, M.getDimension(), 0, 0, 1);
 		__Check_Stability__
 	};
+
+	void testRiemannianHessian(){
+		Manifold.Ge = Obj.A;
+		const Eigen::MatrixXd X = Manifold.TangentProjection(Obj.A);
+		const Eigen::MatrixXd HeX = 2 * X;
+		const Eigen::MatrixXd tmp = Manifold.Ge.transpose() * Manifold.P + Manifold.P.transpose() * Manifold.Ge;
+		const Eigen::MatrixXd expected = Manifold.TangentProjection(HeX - 0.5 * X * tmp);
+		const Eigen::MatrixXd actual = Manifold.getHessian(HeX, X);
+		std::cout << typeid(*this).name() << " " << __func__ << " ";
+		if ( actual.isApprox(expected) ){
+			std::cout << "\033[32mSuccess!\033[0m" << std::endl;
+		}else std::cout << "\033[31mFailed: Weingarten term is missing!\033[0m" << std::endl;
+	};
 };
 
 int main(){
@@ -139,4 +152,5 @@ int main(){
 	TestProjection().testLBFGS();
 	TestProjection().testAnderson();
 	TestProjection().testLanczos();
+	TestProjection().testRiemannianHessian();
 }
