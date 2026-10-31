@@ -128,18 +128,16 @@ Eigen::MatrixXd GeneralizedStiefel::TransportManifold(Eigen::MatrixXd X, Manifol
 	return this->TransportTangent(X, Z);
 }
 
-inline static Eigen::MatrixXd GeneralizedStiefelTangentProjection(Eigen::MatrixXd B, Eigen::MatrixXd P, Eigen::MatrixXd A){
-	const Eigen::MatrixXd PtA = P.transpose() * B * A;
-	const Eigen::MatrixXd SymPtA = 0.5 * ( PtA + PtA.transpose() );
-	return A - P * SymPtA;
+Eigen::MatrixXd GeneralizedStiefel::symf(Eigen::MatrixXd PtBX) const{
+    return 0.5 * ( PtBX + PtBX.transpose() );
 }
 
 Eigen::MatrixXd GeneralizedStiefel::TangentProjection(Eigen::MatrixXd X) const{
-	return GeneralizedStiefelTangentProjection(B, this->P, X);
+	return X - P * symf(P.transpose() * B * X);
 }
 
 Eigen::MatrixXd GeneralizedStiefel::TangentPurification(Eigen::MatrixXd X) const{
-	return GeneralizedStiefelTangentProjection(B, this->P, X);
+	return TangentProjection(X);
 }
 
 void GeneralizedStiefel::setPoint(Eigen::MatrixXd p, bool purify){
@@ -155,8 +153,7 @@ void GeneralizedStiefel::getGradient(){
 }
 
 Eigen::MatrixXd GeneralizedStiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
-	return GeneralizedStiefelTangentProjection(
-		B, this->P,
+	return TangentProjection(
 		Binv * HeX - X * this->P.transpose() * (
 			this->Ge - B * this->Gr
 		)

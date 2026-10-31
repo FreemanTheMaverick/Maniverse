@@ -18,10 +18,7 @@ class Flag: public Stiefel{ public:
 
 	int getDimension() const override;
 
-	Eigen::MatrixXd TangentProjection(Eigen::MatrixXd A) const override;
-	Eigen::MatrixXd TangentPurification(Eigen::MatrixXd A) const override;
-
-	Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const override;
+	Eigen::MatrixXd symf(Eigen::MatrixXd PtX) const override;
 
 	std::unique_ptr<Manifold> Clone() const override;
 	std::shared_ptr<Manifold> Share() const override;
