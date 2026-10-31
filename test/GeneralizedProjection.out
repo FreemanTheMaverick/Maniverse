@@ -1,0 +1,1029 @@
+Configuring linear solver ...
+Frown at non-positive curvature          : 1
+Tolerance of relative quadratic lowering : 1.000000E-04
+Tolerance of relative residual           : 1.000000E-04
+Maximal iterations                       : 39
+Linear solver type                       : Conjugate gradient
+Initializing linear solver for the subproblem of Newton's method ...
+Manifold                                 : GeneralizedStiefel(10, 6)
+Dimension number                         : 39
+******************************* Newton's method ********************************
+
+Manifold: GeneralizedStiefel(10, 6)
+Dimension number: 39
+Maximum number of iterations: 9
+Trust region settings:
+| Initial radius: 1.000000
+| Rho threshold: 0.100000
+Convergence threshold:
+| Target change (T. C.)               : 1.000000E-05
+| Gradient norm (Grad.)               : 1.000000E-05
+| Independent variable update (V. U.) : 1.000000E-05
+
+Iteration 0
+---------------------------------------------------------------
+Trial 0 - 0:
+Step length: 0.000000E+00
+Predicted change in target: 0.000000E+00
+Target = 68.1916641078
+Step score:
+| Predicted and actual changes in target = 0.000000E+00, 6.819166E+01
+| Score of the new step Rho = inf, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change:  6.819166E+01 / 1.000000E-05 / False
+| Gradient    norm:  1.088382E+01 / 1.000000E-05 / False
+| Step length norm:  0.000000E+00 / 1.000000E-05 / True
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 1.1E+01 |       0.0000000000  |  0.0E+00 | 2.4E+00 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000204 seconds for current iteration; 0.000215 seconds in total
+
+Iteration 1
+---------------------------------------------------------------
+Trial 1 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -8.646305E+00
+Target = 60.6892482209
+Step score:
+| Predicted and actual changes in target = -8.646305E+00, -7.502416E+00
+| Score of the new step Rho = 0.867702, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -7.502416E+00 / 1.000000E-05 / False
+| Gradient    norm:  5.916826E+00 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 5.9E+00 |       0.0000000000  |  0.0E+00 | 1.2E+00 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000220 seconds for current iteration; 0.000450 seconds in total
+
+Iteration 2
+---------------------------------------------------------------
+Trial 2 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -3.538753E+00
+Target = 57.4135142882
+Step score:
+| Predicted and actual changes in target = -3.538753E+00, -3.275734E+00
+| Score of the new step Rho = 0.925675, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -3.275734E+00 / 1.000000E-05 / False
+| Gradient    norm:  3.646908E+00 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 3.6E+00 |       0.0000000000  |  0.0E+00 | 1.3E+00 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000201 seconds for current iteration; 0.000668 seconds in total
+
+Iteration 3
+---------------------------------------------------------------
+Trial 3 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -2.249362E+00
+Target = 55.3765742648
+Step score:
+| Predicted and actual changes in target = -2.249362E+00, -2.036940E+00
+| Score of the new step Rho = 0.905564, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -2.036940E+00 / 1.000000E-05 / False
+| Gradient    norm:  2.992025E+00 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 3.0E+00 |       0.0000000000  |  0.0E+00 | 4.9E-01 |  0.000 |
+|    1 | 1.9E+00 |      -0.7278600970  | -7.3E-01 | 1.2E+00 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000165 seconds for current iteration; 0.000866 seconds in total
+
+Iteration 4
+---------------------------------------------------------------
+Trial 4 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -1.402402E+00
+Target = 54.1011826556
+Step score:
+| Predicted and actual changes in target = -1.402402E+00, -1.275392E+00
+| Score of the new step Rho = 0.909433, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -1.275392E+00 / 1.000000E-05 / False
+| Gradient    norm:  6.565723E-01 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 6.6E-01 |       0.0000000000  |  0.0E+00 | 1.3E-01 |  0.000 |
+|    1 | 4.8E-01 |      -0.0440606880  | -4.4E-02 | 2.8E-01 |  0.000 |
+|    2 | 8.5E-02 |      -0.0788322547  | -3.5E-02 | 2.8E-01 |  0.000 |
+|    3 | 5.3E-02 |      -0.0795145693  | -6.8E-04 | 2.9E-01 |  0.000 |
+|    4 | 1.3E-02 |      -0.0798136941  | -3.0E-04 | 2.9E-01 |  0.000 |
+|    5 | 1.4E-02 |      -0.0798453630  | -3.2E-05 | 2.9E-01 |  0.000 |
+|    6 | 2.0E-03 |      -0.0798647720  | -1.9E-05 | 2.9E-01 |  0.000 |
+|    7 | 1.3E-03 |      -0.0798652049  | -4.3E-07 | 2.9E-01 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000241 seconds for current iteration; 0.001116 seconds in total
+
+Iteration 5
+---------------------------------------------------------------
+Trial 5 - 0:
+Step length: 2.865678E-01
+Predicted change in target: -7.986538E-02
+Target = 54.0220520609
+Step score:
+| Predicted and actual changes in target = -7.986538E-02, -7.913059E-02
+| Score of the new step Rho = 0.990800, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -7.913059E-02 / 1.000000E-05 / False
+| Gradient    norm:  2.669389E-03 / 1.000000E-05 / False
+| Step length norm:  2.865678E-01 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 2.7E-03 |       0.0000000000  |  0.0E+00 | 3.1E-04 |  0.000 |
+|    1 | 7.2E-04 |      -0.0000004159  | -4.2E-07 | 5.6E-04 |  0.000 |
+|    2 | 4.2E-04 |      -0.0000005522  | -1.4E-07 | 6.0E-04 |  0.000 |
+|    3 | 2.0E-04 |      -0.0000005663  | -1.4E-08 | 6.2E-04 |  0.000 |
+|    4 | 5.7E-05 |      -0.0000005726  | -6.3E-09 | 6.2E-04 |  0.000 |
+|    5 | 4.4E-05 |      -0.0000005730  | -3.5E-10 | 6.3E-04 |  0.000 |
+|    6 | 4.2E-06 |      -0.0000005732  | -2.3E-10 | 6.3E-04 |  0.000 |
+|    7 | 2.8E-06 |      -0.0000005732  | -2.1E-12 | 6.3E-04 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000255 seconds for current iteration; 0.001380 seconds in total
+
+Iteration 6
+---------------------------------------------------------------
+Trial 6 - 0:
+Step length: 6.253427E-04
+Predicted change in target: -5.732015E-07
+Target = 54.0220514877
+Step score:
+| Predicted and actual changes in target = -5.732015E-07, -5.732015E-07
+| Score of the new step Rho = 1.000000, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -5.732015E-07 / 1.000000E-05 / True
+| Gradient    norm:  6.925574E-07 / 1.000000E-05 / True
+| Step length norm:  6.253427E-04 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with conjugate gradient
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 6.9E-07 |       0.0000000000  |  0.0E+00 | 2.1E-07 |  0.000 |
+|    1 | 5.1E-07 |      -0.0000000000  | -7.1E-14 | 2.7E-07 |  0.000 |
+|    2 | 1.9E-07 |      -0.0000000000  | -1.9E-14 | 2.8E-07 |  0.000 |
+|    3 | 1.4E-07 |      -0.0000000000  | -2.1E-15 | 2.9E-07 |  0.000 |
+|    4 | 1.3E-08 |      -0.0000000000  | -2.1E-15 | 2.9E-07 |  0.000 |
+|    5 | 9.3E-09 |      -0.0000000000  | -1.6E-17 | 2.9E-07 |  0.000 |
+|    6 | 2.3E-09 |      -0.0000000000  | -9.9E-18 | 2.9E-07 |  0.000 |
+|    7 | 1.7E-09 |      -0.0000000000  | -6.2E-19 | 2.9E-07 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000242 seconds for current iteration; 0.001633 seconds in total
+
+Iteration 7
+---------------------------------------------------------------
+Trial 7 - 0:
+Step length: 2.913799E-07
+Predicted change in target: -9.413842E-14
+Target = 54.0220514877
+Step score:
+| Predicted and actual changes in target = -9.413842E-14, -9.237056E-14
+| Score of the new step Rho = 0.981221, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -9.237056E-14 / 1.000000E-05 / True
+| Gradient    norm:  4.054270E-10 / 1.000000E-05 / True
+| Step length norm:  2.913799E-07 / 1.000000E-05 / True
+| Converged!
+Elapsed time: 0.000067 seconds for current iteration; 0.001710 seconds in total
+
+14TestProjection testNewtonCG [32mSuccess![0m
+Configuring linear solver ...
+Frown at non-positive curvature          : 1
+Tolerance of relative quadratic lowering : 1.000000E-04
+Tolerance of relative residual           : 1.000000E-04
+Maximal iterations                       : 39
+Linear solver type                       : MinRes
+Initializing linear solver for the subproblem of Newton's method ...
+Manifold                                 : GeneralizedStiefel(10, 6)
+Dimension number                         : 39
+******************************* Newton's method ********************************
+
+Manifold: GeneralizedStiefel(10, 6)
+Dimension number: 39
+Maximum number of iterations: 10
+Trust region settings:
+| Initial radius: 1.000000
+| Rho threshold: 0.100000
+Convergence threshold:
+| Target change (T. C.)               : 1.000000E-05
+| Gradient norm (Grad.)               : 1.000000E-05
+| Independent variable update (V. U.) : 1.000000E-05
+
+Iteration 0
+---------------------------------------------------------------
+Trial 0 - 0:
+Step length: 0.000000E+00
+Predicted change in target: 0.000000E+00
+Target = 68.1916641078
+Step score:
+| Predicted and actual changes in target = 0.000000E+00, 6.819166E+01
+| Score of the new step Rho = inf, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change:  6.819166E+01 / 1.000000E-05 / False
+| Gradient    norm:  1.088382E+01 / 1.000000E-05 / False
+| Step length norm:  0.000000E+00 / 1.000000E-05 / True
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 1.1E+01 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000106 seconds for current iteration; 0.000113 seconds in total
+
+Iteration 1
+---------------------------------------------------------------
+Trial 1 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -8.646305E+00
+Target = 60.6892482209
+Step score:
+| Predicted and actual changes in target = -8.646305E+00, -7.502416E+00
+| Score of the new step Rho = 0.867702, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -7.502416E+00 / 1.000000E-05 / False
+| Gradient    norm:  5.916826E+00 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 5.9E+00 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+|    1 | 3.7E+00 |      -3.0935554548  | -3.1E+00 | 7.5E-01 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000120 seconds for current iteration; 0.000245 seconds in total
+
+Iteration 2
+---------------------------------------------------------------
+Trial 2 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -4.464538E+00
+Target = 56.7436347583
+Step score:
+| Predicted and actual changes in target = -4.464538E+00, -3.945613E+00
+| Score of the new step Rho = 0.883767, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -3.945613E+00 / 1.000000E-05 / False
+| Gradient    norm:  3.669417E+00 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 3.7E+00 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+|    1 | 2.4E+00 |      -1.2725999643  | -1.3E+00 | 4.8E-01 |  0.000 |
+Out of trust region!
+Elapsed time: 0.000121 seconds for current iteration; 0.000375 seconds in total
+
+Iteration 3
+---------------------------------------------------------------
+Trial 3 - 0:
+Step length: 1.000000E+00
+Predicted change in target: -2.434203E+00
+Target = 54.5822820261
+Step score:
+| Predicted and actual changes in target = -2.434203E+00, -2.161353E+00
+| Score of the new step Rho = 0.887910, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -2.161353E+00 / 1.000000E-05 / False
+| Gradient    norm:  1.657554E+00 / 1.000000E-05 / False
+| Step length norm:  1.000000E+00 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 1.7E+00 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+|    1 | 1.1E+00 |      -0.2576230173  | -2.6E-01 | 2.2E-01 |  0.000 |
+|    2 | 3.0E-01 |      -0.5771055430  | -3.2E-01 | 7.4E-01 |  0.000 |
+|    3 | 1.8E-01 |      -0.5889518937  | -1.2E-02 | 7.9E-01 |  0.000 |
+|    4 | 3.5E-02 |      -0.5950840670  | -6.1E-03 | 8.2E-01 |  0.000 |
+|    5 | 2.3E-02 |      -0.5952873774  | -2.0E-04 | 8.2E-01 |  0.000 |
+|    6 | 8.2E-03 |      -0.5954143956  | -1.3E-04 | 8.3E-01 |  0.000 |
+|    7 | 3.7E-03 |      -0.5954374539  | -2.3E-05 | 8.3E-01 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000252 seconds for current iteration; 0.000636 seconds in total
+
+Iteration 4
+---------------------------------------------------------------
+Trial 4 - 0:
+Step length: 8.252487E-01
+Predicted change in target: -5.954375E-01
+Target = 54.0221143971
+Step score:
+| Predicted and actual changes in target = -5.954375E-01, -5.601676E-01
+| Score of the new step Rho = 0.940767, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -5.601676E-01 / 1.000000E-05 / False
+| Gradient    norm:  2.822325E-02 / 1.000000E-05 / False
+| Step length norm:  8.252487E-01 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 2.8E-02 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+|    1 | 8.7E-03 |      -0.0000481729  | -4.8E-05 | 3.1E-03 |  0.000 |
+|    2 | 1.8E-03 |      -0.0000620305  | -1.4E-05 | 5.2E-03 |  0.000 |
+|    3 | 1.0E-03 |      -0.0000626886  | -6.6E-07 | 5.4E-03 |  0.000 |
+|    4 | 2.6E-04 |      -0.0000628880  | -2.0E-07 | 5.5E-03 |  0.000 |
+|    5 | 1.8E-04 |      -0.0000629010  | -1.3E-08 | 5.5E-03 |  0.000 |
+|    6 | 5.5E-05 |      -0.0000629087  | -7.7E-09 | 5.5E-03 |  0.000 |
+|    7 | 2.6E-05 |      -0.0000629095  | -7.9E-10 | 5.5E-03 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000226 seconds for current iteration; 0.000871 seconds in total
+
+Iteration 5
+---------------------------------------------------------------
+Trial 5 - 0:
+Step length: 5.519024E-03
+Predicted change in target: -6.290950E-05
+Target = 54.0220514878
+Step score:
+| Predicted and actual changes in target = -6.290950E-05, -6.290929E-05
+| Score of the new step Rho = 0.999997, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -6.290929E-05 / 1.000000E-05 / False
+| Gradient    norm:  2.630538E-05 / 1.000000E-05 / False
+| Step length norm:  5.519024E-03 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 2.6E-05 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+|    1 | 1.3E-05 |      -0.0000000000  | -4.9E-11 | 3.0E-06 |  0.000 |
+|    2 | 4.7E-06 |      -0.0000000001  | -4.9E-11 | 8.6E-06 |  0.000 |
+|    3 | 2.8E-06 |      -0.0000000001  | -2.8E-12 | 9.4E-06 |  0.000 |
+|    4 | 1.0E-06 |      -0.0000000001  | -2.3E-12 | 1.0E-05 |  0.000 |
+|    5 | 6.1E-07 |      -0.0000000001  | -1.1E-13 | 1.0E-05 |  0.000 |
+|    6 | 4.1E-07 |      -0.0000000001  | -4.9E-14 | 1.0E-05 |  0.000 |
+|    7 | 1.2E-07 |      -0.0000000001  | -3.6E-14 | 1.0E-05 |  0.000 |
+|    8 | 1.8E-08 |      -0.0000000001  | -3.3E-15 | 1.0E-05 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000242 seconds for current iteration; 0.001124 seconds in total
+
+Iteration 6
+---------------------------------------------------------------
+Trial 6 - 0:
+Step length: 1.037776E-05
+Predicted change in target: -1.033107E-10
+Target = 54.0220514877
+Step score:
+| Predicted and actual changes in target = -1.033107E-10, -1.034550E-10
+| Score of the new step Rho = 1.001397, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -1.034550E-10 / 1.000000E-05 / True
+| Gradient    norm:  1.837631E-08 / 1.000000E-05 / True
+| Step length norm:  1.037776E-05 / 1.000000E-05 / False
+| Not converged yet!
+Linear system solving with MinRes
+Maximal search radius          : 1.000000
+Maximal number of iterations   : 39
+| Itn. |  Resi.  |       Target        |   Diff.  | Length  |  Time  |
+|    0 | 1.8E-08 |       0.0000000000  |  0.0E+00 | 0.0E+00 |  0.000 |
+|    1 | 9.2E-09 |      -0.0000000000  | -2.7E-17 | 2.3E-09 |  0.000 |
+|    2 | 1.9E-09 |      -0.0000000000  | -1.7E-17 | 5.4E-09 |  0.000 |
+|    3 | 1.1E-09 |      -0.0000000000  | -3.9E-19 | 5.6E-09 |  0.000 |
+|    4 | 4.4E-10 |      -0.0000000000  | -2.3E-19 | 5.7E-09 |  0.000 |
+|    5 | 2.5E-10 |      -0.0000000000  | -1.5E-20 | 5.7E-09 |  0.000 |
+|    6 | 8.9E-11 |      -0.0000000000  | -1.6E-20 | 5.7E-09 |  0.000 |
+|    7 | 5.4E-11 |      -0.0000000000  | -9.5E-22 | 5.7E-09 |  0.000 |
+Tolerance met!
+Elapsed time: 0.000229 seconds for current iteration; 0.001363 seconds in total
+
+Iteration 7
+---------------------------------------------------------------
+Trial 7 - 0:
+Step length: 5.714722E-09
+Predicted change in target: -4.424653E-17
+Target = 54.0220514877
+Step score:
+| Predicted and actual changes in target = -4.424653E-17, -9.947598E-14
+| Score of the new step Rho = 2248.221116, compared with RhoThreshold 0.100000
+| Step accepted
+Trust radius is adjusted to 1.000000
+---------------------------------------------------------------
+Convergence info: current / threshold / converged?
+| Target    change: -9.947598E-14 / 1.000000E-05 / True
+| Gradient    norm:  5.386234E-11 / 1.000000E-05 / True
+| Step length norm:  5.714722E-09 / 1.000000E-05 / True
+| Converged!
+Elapsed time: 0.000067 seconds for current iteration; 0.001438 seconds in total
+
+14TestProjection testNewtonMR [32mSuccess![0m
+*************** Limited-Memory Broyden–Fletcher–Goldfarb–Shanno ***************
+
+Manifold: GeneralizedStiefel(10, 6)
+Dimension number: 39
+Maximum number of iterations: 19
+Maximum memory of previous iterations: 20
+Convergence threshold:
+| Target change (T. C.)               : 1.000000E-05
+| Gradient norm (Grad.)               : 1.000000E-05
+| Independent variable update (V. U.) : 1.000000E-05
+
+Iteration 0
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 0.00E+00 |    68.1916641078  |         6.82E+01  |  0.000 |
+Target = 68.1916641078
+Convergence info: current / threshold / converged?
+| Target    change:  6.819166E+01 / 1.000000E-05 / False
+| Gradient    norm:  1.088382E+01 / 1.000000E-05 / False
+| Step length norm:  0.000000E+00 / 1.000000E-05 / True
+| Not converged yet!
+Current memory size: 0
+Elapsed time: 0.000057 seconds for current iteration; 0.000061 seconds in total
+
+Iteration 1
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 1.09E+01 |    -9.6975222116  |         2.15E+00  |  0.000 |
+|    1 |  7.50E-01 | 8.16E+00 |    -9.9820706267  |        -1.10E+00  |  0.000 |
+Target = 58.2095934810
+Convergence info: current / threshold / converged?
+| Target    change: -9.982071E+00 / 1.000000E-05 / False
+| Gradient    norm:  6.534599E+00 / 1.000000E-05 / False
+| Step length norm:  8.162862E+00 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 1
+Elapsed time: 0.000128 seconds for current iteration; 0.000194 seconds in total
+
+Iteration 2
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 2.29E-01 |    -0.9415253272  |        -8.38E-01  |  0.000 |
+Target = 57.2680681539
+Convergence info: current / threshold / converged?
+| Target    change: -9.415253E-01 / 1.000000E-05 / False
+| Gradient    norm:  5.588882E+00 / 1.000000E-05 / False
+| Step length norm:  2.292112E-01 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 2
+Elapsed time: 0.000136 seconds for current iteration; 0.000335 seconds in total
+
+Iteration 3
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 1.28E+00 |    -2.1984677071  |        -1.52E+00  |  0.000 |
+Target = 55.0696004467
+Convergence info: current / threshold / converged?
+| Target    change: -2.198468E+00 / 1.000000E-05 / False
+| Gradient    norm:  3.037934E+00 / 1.000000E-05 / False
+| Step length norm:  1.279522E+00 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 3
+Elapsed time: 0.000182 seconds for current iteration; 0.000522 seconds in total
+
+Iteration 4
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 6.23E-01 |    -0.6956612213  |        -5.75E-01  |  0.000 |
+Target = 54.3739392254
+Convergence info: current / threshold / converged?
+| Target    change: -6.956612E-01 / 1.000000E-05 / False
+| Gradient    norm:  1.552867E+00 / 1.000000E-05 / False
+| Step length norm:  6.233697E-01 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 4
+Elapsed time: 0.000203 seconds for current iteration; 0.000730 seconds in total
+
+Iteration 5
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 3.63E-01 |    -0.2827175574  |        -2.37E-01  |  0.000 |
+Target = 54.0912216680
+Convergence info: current / threshold / converged?
+| Target    change: -2.827176E-01 / 1.000000E-05 / False
+| Gradient    norm:  5.970697E-01 / 1.000000E-05 / False
+| Step length norm:  3.628343E-01 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 5
+Elapsed time: 0.000269 seconds for current iteration; 0.001004 seconds in total
+
+Iteration 6
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 2.34E-01 |    -0.0496276298  |        -3.68E-02  |  0.000 |
+Target = 54.0415940382
+Convergence info: current / threshold / converged?
+| Target    change: -4.962763E-02 / 1.000000E-05 / False
+| Gradient    norm:  4.727840E-01 / 1.000000E-05 / False
+| Step length norm:  2.336547E-01 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 6
+Elapsed time: 0.000274 seconds for current iteration; 0.001284 seconds in total
+
+Iteration 7
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 6.86E-02 |    -0.0142849866  |        -1.13E-02  |  0.000 |
+Target = 54.0273090516
+Convergence info: current / threshold / converged?
+| Target    change: -1.428499E-02 / 1.000000E-05 / False
+| Gradient    norm:  1.816071E-01 / 1.000000E-05 / False
+| Step length norm:  6.856581E-02 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 7
+Elapsed time: 0.000325 seconds for current iteration; 0.001615 seconds in total
+
+Iteration 8
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 2.25E-02 |    -0.0027169692  |        -2.35E-03  |  0.000 |
+Target = 54.0245920824
+Convergence info: current / threshold / converged?
+| Target    change: -2.716969E-03 / 1.000000E-05 / False
+| Gradient    norm:  9.639003E-02 / 1.000000E-05 / False
+| Step length norm:  2.254212E-02 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 8
+Elapsed time: 0.000347 seconds for current iteration; 0.001967 seconds in total
+
+Iteration 9
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 3.72E-02 |    -0.0019419937  |        -1.62E-03  |  0.000 |
+Target = 54.0226500886
+Convergence info: current / threshold / converged?
+| Target    change: -1.941994E-03 / 1.000000E-05 / False
+| Gradient    norm:  5.082209E-02 / 1.000000E-05 / False
+| Step length norm:  3.724876E-02 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 9
+Elapsed time: 0.000376 seconds for current iteration; 0.002353 seconds in total
+
+Iteration 10
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 2.01E-02 |    -0.0005185325  |        -4.37E-04  |  0.000 |
+Target = 54.0221315561
+Convergence info: current / threshold / converged?
+| Target    change: -5.185325E-04 / 1.000000E-05 / False
+| Gradient    norm:  2.458868E-02 / 1.000000E-05 / False
+| Step length norm:  2.012157E-02 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 10
+Elapsed time: 0.000405 seconds for current iteration; 0.002764 seconds in total
+
+Iteration 11
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 1.14E-02 |     0.0000118988  |         3.28E-05  |  0.000 |
+|    1 |  7.50E-01 | 8.58E-03 |    -0.0000324223  |        -1.68E-05  |  0.000 |
+Target = 54.0220991338
+Convergence info: current / threshold / converged?
+| Target    change: -3.242232E-05 / 1.000000E-05 / False
+| Gradient    norm:  2.932790E-02 / 1.000000E-05 / False
+| Step length norm:  8.577505E-03 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 11
+Elapsed time: 0.000443 seconds for current iteration; 0.003213 seconds in total
+
+Iteration 12
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 3.66E-03 |    -0.0000468730  |        -3.68E-05  |  0.000 |
+Target = 54.0220522608
+Convergence info: current / threshold / converged?
+| Target    change: -4.687295E-05 / 1.000000E-05 / False
+| Gradient    norm:  2.497062E-03 / 1.000000E-05 / False
+| Step length norm:  3.658196E-03 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 12
+Elapsed time: 0.000465 seconds for current iteration; 0.003684 seconds in total
+
+Iteration 13
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 6.51E-04 |    -0.0000006171  |        -5.07E-07  |  0.000 |
+Target = 54.0220516437
+Convergence info: current / threshold / converged?
+| Target    change: -6.170815E-07 / 1.000000E-05 / True
+| Gradient    norm:  8.726161E-04 / 1.000000E-05 / False
+| Step length norm:  6.512098E-04 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 13
+Elapsed time: 0.000517 seconds for current iteration; 0.004207 seconds in total
+
+Iteration 14
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 2.21E-04 |    -0.0000001242  |        -1.06E-07  |  0.000 |
+Target = 54.0220515196
+Convergence info: current / threshold / converged?
+| Target    change: -1.241766E-07 / 1.000000E-05 / True
+| Gradient    norm:  4.160141E-04 / 1.000000E-05 / False
+| Step length norm:  2.206746E-04 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 14
+Elapsed time: 0.000540 seconds for current iteration; 0.004753 seconds in total
+
+Iteration 15
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 2.04E-04 |    -0.0000000160  |        -8.24E-09  |  0.000 |
+Target = 54.0220515036
+Convergence info: current / threshold / converged?
+| Target    change: -1.599395E-08 / 1.000000E-05 / True
+| Gradient    norm:  5.346733E-04 / 1.000000E-05 / False
+| Step length norm:  2.038520E-04 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 15
+Elapsed time: 0.000629 seconds for current iteration; 0.005388 seconds in total
+
+Iteration 16
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 7.08E-05 |    -0.0000000150  |        -1.14E-08  |  0.000 |
+Target = 54.0220514886
+Convergence info: current / threshold / converged?
+| Target    change: -1.499859E-08 / 1.000000E-05 / True
+| Gradient    norm:  1.061242E-04 / 1.000000E-05 / False
+| Step length norm:  7.083031E-05 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 16
+Elapsed time: 0.000617 seconds for current iteration; 0.006011 seconds in total
+
+Iteration 17
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 1.93E-05 |    -0.0000000008  |        -6.55E-10  |  0.000 |
+Target = 54.0220514878
+Convergence info: current / threshold / converged?
+| Target    change: -8.166197E-10 / 1.000000E-05 / True
+| Gradient    norm:  1.094193E-05 / 1.000000E-05 / False
+| Step length norm:  1.931524E-05 / 1.000000E-05 / False
+| Not converged yet!
+Current memory size: 17
+Elapsed time: 0.000614 seconds for current iteration; 0.006631 seconds in total
+
+Iteration 18
+Armijo backtracking line search on the tangent space of GeneralizedStiefel(10, 6) manifold
+Armijo's C1: 0.100000
+Shrinking rate tau: 0.750000
+| Itn. |   Ratio   |   Step   |      Target       |  Target - L.H.S.  |  Time  |
+|    0 |  1.00E+00 | 1.79E-06 |    -0.0000000000  |        -1.27E-11  |  0.000 |
+Target = 54.0220514877
+Convergence info: current / threshold / converged?
+| Target    change: -1.464429E-11 / 1.000000E-05 / True
+| Gradient    norm:  5.867839E-06 / 1.000000E-05 / True
+| Step length norm:  1.794393E-06 / 1.000000E-05 / True
+| Converged!
+Elapsed time: 0.000584 seconds for current iteration; 0.007221 seconds in total
+
+14TestProjection testLBFGS [32mSuccess![0m
+Configuring Lanczos diagonalization of hessian
+Manifold: GeneralizedStiefel(10, 6)
+Dimension number: 39
+Generalized eigendecomposition: No
+Extra constraint: No
+*************************** Lanczos diagonalization ***************************
+
+Size of each vector: 60
+Number of eigenpairs attempted: 39
+
+Iteration 0:
+Beta = 1.000000
+Alpha = 4.797187
+Found 1 eigenvalues: 4.797187
+Elapsed time: 0.000028 seconds for current iteration; 0.000043 seconds in total
+
+Iteration 1:
+Beta = 5.329172
+Alpha = 13.338142
+Found 2 eigenvalues: 2.238532 15.896797
+Elapsed time: 0.000022 seconds for current iteration; 0.000070 seconds in total
+
+Iteration 2:
+Beta = 2.606622
+Alpha = 6.368267
+Found 3 eigenvalues: 1.924168 6.130002 16.449426
+Elapsed time: 0.000027 seconds for current iteration; 0.000102 seconds in total
+
+Iteration 3:
+Beta = 3.816270
+Alpha = 5.877059
+Found 4 eigenvalues: 1.346736 2.913667 9.589268 16.530983
+Elapsed time: 0.000028 seconds for current iteration; 0.000135 seconds in total
+
+Iteration 4:
+Beta = 0.985490
+Alpha = 3.376927
+Found 5 eigenvalues: 1.238425 2.584599 3.739300 9.663632 16.531625
+Elapsed time: 0.000031 seconds for current iteration; 0.000171 seconds in total
+
+Iteration 5:
+Beta = 2.022356
+Alpha = 7.570629
+Found 6 eigenvalues: 1.190201 2.288368 3.273855 8.348009 9.696129 16.531649
+Elapsed time: 0.000041 seconds for current iteration; 0.000217 seconds in total
+
+Iteration 6:
+Beta = 2.191901
+Alpha = 2.890421
+Found 7 eigenvalues: 1.125446 1.665845 2.646443 3.524209 9.001998 9.723040 16.531650
+Elapsed time: 0.000041 seconds for current iteration; 0.000263 seconds in total
+
+Iteration 7:
+Beta = 1.040534
+Alpha = 6.829577
+Found 8 eigenvalues: 1.107893 1.572822 2.593853 3.479484 6.985872 9.050744 9.725890 16.531650
+Elapsed time: 0.000041 seconds for current iteration; 0.000309 seconds in total
+
+Iteration 8:
+Beta = 3.218299
+Alpha = 5.170204
+Found 9 eigenvalues: 1.087543 1.474202 2.431180 2.965860 3.587162 8.885162 9.512929 9.742724 16.531650
+Elapsed time: 0.000048 seconds for current iteration; 0.000363 seconds in total
+
+Iteration 9:
+Beta = 0.774203
+Alpha = 5.171329
+Found 10 eigenvalues: 1.085896 1.465720 2.391040 2.883037 3.562383 5.277287 8.897543 9.548743 9.746443 16.531650
+Elapsed time: 0.000052 seconds for current iteration; 0.000419 seconds in total
+
+Iteration 10:
+Beta = 3.457726
+Alpha = 6.815818
+Found 11 eigenvalues: 1.083880 1.450467 2.101272 2.560576 3.133505 3.614674 8.860432 9.314642 9.712865 9.841596 16.531650
+Elapsed time: 0.000056 seconds for current iteration; 0.000481 seconds in total
+
+Iteration 11:
+Beta = 1.000940
+Alpha = 5.377451
+Found 12 eigenvalues: 1.083680 1.448195 2.037682 2.535521 3.096102 3.606427 5.369230 8.868272 9.372656 9.724080 9.909515 16.531650
+Elapsed time: 0.000058 seconds for current iteration; 0.000544 seconds in total
+
+Iteration 12:
+Beta = 3.252338
+Alpha = 6.567735
+Found 13 eigenvalues: 1.083485 1.444779 1.898616 2.449413 2.794882 3.237898 3.625639 8.798891 8.974474 9.499954 9.736833 10.074230 16.531650
+Elapsed time: 0.000079 seconds for current iteration; 0.000628 seconds in total
+
+Iteration 13:
+Beta = 0.624546
+Alpha = 2.256693
+Found 14 eigenvalues: 1.083458 1.443742 1.799936 2.134957 2.499952 2.891199 3.276507 3.628365 8.807519 8.987825 9.504935 9.737243 10.080149 16.531650
+Elapsed time: 0.000070 seconds for current iteration; 0.000703 seconds in total
+
+Iteration 14:
+Beta = 0.402930
+Alpha = 2.148302
+Found 15 eigenvalues: 1.083454 1.443139 1.660188 1.942787 2.383788 2.559196 2.921694 3.283427 3.628636 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650
+Elapsed time: 0.000073 seconds for current iteration; 0.000781 seconds in total
+
+Iteration 15:
+Beta = 0.573765
+Alpha = 1.834219
+Found 16 eigenvalues: 1.083449 1.310561 1.444415 1.803587 2.079531 2.469394 2.690720 2.944686 3.285502 3.628679 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650
+Elapsed time: 0.000076 seconds for current iteration; 0.000862 seconds in total
+
+Iteration 16:
+Beta = 0.299170
+Alpha = 2.303701
+Found 17 eigenvalues: 1.083448 1.267177 1.444123 1.785667 2.036063 2.338717 2.491868 2.732577 2.950222 3.285685 3.628680 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650
+Elapsed time: 0.000083 seconds for current iteration; 0.000953 seconds in total
+
+Iteration 17:
+Beta = 0.337824
+Alpha = 2.975761
+Found 18 eigenvalues: 1.083448 1.264183 1.444102 1.782009 2.018448 2.245107 2.479904 2.710569 2.945370 3.132355 3.285811 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650
+Elapsed time: 0.000087 seconds for current iteration; 0.001044 seconds in total
+
+Iteration 18:
+Beta = 1.536464
+Alpha = 16.098176
+Found 19 eigenvalues: 1.083448 1.263855 1.444100 1.781293 2.013501 2.223667 2.477510 2.700994 2.935328 3.004257 3.285748 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.275782 16.531650
+Elapsed time: 0.000092 seconds for current iteration; 0.001141 seconds in total
+
+Iteration 19:
+Beta = 1.896961
+Alpha = 2.648241
+Found 20 eigenvalues: 1.083448 1.263776 1.444099 1.780914 2.008509 2.185052 2.368952 2.482573 2.709223 2.942580 3.051220 3.285759 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531619 16.531650
+Elapsed time: 0.000098 seconds for current iteration; 0.001244 seconds in total
+
+Iteration 20:
+Beta = 0.156438
+Alpha = 2.178354
+Found 21 eigenvalues: 1.083448 1.263774 1.444099 1.780867 2.004786 2.080694 2.215465 2.431805 2.487467 2.710177 2.942810 3.053277 3.285760 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650
+Elapsed time: 0.000111 seconds for current iteration; 0.001360 seconds in total
+
+Iteration 21:
+Beta = 0.228708
+Alpha = 2.318847
+Found 22 eigenvalues: 1.083448 1.263774 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.536390 2.710545 2.942839 3.053466 3.285760 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650
+Elapsed time: 0.000113 seconds for current iteration; 0.001478 seconds in total
+
+Iteration 22:
+Beta = 0.000000
+Alpha = 1.466596
+Found 23 eigenvalues: 1.083448 1.263774 1.444099 1.466596 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.536390 2.710545 2.942839 3.053466 3.285760 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650
+Elapsed time: 0.000120 seconds for current iteration; 0.001603 seconds in total
+
+Iteration 23:
+Beta = 1.326439
+Alpha = 11.217902
+Found 24 eigenvalues: 1.083448 1.263774 1.289385 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.536390 2.710545 2.942839 3.053466 3.285760 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 11.395112 16.531650 16.531650
+Elapsed time: 0.000117 seconds for current iteration; 0.001725 seconds in total
+
+Iteration 24:
+Beta = 6.436778
+Alpha = 8.559266
+Found 25 eigenvalues: 1.083448 1.083465 1.263774 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.536390 2.710545 2.942839 3.053466 3.285760 3.628652 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531647 16.531650 16.531650
+Elapsed time: 0.000125 seconds for current iteration; 0.001855 seconds in total
+
+Iteration 25:
+Beta = 0.010662
+Alpha = 1.444711
+Found 26 eigenvalues: 1.083448 1.083448 1.263774 1.444099 1.444696 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.536390 2.710545 2.942839 3.053466 3.285760 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650
+Elapsed time: 0.000123 seconds for current iteration; 0.001982 seconds in total
+
+Iteration 26:
+Beta = 0.029915
+Alpha = 2.941681
+Found 27 eigenvalues: 1.083448 1.083448 1.263774 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.536390 2.710545 2.942279 2.942839 3.053466 3.285760 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650
+Elapsed time: 0.000129 seconds for current iteration; 0.002116 seconds in total
+
+Iteration 27:
+Beta = 0.016121
+Alpha = 2.478812
+Found 28 eigenvalues: 1.083448 1.083448 1.263774 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650
+Elapsed time: 0.000130 seconds for current iteration; 0.002251 seconds in total
+
+Iteration 28:
+Beta = 0.000000
+Alpha = 16.531641
+Found 29 eigenvalues: 1.083448 1.083448 1.263774 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531641 16.531650 16.531650 16.531650
+Elapsed time: 0.000139 seconds for current iteration; 0.002395 seconds in total
+
+Iteration 29:
+Beta = 0.011052
+Alpha = 2.250205
+Found 30 eigenvalues: 1.083448 1.083448 1.263774 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.250197 2.356064 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000146 seconds for current iteration; 0.002545 seconds in total
+
+Iteration 30:
+Beta = 1.268205
+Alpha = 2.461932
+Found 31 eigenvalues: 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000156 seconds for current iteration; 0.002707 seconds in total
+
+Iteration 31:
+Beta = 0.000224
+Alpha = 1.445599
+Found 32 eigenvalues: 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.445599 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000150 seconds for current iteration; 0.002867 seconds in total
+
+Iteration 32:
+Beta = 0.047390
+Alpha = 2.941196
+Found 33 eigenvalues: 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.536390 2.710545 2.942697 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000156 seconds for current iteration; 0.003028 seconds in total
+
+Iteration 33:
+Beta = 0.008128
+Alpha = 2.478394
+Found 34 eigenvalues: 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000158 seconds for current iteration; 0.003191 seconds in total
+
+Iteration 34:
+Beta = 0.000000
+Alpha = 1.880199
+Found 35 eigenvalues: 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.780850 1.880199 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000168 seconds for current iteration; 0.003364 seconds in total
+
+Iteration 35:
+Beta = 1.180298
+Alpha = 2.831930
+Found 36 eigenvalues: 1.083448 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000169 seconds for current iteration; 0.003538 seconds in total
+
+Iteration 36:
+Beta = 0.000043
+Alpha = 1.445778
+Found 37 eigenvalues: 1.083448 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.445778 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000204 seconds for current iteration; 0.003747 seconds in total
+
+Iteration 37:
+Beta = 0.050139
+Alpha = 2.941148
+Found 38 eigenvalues: 1.083448 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.478252 2.536390 2.710545 2.942827 2.942839 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000182 seconds for current iteration; 0.003936 seconds in total
+
+Iteration 38:
+Beta = 0.002357
+Alpha = 2.478264
+Found 39 eigenvalues: 1.083448 1.083448 1.083448 1.083448 1.263774 1.444099 1.444099 1.444099 1.444099 1.780850 1.961175 2.013143 2.193469 2.356064 2.478252 2.478252 2.478252 2.478252 2.536390 2.710545 2.942839 2.942839 2.942839 2.942839 3.053466 3.285760 3.628681 3.628681 3.628681 3.628681 8.807549 8.987874 9.504951 9.737244 10.080165 16.531650 16.531650 16.531650 16.531650
+Elapsed time: 0.000185 seconds for current iteration; 0.004126 seconds in total
+14TestProjection testLanczos [32mSuccess![0m
