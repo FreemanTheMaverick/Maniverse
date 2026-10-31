@@ -164,13 +164,10 @@ void Stiefel::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-Eigen::MatrixXd Stiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
+Eigen::MatrixXd Stiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
 	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	if ( ! weingarten ) return StiefelTangentProjection(this->P, HeX);
-	else{
-		const Eigen::MatrixXd tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
-		return StiefelTangentProjection(this->P, HeX - 0.5 * X * tmp);
-	}
+	const Eigen::MatrixXd tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
+	return StiefelTangentProjection(this->P, HeX - 0.5 * X * tmp);
 }
 
 std::unique_ptr<Manifold> Stiefel::Clone() const{

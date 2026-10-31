@@ -150,16 +150,14 @@ void Grassmann::getGradient(){
 	this->Gr = this->TangentPurification(this->TangentProjection(this->Ge));
 }
 
-Eigen::MatrixXd Grassmann::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
+Eigen::MatrixXd Grassmann::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
 	// https://arxiv.org/abs/0709.2205
 	const Eigen::MatrixXd PHeX = P * HeX;
 	const Eigen::MatrixXd partA = PHeX - PHeX.transpose();
-	if ( weingarten ){
-		const Eigen::MatrixXd GeX = Ge * X;
-		const Eigen::MatrixXd partB = GeX - GeX.transpose();
-		const Eigen::MatrixXd sum = partA - partB;
-		return (Eigen::MatrixXd)(2 * P * sum);
-	}else return (Eigen::MatrixXd)(2 * P * partA);
+	const Eigen::MatrixXd GeX = Ge * X;
+	const Eigen::MatrixXd partB = GeX - GeX.transpose();
+	const Eigen::MatrixXd sum = partA - partB;
+	return (Eigen::MatrixXd)(2 * P * sum);
 }
 
 std::unique_ptr<Manifold> Grassmann::Clone() const{

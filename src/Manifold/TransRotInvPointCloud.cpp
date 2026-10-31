@@ -115,7 +115,7 @@ void TransRotInvPointCloud::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-Eigen::MatrixXd TransRotInvPointCloud::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/, bool /*weingarten*/) const{
+Eigen::MatrixXd TransRotInvPointCloud::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd /*X*/) const{
 	return this->TangentProjection(HeX);
 }
 

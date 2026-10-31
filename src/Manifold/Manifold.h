@@ -56,7 +56,7 @@ class Manifold{ public:
 	virtual void setPoint(Eigen::MatrixXd p, bool purify);
 
 	virtual void getGradient();
-	virtual Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const;
+	virtual Eigen::MatrixXd getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const;
 
 	virtual ~Manifold() = default;
 	virtual std::unique_ptr<Manifold> Clone() const;

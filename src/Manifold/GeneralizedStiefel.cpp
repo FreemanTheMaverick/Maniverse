@@ -154,7 +154,7 @@ void GeneralizedStiefel::getGradient(){
 	this->Gr = this->TangentProjection(this->Sharp(this->Ge));
 }
 
-Eigen::MatrixXd GeneralizedStiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
+Eigen::MatrixXd GeneralizedStiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
 	return GeneralizedStiefelTangentProjection(
 		B, this->P,
 		Binv * HeX - X * this->P.transpose() * (

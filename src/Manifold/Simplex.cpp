@@ -88,7 +88,7 @@ static Eigen::MatrixXd Projection(Eigen::MatrixXd P, Eigen::MatrixXd A){
 	return ( Eigen::MatrixXd::Identity(n, n) - tmp ) * A;
 }
 
-Eigen::MatrixXd Simplex::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
+Eigen::MatrixXd Simplex::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
 	const int n = this->P.size();
 	const Eigen::MatrixXd ones = Eigen::MatrixXd::Zero(n, n).array() + 1;
 	const Eigen::MatrixXd proj = Projection(this->P, Eigen::MatrixXd::Identity(n, n));
@@ -98,8 +98,7 @@ Eigen::MatrixXd Simplex::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool
 			- ones * this->Ge.cwiseProduct(this->P)
 			- 0.5 * this->Gr.cwiseProduct(this->P.cwiseInverse())
 	).asDiagonal();
-	if ( weingarten ) return (Eigen::MatrixXd)(M * HeX + N * X);
-	else return (Eigen::MatrixXd)(M * HeX); // Not sure about this one.
+	return (Eigen::MatrixXd)(M * HeX + N * X);
 }
 
 std::unique_ptr<Manifold> Simplex::Clone() const{

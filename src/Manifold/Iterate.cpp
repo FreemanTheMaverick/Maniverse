@@ -47,7 +47,7 @@ Eigen::VectorXd Constraint::Hessian(Eigen::VectorXd Xvec) const{
 
 	Eigen::VectorXd HrXvec = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < nmans; iman++ ){
-		MV_Block(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman], 1);
+		MV_Block(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman]);
 	}
 	return HrXvec;
 }
@@ -135,7 +135,7 @@ Eigen::VectorXd Iterate::ObjectiveHessian(Eigen::VectorXd Xvec) const{
 
 	Eigen::VectorXd HrXvec = Eigen::VectorXd::Zero(this->TotalSize);
 	for ( int iman = 0; iman < nmans; iman++ ){
-		MV_Block(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman], 1);
+		MV_Block(HrXvec, iman, this->BlockParameters) = this->Manifolds[iman]->getHessian(HeX[iman], X[iman]);
 	}
 	return HrXvec;
 }

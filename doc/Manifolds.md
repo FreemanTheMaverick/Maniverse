@@ -57,7 +57,7 @@ and understand the consequences.
 | `TangentPurification(A)` | Applies the tangent-space purification operation defined by the concrete manifold implementation. |
 | `setPoint(p, purify)` | Updates `P` to `p`. When `purify=true`, the point is purified or projected according to the manifold's implementation before use. |
 | `getGradient()` | Computes the manifold's Riemannian gradient from the stored Euclidean gradient `Ge`, updates `Gr`. |
-| `getHessian(HeX, X, weingarten)` | Applies the manifold-specific Riemannian Hessian operation using a Euclidean Hessian-vector product `HeX` and tangent vector `X`. When `weingarten=true`, the Weingarten map is included in the computation; otherwise only the projected Euclidean Hessian term is used.|
+| `getHessian(HeX, X)` | Applies the manifold-specific Riemannian Hessian operation using a Euclidean Hessian-vector product `HeX` and tangent vector `X`, including the Weingarten map where applicable. |
 | `Clone()` | Returns a copied manifold object. |
 | `Share()` | Returns a shared-ownership manifold object suitable for APIs expecting shared pointers. |
 
