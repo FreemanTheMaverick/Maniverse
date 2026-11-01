@@ -1,0 +1,95 @@
+import unittest as ut
+import numpy as np
+import Maniverse as mv
+
+# Symmetric diagonalization
+# Finding the eigenvalues and eigenvectors of a symmetric A
+# Minimize L(n, C) = || C diag(n) C.t - A ||^2
+# A \in Sym(10)
+# n \in R(10)
+# C \in O(10)
+
+class Obj(mv.Function):
+	def __init__(self):
+		super().__init__()
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',').reshape([10, 10])
+
+	def Calculate(self, X, derivatives):
+		n = self.n = X[0][:, 0]
+		C = self.C = X[1]
+		if 0 in derivatives:
+			self.Value = np.linalg.norm( C * n @ C.T - self.A ) ** 2
+		if 1 in derivatives:
+			Gn = 2 * ( n - np.diag( C.T @ self.A @ C ) )
+			GC = 4 * ( C * n ** 2 - self.A @ C * n )
+			self.Gradient = [ Gn, GC ]
+
+	def Hessian(self, V):
+		n = self.n
+		C = self.C
+		delta_n = V[0][:, 0]
+		delta_C = V[1]
+		Hnn = 2 * delta_n
+		HnC = - 4 * np.diag( C.T @ self.A @ delta_C )
+		HCn = 8 * C * n * delta_n - 4 * self.A @ C * delta_n
+		HCC = 4 * ( delta_C * n ** 2 - self.A @ delta_C * n )
+		return [
+					Hnn + HnC,
+					HCn + HCC
+		]
+
+class TestDiagonalization(ut.TestCase):
+	def __init__(self, *args):
+		super().__init__(*args)
+		self.Obj = Obj()
+		self.Manifold0 = mv.Euclidean(np.zeros(10))
+		self.Manifold1 = mv.Orthogonal(np.eye(10))
+		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
+		self.Solution0, self.Solution1 = np.linalg.eigh(self.Obj.A)
+
+	def testNewtonCG(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(cg, M)
+		converged = mv.Newton(
+				M, tr, cg, self.Tolerance, 26, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
+
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(mr, M)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 27, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
+
+	def testLBFGS(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		converged = mv.LBFGS(
+				M, self.Tolerance,
+				100, 110, 0.1, 0.75, 5, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
+
+	def testLanczos(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1])
+		M.setPoint([self.Solution0, self.Solution1], 1)
+		M.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient()
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
+		for i in range(len(Evals)):
+			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			assert residual < 1e-5
+
+if __name__ == "__main__":
+	TestDiagonalization().testNewtonCG()
+	TestDiagonalization().testNewtonMR()
+	TestDiagonalization().testLBFGS()
+	TestDiagonalization().testLanczos()
