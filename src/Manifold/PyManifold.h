@@ -8,7 +8,6 @@ Init_TransRotInvPointCloud(m);
 Init_RealSymmetric(m);
 
 Init_Stiefel(m);
-Init_GeneralizedStiefel(m);
 Init_Orthogonal(m);
 Init_Grassmann(m);
 Init_Flag(m);
@@ -27,7 +26,6 @@ void Init_TransRotInvPointCloud(pybind11::module_& m);
 void Init_RealSymmetric(pybind11::module_& m);
 
 void Init_Stiefel(pybind11::module_& m);
-void Init_GeneralizedStiefel(pybind11::module_& m);
 void Init_Orthogonal(pybind11::module_& m);
 void Init_Grassmann(pybind11::module_& m);
 void Init_Flag(pybind11::module_& m);

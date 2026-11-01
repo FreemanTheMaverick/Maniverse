@@ -12,15 +12,35 @@
 
 namespace Maniverse{
 
+// Generalized: https://doi.org/10.1016/j.cam.2022.114953
+// https://doi.org/10.1109/TSP.2012.2226167
+// https://doi.org/10.1007/s10589-016-9883-4
+
 Stiefel::Stiefel(Eigen::MatrixXd p, std::string geodesic): Manifold(p, geodesic){
 	__Check_Geodesic__("EXACT", "POLAR", "QR")
 	this->Name = "Stiefel("
 		+ std::to_string(p.rows())
 		+ ", "
 		+ std::to_string(p.cols())
-		+ ")";
+	+ ")";
 	if ( ! ( p.transpose() * p ).isApprox(Eigen::MatrixXd::Identity(p.cols(), p.cols())) )
 		throw std::runtime_error("A Stiefel matrix must fulfill Ut.U = I!");
+}
+
+Stiefel::Stiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std::string geodesic): Manifold(p, geodesic), B(B){
+	__Check_Geodesic__("EXACT", "POLAR", "QR")
+	this->Name = "GeneralizedStiefel("
+		+ std::to_string(p.rows())
+		+ ", "
+		+ std::to_string(p.cols())
+	+ ")";
+	if ( ! ( p.transpose() * B * p ).isApprox(Eigen::MatrixXd::Identity(p.cols(), p.cols())) )
+		throw std::runtime_error("A GeneralizedStiefel matrix must fulfill Ut.B.U = I!");
+	if ( ! B.transpose().isApprox(B) ) throw std::runtime_error("The B-matrix must be symmetric!");
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(B);
+	if ( es.eigenvalues()(0) <= 0 ) throw std::runtime_error("The B-matrix must be positive definite!");
+	Binv = es.eigenvectors() * es.eigenvalues().cwiseInverse().asDiagonal() * es.eigenvectors().transpose();
+	Bsqrt = es.operatorSqrt();
 }
 
 int Stiefel::getDimension() const{
@@ -30,42 +50,45 @@ int Stiefel::getDimension() const{
 }
 
 double Stiefel::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
-	return X.cwiseProduct(Y).sum();
+	return X.cwiseProduct(B.size() ? ( B * Y ).eval() : Y).sum();
 }
 
 Eigen::MatrixXd Stiefel::Flat(Eigen::MatrixXd X) const{
-	return X;
+	return B.size() ? ( B * X ).eval() : X;
 }
 
 Eigen::MatrixXd Stiefel::Sharp(Eigen::MatrixXd X) const{
-	return X;
+	return B.size() ? ( Binv * X ).eval() : X;
 }
 
 Eigen::MatrixXd Stiefel::Retract(Eigen::MatrixXd X) const{
 	const int nrows = X.rows();
 	const int ncols = X.cols();
+	const Eigen::MatrixXd BX = B.size() ? ( B * X ).eval() : X;
 	if ( this->Geodesic == "EXACT" ){
 		Eigen::MatrixXd A = Eigen::MatrixXd::Zero(nrows, 2 * ncols);
 		A << this->P, X;
 		Eigen::MatrixXd B = Eigen::MatrixXd::Zero(2 * ncols, 2 * ncols);
 		B.topLeftCorner(ncols, ncols) = B.bottomRightCorner(ncols, ncols) = this->P.transpose() * X;
-		B.topRightCorner(ncols, ncols) = - X.transpose() * X;
+		B.topRightCorner(ncols, ncols) = - X.transpose() * BX;
 		B.bottomLeftCorner(ncols, ncols) = Eigen::MatrixXd::Identity(ncols, ncols);
 		Eigen::MatrixXd C = Eigen::MatrixXd::Zero(2 * ncols, ncols);
 		C.topRows(ncols) = ( - this->P.transpose() * X ).exp();
 		return A * B.exp() * C;
 	}else if ( this->Geodesic == "POLAR" ){
-		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeFullV> svd(this->P + X);
-		return svd.matrixU() * svd.matrixV().transpose();
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(
+			Eigen::MatrixXd::Identity(ncols, ncols) + X.transpose() * BX
+		);
+		return ( this->P + X ) * es.operatorInverseSqrt();
 	}else if ( this->Geodesic == "QR" ){
-		Eigen::HouseholderQR<Eigen::MatrixXd> qr(this->P + X);
-		return qr.householderQ() * Eigen::MatrixXd::Identity(nrows, ncols);
+		// to do
 	}
 	__Check_Geodesic_Func__
 	return X;
 }
 
-inline static Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
+Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
+	// Solve A * X + X * A^t = Q
 	// https://discourse.mc-stan.org/t/solve-a-lyapunov-sylvester-equation-include-custom-c-function-using-eigen-library-possible/12688
 
 	const Eigen::MatrixXd B = A.transpose();
@@ -86,12 +109,12 @@ inline static Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
 }
 
 Eigen::MatrixXd Stiefel::InverseRetract(Manifold& N) const{
-	// https://doi.org/10.1109/TSP.2012.2226167
 	__Check_Log_Map__
 	const Eigen::MatrixXd p = this->P;
 	const Eigen::MatrixXd q = N.P;
-	if ( this->Geodesic == "POLAR" ){ // Algorithm 2
-		const Eigen::MatrixXd M = p.transpose() * q;
+	const Eigen::MatrixXd Bq = B.size() ? ( B * q ).eval() : q;
+	if ( this->Geodesic == "POLAR" ){
+		const Eigen::MatrixXd M = p.transpose() * Bq;
 		const Eigen::MatrixXd S = Sylvester(M, 2 * Eigen::MatrixXd::Identity(p.cols(), p.cols()));
 		return q * S - p;
 	}
@@ -101,31 +124,20 @@ Eigen::MatrixXd Stiefel::InverseRetract(Manifold& N) const{
 
 Eigen::MatrixXd Stiefel::TransportTangent(Eigen::MatrixXd Y, Eigen::MatrixXd Z) const{
 	// Transport Y along Z
-	// Section 3.5, https://doi.org/10.1007/s10589-016-9883-4
 	const int nrows = Y.rows();
 	const int ncols = Y.cols();
+	const Eigen::MatrixXd BZ = B.size() ? ( B * Z ).eval() : Z;
 	if ( this->Geodesic == "POLAR" ){
-		const Eigen::MatrixXd IplusZtZ = Eigen::MatrixXd::Identity(ncols, ncols) + Z.transpose() * Z;
+		const Eigen::MatrixXd IplusZtZ = Eigen::MatrixXd::Identity(ncols, ncols) + Z.transpose() * BZ;
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(IplusZtZ);
 		const Eigen::MatrixXd A = es.operatorSqrt();
 		const Eigen::MatrixXd Ainv = es.operatorInverseSqrt();
-		const Eigen::MatrixXd RZ = this->Retract(Z);
-		const Eigen::MatrixXd RZtY = RZ.transpose() * Y;
-		const Eigen::MatrixXd Q = RZtY - RZtY.transpose();
-		const Eigen::MatrixXd Lambda = Sylvester(A, Q);
-		return RZ * Lambda + ( Eigen::MatrixXd::Identity(nrows, nrows) - RZ * RZ.transpose() ) * Y * Ainv;
-	}else if ( this->Geodesic == "QR" ){
-		Eigen::HouseholderQR<Eigen::MatrixXd> qr(this->P + Z);
-		const Eigen::MatrixXd Q = qr.householderQ() * Eigen::MatrixXd::Identity(nrows, ncols);
-		const Eigen::MatrixXd Rinv = qr.matrixQR().topLeftCorner(ncols, ncols).triangularView<Eigen::Upper>();
-		Eigen::MatrixXd TMP = Q.transpose() * Y * Rinv;
-		for ( int i = 0; i < ncols; i++ ){
-			for ( int j = 0; j < ncols; j++ ){
-				if ( i == j ) TMP(i, j) = 0;
-				else if ( i < j ) TMP(i, j) = - TMP(i, j);
-			}
-		}
-		return Q * TMP + ( Eigen::MatrixXd::Identity(nrows, nrows) - Q * Q.transpose() ) * Y * Rinv;
+		const Eigen::MatrixXd xiBeta = Y.transpose() * BZ;
+		const Eigen::MatrixXd Q = xiBeta + xiBeta.transpose();
+		const Eigen::MatrixXd deri = Sylvester(A, Q);
+		return Y * Ainv - ( this->P + Z ) * Ainv * deri * Ainv;
+	}else if ( this->Geodesic == "QR"){
+		//todo
 	}
 	__Check_Geodesic_Func__
 	return Y;
@@ -137,34 +149,38 @@ Eigen::MatrixXd Stiefel::TransportManifold(Eigen::MatrixXd X, Manifold& N) const
 	return this->TransportTangent(X, Z);
 }
 
-Eigen::MatrixXd Stiefel::symf(Eigen::MatrixXd PtX) const{
-	return 0.5 * ( PtX + PtX.transpose() );
+Eigen::MatrixXd Stiefel::symf(Eigen::MatrixXd PtBX) const{
+    return 0.5 * ( PtBX + PtBX.transpose() );
 }
 
 Eigen::MatrixXd Stiefel::TangentProjection(Eigen::MatrixXd X) const{
-	// https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	return X - P * symf(P.transpose() * X);
+	const Eigen::MatrixXd BX = B.size() ? ( B * X ).eval() : X;
+	return X - P * symf(P.transpose() * BX);
 }
 
 Eigen::MatrixXd Stiefel::TangentPurification(Eigen::MatrixXd X) const{
-	return this->TangentProjection(X);
+	return TangentProjection(X);
 }
 
 void Stiefel::setPoint(Eigen::MatrixXd p, bool purify){
 	if (purify){
-		Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(p);
-		p = svd.matrixU() * svd.matrixV().transpose();
+		const Eigen::MatrixXd Bp = B.size() ? ( B * p ).eval() : p;
+		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(p.transpose() * Bp);
+		p = ( p * es.operatorInverseSqrt() ).eval();
 	}
 	this->P = p;
 }
 
 void Stiefel::getGradient(){
-	this->Gr = this->TangentProjection(this->Ge);
+	this->Gr = this->TangentProjection(this->Sharp(this->Ge));
 }
 
 Eigen::MatrixXd Stiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
-	// https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	return this->TangentProjection(HeX - X * symf(P.transpose() * Ge));
+	const Eigen::MatrixXd BinvHeX = B.size() ? ( Binv * HeX ).eval() : HeX;
+	const Eigen::MatrixXd BGr = B.size() ? ( B * this->Gr ).eval() : this->Gr;
+	return TangentProjection(
+		BinvHeX - X * this->P.transpose() * ( this->Ge - BGr )
+	);
 }
 
 std::unique_ptr<Manifold> Stiefel::Clone() const{
@@ -178,7 +194,8 @@ std::shared_ptr<Manifold> Stiefel::Share() const{
 #ifdef __PYTHON__
 void Init_Stiefel(pybind11::module_& m){
 	pybind11::classh<Stiefel, Manifold>(m, "Stiefel")
-		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR");
+		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR")
+		.def(pybind11::init<Eigen::MatrixXd, Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("B"), pybind11::arg("geodesic") = "POLAR");
 }
 #endif
 

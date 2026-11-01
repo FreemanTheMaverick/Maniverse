@@ -91,3 +91,9 @@ can be constructed by combining manifold components into `Iterate` (see [Iterate
 Each component retains its own geometry,
 while tangent vectors, gradients,
 and Hessian operations are applied component-wise.
+
+The C++ header `src/Manifold/StiefelTemplate.h` also provides
+`StiefelFromTemplate` and `GeneralizedStiefelFromTemplate`,
+which share a `StiefelTemplate<IsGeneralized>` implementation.
+These are separate alternatives; the existing `Stiefel`,
+`GeneralizedStiefel`, and `Flag` classes are unchanged.

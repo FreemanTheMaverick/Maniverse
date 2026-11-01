@@ -34,7 +34,7 @@ class TestProjection(ut.TestCase):
 		L = np.linalg.cholesky(self.Obj.B)
 		U, _, Vt = np.linalg.svd(L.T @ self.Obj.A, full_matrices = False)
 		self.Solution = np.linalg.inv(L.T) @ U @ Vt
-		self.Manifold = mv.GeneralizedStiefel( self.Solution @ expm( self.Obj.A[4:, :] - self.Obj.A[4:, :].T ), self.Obj.B )
+		self.Manifold = mv.Stiefel( self.Solution @ expm( self.Obj.A[4:, :] - self.Obj.A[4:, :].T ), self.Obj.B )
 		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
 
 	def testNewtonCG(self):

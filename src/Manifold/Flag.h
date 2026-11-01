@@ -14,7 +14,8 @@ class Flag: public Stiefel{ public:
 	std::vector<std::tuple<int, int>> BlockParameters;
 	void setBlockParameters(std::vector<int>);
 
-	Flag(Eigen::MatrixXd p, std::string geodesic = "POLAR");
+	Flag(Eigen::MatrixXd p, std::string geodesic = "POLAR") : Stiefel(p, geodesic){};
+	Flag(Eigen::MatrixXd p, Eigen::MatrixXd B, std::string geodesic = "POLAR") : Stiefel(p, B, geodesic){};
 
 	int getDimension() const override;
 

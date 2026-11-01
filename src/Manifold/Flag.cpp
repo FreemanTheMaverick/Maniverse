@@ -15,7 +15,7 @@ namespace Maniverse{
 
 void Flag::setBlockParameters(std::vector<int> sizes){
 	this->BlockParameters.clear();
-	this->Name = "Flag(";
+	this->Name = B.size() ? "GeneralizedFlag(" : "Flag(";
 	int tot_size = 0;
 	for ( int size : sizes ){
 		if ( size <= 0 ) throw std::runtime_error("Invalid sizes of subspaces! (Non-positive dimension)");
@@ -27,8 +27,6 @@ void Flag::setBlockParameters(std::vector<int> sizes){
 	if ( tot_size > this->P.cols() ) throw std::runtime_error("Invalid sizes of subspaces! (Dimension exceeds)");
 	this->Name += "; " + std::to_string(this->P.rows()) + ")";
 }
-
-Flag::Flag(Eigen::MatrixXd p, std::string geodesic): Stiefel(p, geodesic){} // Be sure to Flag::setBlockParameters after construction.
 
 int Flag::getDimension() const{
 	const int N = this->P.rows();

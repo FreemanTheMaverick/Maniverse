@@ -2,7 +2,7 @@
 #include <unsupported/Eigen/MatrixFunctions>
 #include <vector>
 #include <iostream>
-#include <Maniverse/Manifold/GeneralizedStiefel.h>
+#include <Maniverse/Manifold/Stiefel.h>
 #include <Maniverse/LinearSolver/ConjugateGradient.h>
 #include <Maniverse/LinearSolver/MinRes.h>
 #include <Maniverse/Optimizer/Newton.h>
@@ -66,7 +66,7 @@ class ObjProjection: public mv::Function{ public:
 
 class TestProjection{ public:
 	ObjProjection Obj = ObjProjection();
-	mv::GeneralizedStiefel Manifold = mv::GeneralizedStiefel(
+	mv::Stiefel Manifold = mv::Stiefel(
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd>(Obj.B).operatorInverseSqrt().leftCols(6),
 		Obj.B
 	);
@@ -80,7 +80,7 @@ class TestProjection{ public:
 		const Eigen::MatrixXd U = svd.matrixU();
 		const Eigen::MatrixXd V = svd.matrixV();
 		Solution = L.transpose().inverse() * U * V.transpose();
-		Manifold = mv::GeneralizedStiefel( Solution * ( Obj.A.bottomRows(6) - Obj.A.bottomRows(6).transpose() ).exp(), Obj.B );
+		Manifold = mv::Stiefel( Solution * ( Obj.A.bottomRows(6) - Obj.A.bottomRows(6).transpose() ).exp(), Obj.B );
 	};
 
 	void testNewtonCG(){
