@@ -84,7 +84,7 @@ Eigen::MatrixXd Stiefel::Retract(Eigen::MatrixXd X) const{
 	return X;
 }
 
-inline static Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
+Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
 	// Solve A * X + X * A^t = Q
 	// https://discourse.mc-stan.org/t/solve-a-lyapunov-sylvester-equation-include-custom-c-function-using-eigen-library-possible/12688
 
@@ -110,7 +110,7 @@ Eigen::MatrixXd Stiefel::InverseRetract(Manifold& N) const{
 	const Eigen::MatrixXd p = this->P;
 	const Eigen::MatrixXd q = N.P;
 	if ( this->Geodesic == "POLAR" ){
-		const Eigen::MatrixXd M = p.transpose() * B * q;
+		const Eigen::MatrixXd M = p.transpose() * B.size() ? ( B * q ).eval() : q;
 		const Eigen::MatrixXd S = Sylvester(M, 2 * Eigen::MatrixXd::Identity(p.cols(), p.cols()));
 		return q * S - p;
 	}
