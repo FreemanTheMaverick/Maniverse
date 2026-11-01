@@ -33,6 +33,14 @@ double Stiefel::Inner(Eigen::MatrixXd X, Eigen::MatrixXd Y) const{
 	return X.cwiseProduct(Y).sum();
 }
 
+Eigen::MatrixXd Stiefel::Flat(Eigen::MatrixXd X) const{
+	return X;
+}
+
+Eigen::MatrixXd Stiefel::Sharp(Eigen::MatrixXd X) const{
+	return X;
+}
+
 Eigen::MatrixXd Stiefel::Retract(Eigen::MatrixXd X) const{
 	const int nrows = X.rows();
 	const int ncols = X.cols();
@@ -129,19 +137,17 @@ Eigen::MatrixXd Stiefel::TransportManifold(Eigen::MatrixXd X, Manifold& N) const
 	return this->TransportTangent(X, Z);
 }
 
-inline static Eigen::MatrixXd StiefelTangentProjection(Eigen::MatrixXd P, Eigen::MatrixXd A){
-	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	const Eigen::MatrixXd PtA = P.transpose() * A;
-	const Eigen::MatrixXd SymPtA = 0.5 * ( PtA + PtA.transpose() );
-	return A - P * SymPtA;
+Eigen::MatrixXd Stiefel::symf(Eigen::MatrixXd PtX) const{
+	return 0.5 * ( PtX + PtX.transpose() );
 }
 
 Eigen::MatrixXd Stiefel::TangentProjection(Eigen::MatrixXd X) const{
-	return StiefelTangentProjection(this->P, X);
+	// https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
+	return X - P * symf(P.transpose() * X);
 }
 
 Eigen::MatrixXd Stiefel::TangentPurification(Eigen::MatrixXd X) const{
-	return StiefelTangentProjection(this->P, X);
+	return this->TangentProjection(X);
 }
 
 void Stiefel::setPoint(Eigen::MatrixXd p, bool purify){
@@ -156,13 +162,9 @@ void Stiefel::getGradient(){
 	this->Gr = this->TangentProjection(this->Ge);
 }
 
-Eigen::MatrixXd Stiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
-	//https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
-	if ( ! weingarten ) return StiefelTangentProjection(this->P, HeX);
-	else{
-		const Eigen::MatrixXd tmp = this->Ge.transpose() * this->P + this->P.transpose() * this->Ge;
-		return StiefelTangentProjection(this->P, HeX - 0.5 * X * tmp);
-	}
+Eigen::MatrixXd Stiefel::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X) const{
+	// https://juliamanifolds.github.io/Manifolds.jl/stable/manifolds/stiefel
+	return this->TangentProjection(HeX - X * symf(P.transpose() * Ge));
 }
 
 std::unique_ptr<Manifold> Stiefel::Clone() const{

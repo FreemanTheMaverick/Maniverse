@@ -57,7 +57,7 @@ and understand the consequences.
 | `TangentPurification(A)` | Applies the tangent-space purification operation defined by the concrete manifold implementation. |
 | `setPoint(p, purify)` | Updates `P` to `p`. When `purify=true`, the point is purified or projected according to the manifold's implementation before use. |
 | `getGradient()` | Computes the manifold's Riemannian gradient from the stored Euclidean gradient `Ge`, updates `Gr`. |
-| `getHessian(HeX, X, weingarten)` | Applies the manifold-specific Riemannian Hessian operation using a Euclidean Hessian-vector product `HeX` and tangent vector `X`. When `weingarten=true`, the Weingarten map is included in the computation; otherwise only the projected Euclidean Hessian term is used.|
+| `getHessian(HeX, X)` | Applies the manifold-specific Riemannian Hessian operation using a Euclidean Hessian-vector product `HeX` and tangent vector `X`, including the Weingarten map where applicable. |
 | `Clone()` | Returns a copied manifold object. |
 | `Share()` | Returns a shared-ownership manifold object suitable for APIs expecting shared pointers. |
 
@@ -67,6 +67,7 @@ and understand the consequences.
 |----------------|---------------------------|-----------|
 | `Euclidean(P0)` | Any matrix shape | Number of entries in `P0` |
 | `Stiefel(P0)` | `m × n`, with orthonormal columns (`m ≥ n`) | `mn − n(n+1)/2` |
+| `GeneralizedStiefel(P0, B)` | `m × n`, with `P0ᵀ B P0 = I`, where `B` is symmetric positive definite | `mn − n(n+1)/2` |
 | `Orthogonal(P0)` | Square orthogonal matrix | `n(n−1)/2` |
 | `Flag(P0)` | Orthonormal frame with block sizes configured by `setBlockParameters([...])` | Depends on frame dimensions and block sizes |
 | `Grassmann(P0)` | `m × m` orthogonal projector onto the subspace | `k(m−k)`, where `k` is the projector rank |
@@ -90,3 +91,9 @@ can be constructed by combining manifold components into `Iterate` (see [Iterate
 Each component retains its own geometry,
 while tangent vectors, gradients,
 and Hessian operations are applied component-wise.
+
+The C++ header `src/Manifold/StiefelTemplate.h` also provides
+`StiefelFromTemplate` and `GeneralizedStiefelFromTemplate`,
+which share a `StiefelTemplate<IsGeneralized>` implementation.
+These are separate alternatives; the existing `Stiefel`,
+`GeneralizedStiefel`, and `Flag` classes are unchanged.

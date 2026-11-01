@@ -12,7 +12,7 @@ It includes built-in manifolds and optimization algorithms,
 and supports extensions for additional problem types.
 
 ## Features
-- **Manifolds**: Stiefel and related manifolds (Flag, Grassmann, and Orthogonal), the Simplex manifold, and user-defined manifolds. Products of manifolds are supported.
+- **Manifolds**: (Generalized) Stiefel and related manifolds (Flag, Grassmann, and Orthogonal), the Simplex manifold, and user-defined manifolds. Products of manifolds are supported.
 - **Optimizers**: Trust-region Newton's method with conjugate-gradient or minimum-residual inner solvers, L-BFGS, Anderson acceleration, and an augmented-Lagrangian wrapper for equality constraints.
 - **Linear solvers**: Conjugate Gradient and MinRes, with preconditioning and optional handling of non-positive curvature in Newton's trust-region subproblem.
 - **Hessian eigenpairs**: A Lanczos method for examining the stability of constrained and unconstrained solutions.

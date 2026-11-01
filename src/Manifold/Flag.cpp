@@ -42,36 +42,15 @@ int Flag::getDimension() const{
 	return ndim;
 }
 
-static Eigen::MatrixXd symf(std::vector<std::tuple<int, int>> BlockParameters, Eigen::MatrixXd A){
+Eigen::MatrixXd Flag::symf(Eigen::MatrixXd PtX) const{
 	// https://doi.org/10.1007/s10957-023-02242-z
 	for ( int i = 0; i < (int)BlockParameters.size(); i++ ){
 		for ( int j = 0; j < i; j++ ){
-			FlagGetBlock(A, i, j) = ( FlagGetBlock(A, i, j) + FlagGetBlock(A, j, i).transpose() ) / 2;
-			FlagGetBlock(A, j, i) = FlagGetBlock(A, i, j).transpose();
+			FlagGetBlock(PtX, i, j) = ( FlagGetBlock(PtX, i, j) + FlagGetBlock(PtX, j, i).transpose() ) / 2;
+			FlagGetBlock(PtX, j, i) = FlagGetBlock(PtX, i, j).transpose();
 		}
 	}
-	return A;
-}
-
-static Eigen::MatrixXd FlagTangentProjection(Eigen::MatrixXd P, std::vector<std::tuple<int, int>> BlockParameters, Eigen::MatrixXd X){
-	// https://doi.org/10.1007/s10957-023-02242-z
-	return X - P * symf(BlockParameters, P.transpose() * X);
-}
-
-Eigen::MatrixXd Flag::TangentProjection(Eigen::MatrixXd X) const{
-	return FlagTangentProjection(this->P, this->BlockParameters, X);
-}
-
-Eigen::MatrixXd Flag::TangentPurification(Eigen::MatrixXd X) const{
-	return FlagTangentProjection(this->P, this->BlockParameters, X);
-}
-
-Eigen::MatrixXd Flag::getHessian(Eigen::MatrixXd HeX, Eigen::MatrixXd X, bool weingarten) const{
-	// https://doi.org/10.1007/s10957-023-02242-z
-	if ( weingarten ){
-		const Eigen::MatrixXd tmp = symf(this->BlockParameters, this->P.transpose() * this->Ge);
-		return this->TangentProjection(HeX - X * tmp);
-	}else return this->TangentProjection(HeX);
+	return PtX;
 }
 
 std::unique_ptr<Manifold> Flag::Clone() const{
