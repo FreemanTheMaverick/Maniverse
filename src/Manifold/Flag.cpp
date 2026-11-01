@@ -63,6 +63,7 @@ std::shared_ptr<Manifold> Flag::Share() const{
 void Init_Flag(pybind11::module_& m){
 	pybind11::classh<Flag, Stiefel>(m, "Flag")
 		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR")
+		.def(pybind11::init<Eigen::MatrixXd, Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("B"), pybind11::arg("geodesic") = "POLAR")
 		.def("setBlockParameters", &Flag::setBlockParameters);
 }
 #endif

@@ -41,6 +41,7 @@ Stiefel::Stiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std::string geodesic): Ma
 	if ( es.eigenvalues()(0) <= 0 ) throw std::runtime_error("The B-matrix must be positive definite!");
 	Binv = es.eigenvectors() * es.eigenvalues().cwiseInverse().asDiagonal() * es.eigenvectors().transpose();
 	Bsqrt = es.operatorSqrt();
+	Binvsqrt = es.operatorInverseSqrt();
 }
 
 int Stiefel::getDimension() const{
@@ -81,17 +82,20 @@ Eigen::MatrixXd Stiefel::Retract(Eigen::MatrixXd X) const{
 		);
 		return ( this->P + X ) * es.operatorInverseSqrt();
 	}else if ( this->Geodesic == "QR" ){
-		// to do
+		const Eigen::MatrixXd P_plus_X = P + X;
+		const Eigen::MatrixXd B_P_plus_X = B.size() ? ( B * P_plus_X ).eval() : P_plus_X;
+		Eigen::LLT<Eigen::MatrixXd> llt(P_plus_X.transpose() * B_P_plus_X);
+		if ( llt.info() != Eigen::Success )
+			throw std::runtime_error("QR retraction requires a full-rank matrix!");
+		return llt.matrixL().solve(P_plus_X.transpose()).transpose();
 	}
 	__Check_Geodesic_Func__
 	return X;
 }
 
-Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
-	// Solve A * X + X * A^t = Q
+Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd B, Eigen::MatrixXd Q){
+	// Solve A * X + X * B = Q
 	// https://discourse.mc-stan.org/t/solve-a-lyapunov-sylvester-equation-include-custom-c-function-using-eigen-library-possible/12688
-
-	const Eigen::MatrixXd B = A.transpose();
 
 	Eigen::ComplexSchur<Eigen::MatrixXd> SchurA(A);
 	const Eigen::MatrixXcd R = SchurA.matrixT();
@@ -108,18 +112,53 @@ Eigen::MatrixXd Sylvester(Eigen::MatrixXd A, Eigen::MatrixXd Q){
 	return X.real();
 }
 
+Eigen::MatrixXd UpperTriangularTransposedLyapunovIdentity(Eigen::MatrixXd M){
+	const Eigen::Index n = M.rows();
+	Eigen::MatrixXd X = Eigen::MatrixXd::Zero(n, n);
+	for ( Eigen::Index i = 0; i < n; ++i ){
+		const Eigen::MatrixXd Mi = M.topLeftCorner(i + 1, i + 1);
+		Eigen::FullPivLU<Eigen::MatrixXd> lu(Mi);
+
+		Eigen::VectorXd bi = Eigen::VectorXd::Zero(i + 1);
+		for ( Eigen::Index j = 0; j < i; ++j )
+			bi(j) = - M.row(i).head(j + 1) * X.col(j).head(j + 1);
+		bi(i) = 1.0;
+
+		const Eigen::VectorXd ri = lu.solve(bi);
+		X.col(i).head(i + 1) = ri;
+	}
+	return X;
+}
+
 Eigen::MatrixXd Stiefel::InverseRetract(Manifold& N) const{
 	__Check_Log_Map__
 	const Eigen::MatrixXd p = this->P;
 	const Eigen::MatrixXd q = N.P;
 	const Eigen::MatrixXd Bq = B.size() ? ( B * q ).eval() : q;
+	const Eigen::MatrixXd M = p.transpose() * Bq;
 	if ( this->Geodesic == "POLAR" ){
-		const Eigen::MatrixXd M = p.transpose() * Bq;
-		const Eigen::MatrixXd S = Sylvester(M, 2 * Eigen::MatrixXd::Identity(p.cols(), p.cols()));
-		return q * S - p;
+		const Eigen::MatrixXd R = Sylvester(M, M.transpose(), 2 * Eigen::MatrixXd::Identity(p.cols(), p.cols()));
+		return q * R - p;
+	}else if ( this->Geodesic == "QR" ){
+		const Eigen::MatrixXd R = UpperTriangularTransposedLyapunovIdentity(M);
+		return q * R - p;
 	}
 	__Check_Geodesic_Func__
 	return q;
+}
+
+Eigen::MatrixXd diffQR(Eigen::MatrixXd Y, Eigen::MatrixXd U){
+	Eigen::HouseholderQR<Eigen::MatrixXd> qr(Y);
+	const Eigen::MatrixXd qfY = qr.householderQ();
+	const Eigen::MatrixXd A = U * ( qfY.transpose() * Y ).inverse();
+	Eigen::MatrixXd B = qfY.transpose() * A;
+	for ( int i = 0; i < B.rows(); i++ ){
+		B(i, i) = 0;
+		for ( int j = i + 1; j < B.cols(); j++ ){
+			B(i, j) = - B(j, i);
+		}
+	}
+	return qfY * B + ( Eigen::MatrixXd::Identity(Y.rows(), Y.rows()) - qfY * qfY.transpose() ) * A;
 }
 
 Eigen::MatrixXd Stiefel::TransportTangent(Eigen::MatrixXd Y, Eigen::MatrixXd Z) const{
@@ -134,10 +173,11 @@ Eigen::MatrixXd Stiefel::TransportTangent(Eigen::MatrixXd Y, Eigen::MatrixXd Z) 
 		const Eigen::MatrixXd Ainv = es.operatorInverseSqrt();
 		const Eigen::MatrixXd xiBeta = Y.transpose() * BZ;
 		const Eigen::MatrixXd Q = xiBeta + xiBeta.transpose();
-		const Eigen::MatrixXd deri = Sylvester(A, Q);
+		const Eigen::MatrixXd deri = Sylvester(A, A.transpose(), Q);
 		return Y * Ainv - ( this->P + Z ) * Ainv * deri * Ainv;
 	}else if ( this->Geodesic == "QR"){
-		//todo
+		if (B.size()) return Binvsqrt * diffQR(Bsqrt * (this->P + Z ), Bsqrt * Y);	
+		else return diffQR(this->P + Z, Y);
 	}
 	__Check_Geodesic_Func__
 	return Y;

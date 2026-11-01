@@ -12,6 +12,7 @@ class Stiefel: public Manifold{ public:
 	Eigen::MatrixXd B;
 	Eigen::MatrixXd Binv;
 	Eigen::MatrixXd Bsqrt;
+	Eigen::MatrixXd Binvsqrt;
 
 	Stiefel(Eigen::MatrixXd p, std::string geodesic = "POLAR");
 	Stiefel(Eigen::MatrixXd p, Eigen::MatrixXd B, std::string geodesic = "POLAR");
