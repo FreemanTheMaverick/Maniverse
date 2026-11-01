@@ -121,6 +121,7 @@ Eigen::MatrixXd Stiefel::InverseRetract(Manifold& N) const{
 Eigen::MatrixXd Stiefel::TransportTangent(Eigen::MatrixXd Y, Eigen::MatrixXd Z) const{
 	const int nrows = Y.rows();
 	const int ncols = Y.cols();
+	Eigen::M
 	if ( this->Geodesic == "POLAR" ){
 		const Eigen::MatrixXd IplusZtZ = Eigen::MatrixXd::Identity(ncols, ncols) + Z.transpose() * B * Z;
 		Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> es(IplusZtZ);
