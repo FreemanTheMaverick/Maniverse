@@ -235,7 +235,8 @@ std::shared_ptr<Manifold> Stiefel::Share() const{
 void Init_Stiefel(pybind11::module_& m){
 	pybind11::classh<Stiefel, Manifold>(m, "Stiefel")
 		.def(pybind11::init<Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("geodesic") = "POLAR")
-		.def(pybind11::init<Eigen::MatrixXd, Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("B"), pybind11::arg("geodesic") = "POLAR");
+		.def(pybind11::init<Eigen::MatrixXd, Eigen::MatrixXd, std::string>(), pybind11::arg("p"), pybind11::arg("B"), pybind11::arg("geodesic") = "POLAR")
+		.def("symf", &Stiefel::symf);
 }
 #endif
 
