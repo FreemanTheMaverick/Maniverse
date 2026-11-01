@@ -38,5 +38,5 @@ class Stiefel: public Manifold{ public:
 	std::unique_ptr<Manifold> Clone() const override;
 	std::shared_ptr<Manifold> Share() const override;
 };
-Eigen::Mxd
+
 }
