@@ -1,0 +1,108 @@
+import unittest as ut
+import numpy as np
+import Maniverse as mv
+
+# Thin singular value decomposition
+# Finding the singular values and vectors of a rectangular A
+# Minimize L(U, s, V) = || U diag(s) V.t - A ||^2
+# A \in R(10, 6)
+# U \in St(10, 6)
+# s \in R(6)
+# V \in O(6)
+
+class Obj(mv.Function):
+	def __init__(self):
+		super().__init__()
+		self.A = np.loadtxt("Sym10.txt", delimiter = ',')[:60].reshape([6, 10]).T
+
+	def Calculate(self, X, derivatives):
+		U = self.U = X[0]
+		s = self.s = X[1][:, 0]
+		V = self.V = X[2]
+		if 0 in derivatives:
+			self.Value = np.linalg.norm( U * s @ V.T - self.A )**2
+		if 1 in derivatives:
+			GU = 2 * ( U * s ** 2 - self.A @ V * s )
+			Gs = 2 * ( s - np.diag( U.T @ self.A @ V ) )
+			GV = 2 * ( V * s ** 2 - self.A.T @ U * s )
+			self.Gradient = [ GU, Gs, GV ]
+
+	def Hessian(self, K):
+		U = self.U
+		s = self.s
+		V = self.V
+		delta_U, delta_s, delta_V = K
+		delta_s = delta_s[:, 0]
+		HUU = 2 * delta_U * s ** 2
+		HUs = 4 * U * s * delta_s - 2 * self.A @ V * delta_s
+		HUV = - 2 * self.A @ delta_V * s
+		HsU = - 2 * np.diag( delta_U.T @ self.A @ V )
+		Hss = 2 * delta_s
+		HsV = - 2 * np.diag( U.T @ self.A @ delta_V )
+		HVU = - 2 * self.A.T @ delta_U * s
+		HVs = 4 * V * s * delta_s - 2 * self.A.T @ U * delta_s
+		HVV = 2 * delta_V * s ** 2
+		return [
+					HUU + HUs + HUV,
+					HsU + Hss + HsV,
+					HVU + HVs + HVV
+		]
+
+class TestSingular(ut.TestCase):
+	def __init__(self, *args):
+		super().__init__(*args)
+		self.Obj = Obj()
+		self.Manifold0 = mv.Stiefel(np.eye(10)[:, :6])
+		self.Manifold1 = mv.Euclidean(np.zeros(6))
+		self.Manifold2 = mv.Orthogonal(np.eye(6))
+		self.Tolerance = (1.e-5, 1.e-5, 1.e-5)
+		self.Solution0, self.Solution1, self.Solution2 = np.linalg.svd(self.Obj.A, full_matrices=False)
+		self.Solution1.reshape([6, 1])
+		self.Solution2 = self.Solution2.T
+
+	def testNewtonCG(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
+		tr = mv.TrustRegion()
+		cg = mv.ConjugateGradient(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(cg, M)
+		converged = mv.Newton(
+				M, tr, cg, self.Tolerance, 25, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[0].P * M.Manifolds[1].P[:, 0] @ M.Manifolds[2].P.T, self.Obj.A, atol = 1e-5)
+
+	def testNewtonMR(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
+		tr = mv.TrustRegion()
+		mr = mv.MinRes(1, (1e-4, 1e-4), M.getDimension(), 0)
+		mv.initLinearSolverForNewton(mr, M)
+		converged = mv.Newton(
+				M, tr, mr, self.Tolerance, 22, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[0].P * M.Manifolds[1].P[:, 0] @ M.Manifolds[2].P.T, self.Obj.A, atol = 1e-5)
+
+	def testLBFGS(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
+		converged = mv.LBFGS(
+				M, self.Tolerance,
+				100, 131, 0.1, 0.75, 5, 0
+		)
+		assert converged
+		assert np.allclose(M.Manifolds[0].P * M.Manifolds[1].P[:, 0] @ M.Manifolds[2].P.T, self.Obj.A, atol = 1e-5)
+
+	def testLanczos(self):
+		M = mv.Iterate(self.Obj, [self.Manifold0, self.Manifold1, self.Manifold2])
+		M.setPoint([self.Solution0, self.Solution1, self.Solution2], 1)
+		M.Calculate(M.getPoint(), [0, 1, 2])
+		M.setGradient()
+		Evals, Evecs = mv.Lanczos(M, M.getDimension(), 0, 0, 0)
+		for i in range(len(Evals)):
+			residual = np.linalg.norm( M.Hessian(Evecs[i]) - Evals[i] * Evecs[i] )
+			assert residual < 1e-5
+
+if __name__ == "__main__":
+	TestSingular().testNewtonCG()
+	TestSingular().testNewtonMR()
+	TestSingular().testLBFGS()
+	TestSingular().testLanczos()
