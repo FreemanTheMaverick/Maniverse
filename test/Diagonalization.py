@@ -53,7 +53,7 @@ class TestDiagonalization(ut.TestCase):
 		cg = mv.ConjugateGradient(1, (1e-4, 1e-4), M.getDimension(), 0)
 		mv.initLinearSolverForNewton(cg, M)
 		converged = mv.Newton(
-				M, tr, cg, self.Tolerance, 26, 0
+				M, tr, cg, self.Tolerance, 28, 0
 		)
 		assert converged
 		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)
@@ -64,7 +64,7 @@ class TestDiagonalization(ut.TestCase):
 		mr = mv.MinRes(1, (1e-4, 1e-4), M.getDimension(), 0)
 		mv.initLinearSolverForNewton(mr, M)
 		converged = mv.Newton(
-				M, tr, mr, self.Tolerance, 27, 0
+				M, tr, mr, self.Tolerance, 28, 0
 		)
 		assert converged
 		assert np.allclose(M.Manifolds[1].P * M.Manifolds[0].P[:, 0] @ M.Manifolds[1].P.T, self.Obj.A)

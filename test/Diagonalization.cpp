@@ -96,7 +96,7 @@ class TestDiagonalization{ public:
 		mv::ConjugateGradient cg(1, {1e-4, 1e-4}, M.getDimension(), 1);
 		mv::initLinearSolverForNewton(cg, M);
 		const bool converged = mv::Newton(
-				M, tr, cg, Tolerance, 26, 1
+				M, tr, cg, Tolerance, 28, 1
 		);
 		__Check_Result__
 	};
@@ -107,7 +107,7 @@ class TestDiagonalization{ public:
 		mv::MinRes mr(1, {1e-4, 1e-4}, M.getDimension(), 1);
 		mv::initLinearSolverForNewton(mr, M);
 		const bool converged = mv::Newton(
-				M, tr, mr, Tolerance, 27, 1
+				M, tr, mr, Tolerance, 28, 1
 		);
 		__Check_Result__
 	};

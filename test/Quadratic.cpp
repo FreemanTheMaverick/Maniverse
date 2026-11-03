@@ -95,9 +95,6 @@ class TestQuadratic{ public:
 		mv::TrustRegion tr;
 		mv::ConjugateGradient cg(1, {1e-4, 1e-4}, M.getDimension(), 1);
 		mv::initLinearSolverForNewton(cg, M);
-		M.Preconditioner = [&Ainv = Obj.Ainv](Eigen::VectorXd v) -> Eigen::VectorXd {
-			return Ainv.cwiseProduct(v).eval();
-		};
 		const bool converged = mv::Newton(
 				M, tr, cg, Tolerance, 20, 1
 		);

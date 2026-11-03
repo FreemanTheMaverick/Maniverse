@@ -35,28 +35,21 @@ void ConjugateGradient::Calculate(double R){
 
 	Eigen::VectorXd r = b;
 	Eigen::VectorXd v = Eigen::VectorXd::Zero(total_size);
-	Eigen::VectorXd p = Eigen::VectorXd::Zero(total_size);
+	Eigen::VectorXd p = P(b);
 
-	double r2 = 114514;
+	double r2 = dot(r, P(r));
 	double L = 0;
 	const auto start = __now__;
 
 	for ( int iiter = 0; iiter < MaxIter; iiter++ ){
 		if (Verbose) std::printf("| %4d ", iiter);
 
-		const Eigen::VectorXd z = proj(P(r));
-		const double r2old = r2;
-		r2 = dot(r, z);
-		if (Verbose) std::printf("| %5.1E ", std::sqrt(r2));
-
-		const double Llast = L;
-		L = 0.5 * dot( r - b, v );
-		if (Verbose) std::printf("|  %17.10f  | % 5.1E |", L, L - Llast);
-
-		const double beta = r2 / r2old;
-		p = z + beta * p;
 		const Eigen::VectorXd Ap = proj(A(p));
 		const double pAp = dot(p, Ap);
+		const double Llast = L;
+		L = 0.5 * dot( r - b, v );
+		if (Verbose) std::printf("| %5.1E |  %17.10f  | % 5.1E |", std::sqrt(r2), L, L - Llast);
+
 		const double alpha = r2 / pAp;
 		const Eigen::VectorXd vplus = proj(v + alpha * p);
 		const double vplusnorm = std::sqrt(dot(vplus, vplus));
@@ -79,7 +72,13 @@ void ConjugateGradient::Calculate(double R){
 			return;
 		}
 
+		const double r2old = r2;
 		r -= alpha * Ap;
+		const Eigen::VectorXd z = proj(P(r));
+		r2 = dot(r, z);
+		const double beta = r2 / r2old;
+		p = z + beta * p;
+
 	}
 	if (Verbose) std::printf("Maximal iterations!\n");
 }
